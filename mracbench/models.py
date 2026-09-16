@@ -26,7 +26,7 @@ class Case:
 class ProtocolDefinition:
     id: str
     version: int
-    max_audit_rounds: int
+    max_audit_rounds: int | None
     prompts: dict[str, str]
     snapshots: dict[str, bytes]
     workflow: str = "generate-audit-repair"
@@ -43,6 +43,7 @@ class RunConfig:
     timeout_seconds: int | None = None
     protocol_id: str | None = None
     reasoning_effort: str | None = None
+    spec_file: Path | None = None
 
 
 @dataclass(frozen=True)

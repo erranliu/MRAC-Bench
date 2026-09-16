@@ -59,7 +59,12 @@ def project(tmp_path):
 @pytest.fixture
 def config(project):
     return RunConfig(
-        project, "sample", project / "runs", project / ".workspaces", model="test-model"
+        project,
+        "sample",
+        project / "runs",
+        project / ".workspaces",
+        model="test-model",
+        protocol_id="spec-mrac-v1",
     )
 
 

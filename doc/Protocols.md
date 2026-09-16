@@ -9,19 +9,24 @@ Spec、Plan 和验收报告保留为历史设计记录。
 
 | ID | version | workflow | 输入含义 | 起点 | 收敛含义 |
 |---|---:|---|---|---|---|
-| `spec-mrac-v1` | 1 | `generate-audit-repair`（默认） | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
+| `spec-mrac-v2` | 1 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立且证据充分的裁决 clean |
+| `spec-mrac-v1` | 1 | `generate-audit-repair` | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
 | `spec-flow-simple-v1` | 1 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
+| `exec-mrac-v1` | 1 | `exec-mrac` | 显式选定的执行 Spec | 独立可写 checkout 中实施代码 | 同一 Spec、基线和完整产品候选快照连续两轮零问题 |
 
+- [spec-mrac-v2 配置](../protocols/spec-mrac-v2/protocol.yaml)
 - [spec-mrac-v1 配置](../protocols/spec-mrac-v1/protocol.yaml)
 - [spec-flow-simple-v1 配置](../protocols/spec-flow-simple-v1/protocol.yaml)
+- [exec-mrac-v1 配置](../protocols/exec-mrac-v1/protocol.yaml)
 
-两者共享只读执行、固定仓库缓存、输入哈希检查和证据存储，但不共享审计问题 schema
-或收敛判断。新协议没有 generate 阶段，不能把普通 issue 文本自动扩写成新的 Spec。
+Spec 协议使用只读 checkout；exec 协议的实施/修复阶段使用独立可写 checkout，审计只读。
+各协议共享输入哈希和证据存储，但不共享审计 schema 或收敛判断。除旧 spec-mrac-v1
+外都没有 generate 阶段，不能把普通 issue 文本自动扩写成新的 Spec。
 
 ## 选择、版本与复现
 
 case 与 protocol 独立，在 run 中组合。协议选择优先级：`run --protocol <id>` →
-运行层默认值 `spec-mrac-v1`（代码中的 `DEFAULT_PROTOCOL_ID`）。CLI 和 Python API 使用
+运行层默认值 `spec-mrac-v2`（代码中的 `DEFAULT_PROTOCOL_ID`）。CLI 和 Python API 使用
 同一个默认值。显式传入无效协议会报错，不回退默认值。
 
 case schema 不包含协议选择字段，制作模板和内置 case 均不声明 `protocol`。
@@ -33,26 +38,257 @@ case schema 不包含协议选择字段，制作模板和内置 case 均不声�
 （未指定时为 null），不再记录 `case_default_protocol`。运行选择不修改 case。
 
 ```powershell
-# 同一 case 使用运行层默认协议 spec-mrac-v1
+# 同一 case 使用运行层默认协议 spec-mrac-v2
 uv run python -m mracbench run --case <case-id> --model gpt-5.6-luna --reasoning-effort high
 
-# 显式选择新协议；12 是总 audit 预算，包含初始化审计
+# 显式选择 flow-simple 旧协议；12 是总 audit 预算，包含初始化审计
 uv run python -m mracbench run --case <case-id> --protocol spec-flow-simple-v1 --model gpt-5.6-luna --reasoning-effort high --max-rounds 12
 
-# 只恢复新协议中完整保存的 PAUSED run
+# 按保存的协议恢复，不重新选择默认值
 uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id>
 ```
 
 协议 ID 标识一套实验语义。新增不同测量对象、阶段图或审计边界时建立独立 ID。
 同一 ID 下修改提示词、schema、裁决或结果含义时递增整数 `version`；仅修复不影响行为的
-排版、链接不需要升级。ID 里的 `v1` 是名称的一部分，实际修订版本以 YAML `version` 为准。
+排版、链接不需要升级。ID 里的 `v1` / `v2` 是名称的一部分，实际修订版本以 YAML `version` 为准。
 每次 run 固定实际配置、提示词原文及 SHA-256；恢复使用 run 内快照，不重读当前项目的
 case 或协议文件，也不重新选择默认协议。已经开始或结束的实验不因编辑项目协议或
 变更默认值而改变。旧 run 中的 `case_default_protocol` 仅保留为当时的记录，不作恢复依据。
 
 新增协议必须登记：目的、来源及固定版本、输入契约、阶段、模型角色、输出 schema、
-收敛/停止条件、预算与恢复、证据格式、兼容性和验证用例。当前只支持下述两种明确的
+收敛/停止条件、预算与恢复、证据格式、兼容性和验证用例。当前只支持登记的四种明确的
 workflow，不支持在 YAML 中编排任意阶段图。
+
+## 执行协议：exec-mrac-v1
+
+这是独立的代码执行协议，`artifact_type: code`。默认协议仍是 spec-mrac-v2；执行代码
+必须显式选择 exec-mrac-v1，并用 `run --spec-file` 指定非空 UTF-8 Markdown Spec。
+case 只提供固定项目/任务包和仓库基线，不能选择协议。执行与审计以显式选定 Spec 为
+唯一实现依据，不自动使用上一 run 或 case 中的原始任务替换它。
+
+```powershell
+uv run python -m mracbench run --case <case-id> --protocol exec-mrac-v1 --spec-file C:\approved\spec.md --model gpt-5.6-luna --reasoning-effort high --runs-dir C:\mrac-runs --workspace-dir C:\mrac-workspaces
+uv run python -m mracbench status --run-dir C:\mrac-runs\<run-id>
+# 预算耗尽后，这个显式操作授予另外六次 audit，先处理保存的待修复项
+uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id>
+uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
+```
+
+### 提示词来源与适配
+
+参考 3bb0 checkout 的 mrac-flow-simple SKILL 及共享控制器，来源 commit 为
+`4e0559443a88fa5a2577d2c73c6b365128bdaaea`；文件 hash 登记在协议 YAML。
+审计提取 `pr-loop`：检查具体正确性、回归、恢复、所有权、必要删除和测试缺陷，忽略
+可选加固和无关风格建议，只读最少必要支撑源码，不在审计中运行 Unity。
+修复提取 `fix-code` / `apply-fix` 的代码修复约束：修复当前问题、实际改变产品 diff、
+保留基线与 Spec 意图、记录验证。原技能没有独立的完整代码修复 prompt；这里的
+repair.md 根据这些约束编写，不声称逐字复制。
+
+本协议比较 Spec 与保存的候选 diff，不要求 Plan、已提交 PR、发布流程或 CLI-L1。
+源技能“忽略未提交工作区变化”不适用：本协议的工作区就是候选实现，未暂存变更和新增
+文件必须进入 diff。原技能的裁决、P3 延期、结构性 BLOCKED 和连续六轮失败计数不迁入；
+本协议采用用户指定的每批总计六次 audit、所有问题修复、两次零问题。
+
+### 阶段与权限
+
+`IMPLEMENT → AUDIT → FIX（有问题时）→ AUDIT → CONVERGED`。
+
+- IMPLEMENT/FIX 使用 Codex `workspace-write`，只允许修改本 run 的独立 checkout，
+  可运行相关验证，必须如实记录失败或未执行的检查；不得修改固定 Spec、其他工作区、
+  全局安装、Git 元数据、commit/push 或自动发布 PR。
+- AUDIT 使用 read-only，新会话，仅接收固定 Spec、基线、完整候选 diff、相关源码及
+  当前验证记录，不接收历史审计或修复解释。验证记录为模型报告，不自动等同于已通过
+  的产品验收；原始命令事件另保存在 raw 中。
+- 确需缺失输入时返回 NEEDS_INPUT，保留 IMPLEMENT/FIX 和待解决项。可用
+  `resume --input-file <UTF-8回答>` 继续。没有回答时只报告现有问题，不再次调用模型。
+  回答可以澄清执行条件，不能悄悄替换 Spec；新 Spec 要启动新 run。exec 的 resume
+  不接受 `--spec-file`。
+
+每个 run 的 checkout 为 `<workspace-dir>/exec/<run-id>/`，从 case 的固定 commit 创建，
+不复用 Spec 协议的只读缓存。HEAD、origin、refs、Git 配置及暂存树保持不变；代码修改
+保留在工作区，由 runner 用临时 index 生成候选，模型不需要 git add。
+
+### 完整 diff、边界与产物
+
+候选 patch 相对于固定基线，包含已跟踪文件的全部修改/删除以及未跟踪且未被 Git 忽略
+的新增文件，支持二进制内容与文件模式。临时 index 放在 run 的 scratch 目录，不改变
+checkout 的真实暂存区。候选 hash 包含基线、完整候选 Git tree 和产品文件的实际字节 hash。
+
+Git 忽略的生成物不导出为产品 patch；单独记录其清单和 hash，并提供路径给审计员。
+必要产品代码/资源不得隐藏在 ignored 路径中；审计必须报告这种遗漏。分类相关性由审计
+判断，runner 不假装能自动识别任意文件是否属于实现。审计前后检查整个 checkout，
+包含 ignored 输出；审计员对这些文件的修改也属于违规。
+
+Spec 原文复制到 `input/execution-spec.md`；记录选择路径与 SHA-256，后续用快照执行，
+不依赖外部源文件仍存在。每个变化的候选保存：
+
+```text
+candidates/0001/changes.patch
+candidates/0001/manifest.json       # 基线、tree、签名、产品变更和工作文件/ignored hash
+implementations/implement-01.json   # 实施总结、验证或缺失输入
+audits/audit-01.json
+repairs/repair-01.json              # 每项修复与验证证据
+pauses/pause-01.json                # 原问题、候选和 clean 计数
+resumptions/resume-01.json          # 继续前的完整结果
+exec-state.json                    # 原子规范检查点和证据 hash
+run-report.md
+```
+
+`final_checkout` 指向代码目录，`final_artifact` 指向最新可应用 patch，`final_candidate_sha256`
+与两个 clean audit ID 构成成功证据。可在相同基线的干净副本中用
+`git apply --binary --index <changes.patch>` 应用产品变更。运行器不会自行应用到用户项目。
+
+### 审计与修复输出
+
+审计返回 `audit_id/spec_sha256/candidate_sha256/findings`。每项 finding 含
+`severity/title/evidence`，P0–P3 都属于必须处理的问题；**只有空 findings 才 clean**。
+没有非阻塞豁免、延期或主控驳回后计 clean 的路径。控制器校验文档/候选身份、审计员
+新会话 ID，以及审计前后代码未变化。所有发现应指向 Spec 落实或实际代码缺陷，不能
+为配额引入无关改进。
+
+实施/修复返回 disposition（complete 或 needs_input）、summary、非空 validation。
+validation 的每项是 command/status/evidence，status 可为 passed、failed、not_run。
+修复 complete 还必须有覆盖全部发现的 fixes（finding_id/summary/evidence），且产品
+diff 实际变化；只改日志或 ignored 输出不能关闭问题。needs_input 不得声称部分关闭。
+Spec 已由基线满足时，首次 IMPLEMENT 可以不改代码，但仍须经历两轮独立审计。
+
+### 六轮预算、续跑和通过标准
+
+每批固定 **6 次实际启动的 audit**，IMPLEMENT/FIX 单独计数，不占 audit 预算。
+case 的历史 audit 限额不参与本协议，`--max-rounds` 只允许省略或显式写 6。
+
+- 相同 Spec、基线和产品候选，连续两个独立审计都零问题，立即 CONVERGED。
+- 第六轮仍有问题：保存原发现和当前代码，**不执行第六轮修复**，PAUSED。
+- 显式 resume：增加六次总额度（6→12→18），先修复保存的问题，再重新审计。
+- 第六轮为首次 clean：暂停时保留；继续时产品代码未变，第七轮 clean 即可收敛。
+- 任何修复或失败审计打断 clean。已启动但超时/无效输出的 audit 仍消耗一次额度；
+  调用失败不会伪装成 clean，也不自动重试。错误后显式恢复时，有剩余额度则保持预算，
+  已耗尽才授予新的一批六次，并记录扩额。
+- 每次继续都校验固定输入、模型/推理强度、adapter 版本、Git 控制状态和保存的代码
+  候选。外部修改产品代码会拒绝恢复，不能把旧 clean 用在新代码上。ignored 生成物
+  的空闲期变化不改变产品候选身份，但审计调用期间对它们的写入仍会被拒绝。
+- 保存的失败可写调用可保留部分代码，恢复后继续该 IMPLEMENT/FIX。只恢复可验证的
+  检查点，不自动修复强制崩溃留下的未知状态。旧子进程仍活着或 run 锁被占用时拒绝
+  恢复；不自动覆盖或删除现有 checkout。
+
+本协议的预算终点是 PAUSED，不使用 NON_CONVERGED 结束该批实验。退出码与统一 CLI
+一致：CONVERGED=0、错误=2、PAUSED=3、NEEDS_INPUT=5、ABORTED=6。默认协议仍是
+spec-mrac-v2，只有显式选择 exec-mrac-v1 才进入可写阶段。
+
+验收覆盖六轮边界、重复扩额、跨批 clean、P3 修复、完整 patch 应用、只读违规、Git
+控制状态、输入/候选篡改、失败恢复、独立 checkout 及实际子进程的 sandbox 参数。
+
+## 默认协议：spec-mrac-v2
+
+参考 3bb0 checkout 的 `.codex/skills/mrac-spec/SKILL.md`、`scripts/mracspec.py` 和
+`references/controller.md`，固定来源 commit 为 `4e0559443a88fa5a2577d2c73c6b365128bdaaea`。
+来源 state version 为 2；原文件 SHA-256 保存在协议 YAML 中。运行时不依赖该本机 checkout。
+
+### 起点、审计和仓库规则
+
+原样复制输入 Spec 后直接 `AUDIT → 裁决 → FIX（如有接受项）→ AUDIT → FROZEN`。
+没有 generate、单独 spec-init、Plan、实现或后置审查。每一轮都必须检查固定仓库，
+包括最终 clean 轮；可以读原始意图核对新引入的设计选择。不能将“拟新增能力尚未存在”
+本身判为缺陷，应检查前提、契约、所有权和验收是否在声明范围内可实现。
+
+输入明确提供当前 Spec、原始 Spec 及 hash、固定 commit、仓库位置和附件。
+`input/repository-instructions.json` 保存固定提交中 `AGENTS.md` / `AGENTS.override.md`
+的路径索引；各阶段按需要用 `git show <commit>:<path>` 读取相关规则，遵循目录作用域，
+但不能覆盖只读、实验输入和授权范围。CLI 仍禁用自动用户配置/规则加载，因此不会混入
+本机配置或未提交的指令。审计与修复都使用 case 的固定 commit；Spec 引用其他版本时，
+在本基线上明确核对差异，不自动换仓库或 fetch 别的提交。
+
+审计 JSON 为：
+
+```json
+{"audit_id":"...","repository_review":{"base_head":"<固定 SHA>","checks":[{"path":"src/loader.py","symbol":"load","conclusion":"具体仓库事实及其对 Spec 可实现性的影响"}]},"findings":[{"severity":"P1","title":"缺口","evidence":"Spec 条款、固定提交中的路径和符号"}]}
+```
+
+`checks` 在 findings 为空时仍必须非空。控制器用 Git 验证完整 commit 一致，以及路径
+确实是该提交的文件（blob）；不接受工作区新增文件、目录、绝对路径或路径逃逸。
+这不是对结论真假的机械证明。每次 CLI 审计创建新会话，记录其 `thread_id`；已记录的
+审计会话 ID 不能复用。测试 adapter 使用显式独立调用标识，不伪装为真实模型会话。
+
+### 裁决、FIX 和必要输入
+
+逐条裁决 P0–P3。rejected 和 deferred 都要具体原因，仅 P3 可以 deferred；所有
+accepted（包括 P3）都进入 FIX。`product-decision`、`scope-expansion`、
+`external-dependency` 只是可选分类元数据，不触发 BLOCKED，也不授予越界权限。
+
+自动主控的 review JSON 在源技能的 `audit_id/decisions` 外增加
+`repository_assessment: {status: supported|insufficient, reason: ...}`，明确记录原技能中
+父会话“证据是否相关且充分”的监督职责。insufficient 不计 clean，保存原记录并保持
+未完成审计，返回 REVIEW_INVALID；显式 resume 后用新审计员重新检查。
+
+修复可在用户目标和授权范围内自主补足设计，区分既有约束和本次新增决定，并记录依据。
+continue 返回完整 Spec 和覆盖每一接受项的 summary/evidence；字节必须变化。
+确实缺少事实或必要选择时，repair 返回 `needs_input`、具体 reason 和非空 questions，
+不返回部分 Spec。Bench 状态为 NEEDS_INPUT，协议阶段仍为 FIX，保留全部 pending findings。
+这只是“需要输入”的执行状态，不是新的 BLOCKED 语义。没有通用 Block 或 RecoverBlocked。
+
+```powershell
+# 默认 v2；不传 --max-rounds 时无总 audit 硬上限
+uv run python -m mracbench run --case <id> --model gpt-5.6-luna --reasoning-effort high
+uv run python -m mracbench status --run-dir C:\mrac-runs\<run-id>
+uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C:\answers.md
+uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
+uv run python -m mracbench abort --run-dir C:\mrac-runs\<run-id> --reason "停止本次实验"
+```
+
+回答文件是非空 UTF-8 文本，只能用于 pending FIX，保存在本 run 的 responses 中；原始
+Spec 快照不变。模型将它作为明确的后续用户输入，不能声称原始 Spec 已隐含该决定。
+NEEDS_INPUT 下不提供新回答或修订 Spec 的 resume 只报告现有问题，不再次调用模型。
+
+### 冻结、暂停与总预算
+
+两次不同新审计员、相同 Spec 字节与同一基线、仓库证据经核验且没有接受项，才冻结。
+修复、废弃轮或外部修订打断 clean。冻结记录包含两个 audit ID、真实审计会话 ID、
+frozen hash、固定基线和证据结论；Bench 状态映射为 CONVERGED，阶段为 FROZEN。
+
+连续六轮包含 accepted P0–P2 后，完成第六轮的所有修复再 PAUSED，此时无 pending fix。
+clean 或仅接受 P3 的一轮都会清除 P0–P2 连续计数；接受的 P3 仍须修复。
+暂停后显式 resume 清零连续计数，重新开始独立审计。
+
+v2 不读取 case 的 `max_audit_rounds`，协议默认总上限为 null。只有显式 `--max-rounds`
+或专门修订协议 limits 才添加总审计硬上限。硬上限仅限制新的 audit，最后一轮的裁决
+和已接受项修复仍会完成。若随后仍不收敛，返回 NON_CONVERGED；与六轮暂停同时发生时
+硬预算终止优先，不能通过 resume 扩充预算。NEEDS_INPUT 则保留 FIX，回答后先完成该轮
+修复，再执行硬预算停止条件。timeout 仍按运行参数 / case 配置生效，默认每调用 1800 秒。
+
+### 检查点和恢复
+
+`repository-state.json` 是 v2 的原子规范检查点，含状态、已计数调用、当前 audit、pending
+findings 和不可变证据 hash。`state.json`、`result.json` 和 `run-report.md` 是展示/终态
+记录。`working/spec.md` 是允许用户修订的当前副本，`artifacts/` 中的历史版本保持不可变。
+
+- 未完成/校验失败的 AUDIT：保存原记录、标记 abandoned、清除 clean，用新 ID 审计。
+  已实际启动的失败调用仍计入 audit 预算，不把错误输出转换成 clean。
+- FIX：保留全部接受项，恢复后继续修复；不得直接跳到新审计。
+- 工作副本被外部修改：活动轮报 AUDIT_STALE；resume 将新字节保存为新的 artifact 并
+  废弃旧活动轮。也可用 `resume --spec-file <修订文件>` 显式导入。历史 artifact 被改写
+  是证据损坏，不能用工作副本导入来绕过。
+- FROZEN：状态/报告验证冻结 hash；改变冻结副本会报 FROZEN_SPEC_CHANGED，必须新开 run。
+- 执行失败：保留阶段与检查点；允许从列明的调用/解析/验证错误恢复，不允许迁移其他
+  协议或旧 state schema 的 clean 计数。模型、推理强度、adapter 版本、基线和预算固定。
+- 活跃执行持有 OS run 锁；旧审计子进程仍活着时拒绝恢复。因强制退出遗留的 Git 缓存锁
+  仍需确认旧进程树已结束后处理，不自动删除未知锁。无法验证的崩溃证据不声称可恢复。
+- Abort 保存原因和待修复证据，进入 ABORTED；不作为成功冻结，也不能继续该 run。
+
+CLI 的 status/report/abort 用于 v2；resume 会根据保存的协议选择旧或新恢复器。
+NEEDS_INPUT 退出码为 5，ABORTED 为 6，PAUSED 为 3；其他校验/执行错误为 2。
+只读 status 查询正在运行的 run 返回 0，含 RUNNING 状态，不表示收敛。
+
+### 与源技能的适配边界
+
+Bench 用固定 checkout 和新 CLI 会话替代交互主控/子 agent；用带固定输入的独立 review、
+repair 调用替代父会话，显式保存语义证据判断和缺失输入请求。它不继承父会话隐式历史，
+不自动创建 Beads 任务或产品分支。模型不写文件，runner 保存返回文本和证据；仍检查
+仓库内容不变。源技能允许 HEAD 移动后继续按 captured commit 读取，Bench 的 checkout
+则要求整个 run 保持该固定 HEAD。这些执行差异必须在跨环境比较时一同报告。
+
+冻结只表示两轮独立的、带仓库证据的设计可实现性审查通过；不证明代码编译、产品测试、
+部署资源存在或未来实现正确。原 `spec-mrac-v1` 和 `spec-flow-simple-v1` 保持各自语义，
+旧 BLOCKED / document-only 结果不升级为 v2 的仓库核验冻结。
 
 ## 旧协议：spec-mrac-v1
 
@@ -64,7 +300,7 @@ severity 是 `blocking` 或 `non_blocking`。无 blocking 即 clean；非阻塞�
 没有主控裁决阶段。最终预算轮不再 repair。默认最多 8 次 audit，结果为 `CONVERGED`、
 `NON_CONVERGED` 或执行错误。此协议不支持 resume。原有提示词和判定行为保持不变。
 
-## 新协议的参考来源和适配边界
+## spec-flow-simple-v1 的参考来源和适配边界
 
 参考仓库 commit：`90666ff1f49ce9e9c8569c969177adcfef593470`。
 读取来源为用户指定的 bdf6 checkout 中：
@@ -206,7 +442,7 @@ audit ID 连续 clean，且无 pending fix，才能记录 frozen hash 和两个 
 恢复校验错误以退出码 2 输出错误，不重写原 run 的终态。wall time 累加各次实际执行时长，
 不计用户等待恢复的时间。暂不支持任意错误状态自动重试或崩溃续跑。
 
-## 新协议证据
+## spec-flow-simple-v1 证据
 
 除通用 run 文件外，新协议保存：
 
@@ -252,3 +488,6 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
   固定附件、分阶段输入、裁决/修复记录和 PAUSED 恢复。
 - 2026-09-16：解除 case 与协议选择的绑定，默认协议改由运行层提供，保留显式选择及
   历史快照兼容。协议提示词与审计语义没有变化，协议版本保持不变。
+
+- 2026-09-16：新增默认协议 `spec-mrac-v2@1`，对齐 3bb0 的 mrac-spec state v2；所有轮次要求仓库证据，移除该协议的 BLOCKED，保留 FIX，暂停发生在修复之后。
+- 2026-09-16：新增独立执行协议 `exec-mrac-v1@1`，参考 3bb0 的 pr-loop/fix-code；每批六次 audit，耗尽后保留问题，显式续跑增加六次并先修复。

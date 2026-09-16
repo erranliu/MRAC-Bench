@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from conftest import CLEAN, SPEC, StubAgent
+from conftest import StubAgent
 from test_simple_flow import audit, clean, review
 
 from mracbench.cli import main
@@ -57,12 +57,14 @@ def test_cli_protocol_override_and_reasoning_are_recorded(project, monkeypatch, 
 
 
 def test_cli_uses_run_default_for_case_without_protocol(project, monkeypatch, capsys):
-    agent = StubAgent([SPEC, CLEAN, CLEAN])
+    from test_repository_flow import clean as repository_clean
+
+    agent = StubAgent(repository_clean() + repository_clean())
     monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
     assert main(["run", "--case", "sample", "--project-root", str(project)]) == 0
     assert "CONVERGED" in capsys.readouterr().out
     results = list((project / "runs").glob("*/result.json"))
-    assert json.loads(results[0].read_text())["protocol_id"] == "spec-mrac-v1"
+    assert json.loads(results[0].read_text())["protocol_id"] == "spec-mrac-v2"
 
 
 def test_cli_blocked_exit_code(project, monkeypatch, capsys):
@@ -90,3 +92,62 @@ def test_cli_resume_rejects_missing_run_without_mutation(tmp_path, capsys):
     assert main(["resume", "--run-dir", str(path)]) == 2
     assert "RESUME_ERROR" in capsys.readouterr().out
     assert not path.exists()
+
+
+def test_cli_v2_reports_questions_resumes_fix_and_verifies_frozen_report(
+    project, tmp_path, monkeypatch, capsys
+):
+    from test_repository_flow import audit as repo_audit
+    from test_repository_flow import clean as repo_clean
+    from test_repository_flow import needs_input, repair
+    from test_repository_flow import review as repo_review
+
+    agent = StubAgent([repo_audit("P1"), repo_review(), needs_input])
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    assert (
+        main(["run", "--case", "sample", "--project-root", str(project), "--model", "test-model"])
+        == 5
+    )
+    assert "Required input:" in capsys.readouterr().out
+    path = next((project / "runs").iterdir())
+    answer = tmp_path / "answer.md"
+    answer.write_text("Null is the selected behavior.")
+    agent = StubAgent([repair] + repo_clean() + repo_clean())
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    assert main(["resume", "--run-dir", str(path), "--input-file", str(answer)]) == 0
+    assert main(["report", "--run-dir", str(path)]) == 0
+    assert "Baseline:" in capsys.readouterr().out
+
+
+def test_cli_exec_requires_spec_and_uses_explicit_execution_protocol(
+    project, tmp_path, monkeypatch, capsys
+):
+    from test_exec_flow import audit, implement
+
+    spec = tmp_path / "approved.md"
+    spec.write_text("# Approved Spec\nSet value to 2.\n")
+    agent = StubAgent([implement, audit(), audit()])
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    assert (
+        main(
+            [
+                "run",
+                "--case",
+                "sample",
+                "--project-root",
+                str(project),
+                "--protocol",
+                "exec-mrac-v1",
+                "--spec-file",
+                str(spec),
+            ]
+        )
+        == 0
+    )
+    assert "CONVERGED" in capsys.readouterr().out
+    path = next((project / "runs").iterdir())
+    assert main(["report", "--run-dir", str(path)]) == 0
+    assert "Candidate patch:" in capsys.readouterr().out
+    before = (path / "exec-state.json").read_bytes()
+    assert main(["resume", "--run-dir", str(path), "--spec-file", str(spec)]) == 2
+    assert (path / "exec-state.json").read_bytes() == before

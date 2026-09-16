@@ -19,7 +19,7 @@ class Invoker:
         self.capture = capture
         self.stage = "repository"
 
-    def __call__(self, stage, prompt, audit_item=None, *, workspace=None):
+    def __call__(self, stage, prompt, audit_item=None, *, workspace=None, readonly=True):
         self.stage = stage
         store, result, repo = self.store, self.result, self.repo
         raw = store.path / "raw" / stage
@@ -30,6 +30,9 @@ class Invoker:
             raise BenchError("PROTOCOL_VIOLATION", "Repository changed before invocation")
         if self.guard:
             self.guard()
+        begin_invocation = getattr(repo, "begin_invocation", None)
+        if begin_invocation is not None:
+            begin_invocation(readonly=readonly)
         (raw / "request.txt").write_text(prompt, encoding="utf-8")
         store.checkpoint(result, stage + ":started")
         execution = self.adapter.run(
@@ -39,6 +42,7 @@ class Invoker:
                 raw,
                 self.timeout,
                 self.model,
+                readonly=readonly,
                 reasoning_effort=self.effort,
                 skip_git_repo_check=workspace is not None,
             )
@@ -70,6 +74,8 @@ class Invoker:
                 result["repair_rounds"] += 1
             elif stage.startswith("review-"):
                 result["review_rounds"] += 1
+            elif stage.startswith("implement-"):
+                result["implement_rounds"] += 1
         after = repo.inspect()
         write_json(raw / "repository-after.json", after)
         error = None

@@ -25,7 +25,7 @@ def test_valid_inputs(project):
     assert case.timeout_seconds == 1800
     assert case.max_audit_rounds is None
     assert not hasattr(case, "protocol_id")
-    assert load_protocol(project, DEFAULT_PROTOCOL_ID).max_audit_rounds == 8
+    assert load_protocol(project, DEFAULT_PROTOCOL_ID).max_audit_rounds is None
 
 
 @pytest.mark.parametrize(
@@ -163,11 +163,14 @@ def test_explicit_protocol_is_validated_without_fallback(config, protocol_id):
 @pytest.mark.parametrize("legacy", [{"id": "spec-flow-simple-v1"}, "invalid-legacy-value"])
 @pytest.mark.parametrize("selected", [None, "spec-mrac-v1"])
 def test_legacy_case_protocol_never_selects_or_blocks_a_run(project, config, legacy, selected):
+    from test_repository_flow import clean as repository_clean
+
     change_case(project, lambda d: d.update(protocol=legacy))
     original = (project / "cases/sample/case.yaml").read_bytes()
-    path, result = run_case(replace(config, protocol_id=selected), StubAgent([SPEC, CLEAN, CLEAN]))
+    replies = [SPEC, CLEAN, CLEAN] if selected else repository_clean() + repository_clean()
+    path, result = run_case(replace(config, protocol_id=selected), StubAgent(replies))
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_id"] == DEFAULT_PROTOCOL_ID
+    assert result["protocol_id"] == (selected or DEFAULT_PROTOCOL_ID)
     metadata = yaml.safe_load((path / "run.yaml").read_text())
     assert metadata["protocol_selection"] == ("explicit" if selected else "default")
     assert "case_default_protocol" not in metadata

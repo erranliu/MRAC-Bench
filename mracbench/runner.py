@@ -50,16 +50,35 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
         )
         for name, content in protocol.snapshots.items():
             store.snapshot(name, content)
-        maximum = positive_int(
-            config.max_rounds
-            if config.max_rounds is not None
-            else (
-                case.max_audit_rounds
-                if case.max_audit_rounds is not None
-                else protocol.max_audit_rounds
-            ),
-            "max_audit_rounds",
-        )
+        if protocol.workflow == "exec-mrac":
+            if config.spec_file is None:
+                raise BenchError("CASE_ERROR", "exec-mrac requires an explicit --spec-file")
+            if config.max_rounds is not None and (
+                type(config.max_rounds) is not int or config.max_rounds != 6
+            ):
+                raise BenchError(
+                    "CASE_ERROR", "exec-mrac runs in six-audit batches; resume adds six"
+                )
+            maximum = 6
+        elif config.spec_file is not None:
+            raise BenchError("CASE_ERROR", "run --spec-file is supported only by exec-mrac")
+        elif protocol.workflow == "repository-spec-freeze":
+            maximum = (
+                config.max_rounds if config.max_rounds is not None else protocol.max_audit_rounds
+            )
+            if maximum is not None:
+                maximum = positive_int(maximum, "max_audit_rounds")
+        else:
+            maximum = positive_int(
+                config.max_rounds
+                if config.max_rounds is not None
+                else (
+                    case.max_audit_rounds
+                    if case.max_audit_rounds is not None
+                    else protocol.max_audit_rounds
+                ),
+                "max_audit_rounds",
+            )
         timeout = positive_int(
             config.timeout_seconds if config.timeout_seconds is not None else case.timeout_seconds,
             "agent_timeout_seconds",
@@ -82,11 +101,21 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
                 "required_clean_audits": 2,
                 "model": config.model,
                 "reasoning_effort": config.reasoning_effort,
-                "readonly": True,
+                "readonly": protocol.workflow != "exec-mrac",
                 "ignore_user_config": True,
             },
         )
         store.save_metadata()
+        if protocol.workflow == "exec-mrac":
+            from .exec_flow import run_exec
+
+            return run_exec(config, adapter, store, case, protocol, result, timeout, started)
+        if protocol.workflow == "repository-spec-freeze":
+            from .repository_flow import run_repository_flow
+
+            return run_repository_flow(
+                config, adapter, store, case, protocol, result, maximum, timeout, started
+            )
         if protocol.workflow == "spec-init-freeze":
             from .simple_flow import run_simple
 
