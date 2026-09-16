@@ -2,7 +2,11 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前实现支持一个 case 的完整闭环：生成 spec → 独立 audit → 必要时 repair → 再次 audit。连续两次 audit 没有 blocking issue 时收敛；最后一轮仍未满足条件时返回 `NON_CONVERGED`。
+当前支持两个并存协议：`spec-mrac-v1` 生成并审计 implementation Spec；`spec-flow-simple-v1` 原样复制输入 Spec，执行初始化审计、逐条裁决与冻结循环。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+
+case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v1`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
+
+旧协议连续两次 audit 没有 blocking issue 时收敛；新协议需要同一字节的 Spec 连续两次经裁决的冻结 clean。预算耗尽均返回 `NON_CONVERGED`。
 
 ## 快速开始
 
@@ -39,8 +43,10 @@ uv run python -m mracbench run \
 | 参数 | 含义 |
 |---|---|
 | `--case` | `cases/<id>/` 目录中的 case id |
+| `--protocol` | 选择本次运行协议，默认 `spec-mrac-v1`；与 case 无关 |
 | `--project-root` | case/protocol 所在项目根目录，默认当前目录 |
 | `--model` | 传给每次 `codex exec` 的模型名 |
+| `--reasoning-effort` | 显式推理强度，保存并用于各阶段；不指定则使用 CLI/模型默认值 |
 | `--max-rounds` | 覆盖最大 audit invocation 数，必须为正整数 |
 | `--timeout` | 每次 agent invocation 超时秒数，必须为正整数 |
 | `--runs-dir` | run 输出根目录，默认 `<project-root>/runs` |
@@ -49,7 +55,16 @@ uv run python -m mracbench run \
 
 最大轮数优先级为命令参数 → case limits → protocol limits（默认 8）。超时优先级为命令参数 → case limits（默认 1800 秒）。连续 clean 的要求固定为 2，不提供覆盖。
 
-进程退出码：`0` 表示 `CONVERGED`，`1` 表示 `NON_CONVERGED`，`2` 表示配置或执行错误。`--max-rounds 1` 可以运行，但无法满足两次 clean 的收敛条件。
+进程退出码：`0` 为 `CONVERGED`，`1` 为 `NON_CONVERGED`，`2` 为配置或执行错误；新协议另有 `3`（`PAUSED`）和 `4`（`BLOCKED`）。旧协议至少需要两次 audit，新协议至少需要一次初始化和两次冻结 audit。
+
+运行新协议及恢复暂停示例：
+
+```powershell
+uv run python -m mracbench run --case <case-id> --protocol spec-flow-simple-v1 --model gpt-5.6-luna --reasoning-effort high --max-rounds 12
+uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id>
+```
+
+`resume` 只支持新协议的完整 PAUSED 记录，使用原输入和协议快照，保持模型与总预算不变。BLOCKED 需解决决策/依赖并更新 case 后新开 run；普通恢复不能绕过。相关 Spec 可作为带哈希的 case 附件提供，格式与输入边界见协议管理文档。
 
 ## 运行记录
 
@@ -58,7 +73,7 @@ uv run python -m mracbench run \
 ```text
 runs/<run-id>/
   run.yaml                    # 有效配置、环境、输入哈希和仓库信息
-  state.json                  # 最近一次阶段检查点；M1 不支持 resume
+  state.json                  # 最近一次阶段检查点；新协议支持从 PAUSED 恢复
   result.json                 # 最终状态、trajectory 和计数
   input/                      # case/task/protocol/prompts 原文快照
     repository-manifest.json  # checkout 文件内容哈希基线
@@ -81,7 +96,7 @@ runs/<run-id>/
     repository.log
 ```
 
-审计预算只统计已启动的 audit 调用，repair 单独计数。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
+审计预算只统计已启动的 audit 调用，新协议的初始化 audit 也计入；review 和 repair 单独计数。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
 
 所有历史 spec 都保留；连续 clean 的两轮必须审计同一 artifact。最终结果附带 `final_artifact`，正常耗尽预算时也能查看最后一份 spec。
 
@@ -89,7 +104,7 @@ usage 的总 token/cost 当前记为 `null`；每次调用若有 Codex usage 则
 
 ## 独立性与仓库保护
 
-每个阶段使用新的 `codex exec`，不 resume，不保留 session。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。任务、当前 spec 与当前 repair 所需 audit 通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。
+每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。新协议冻结审计只接收当前 Spec 和标识/hash，使用单独空工作目录。
 
 采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 状态与文件内容哈希；包括忽略文件在内的新增/删除/修改均视为违规。历史结果放在 checkout 外。隔离边界不等同于容器或严格的文件读取白名单：禁止读取父目录、历史 run 和外部来源也通过 protocol prompt 约束。
 
@@ -114,8 +129,10 @@ uv run ruff format --check mracbench tests
 - `codex_exec.py`：Codex 进程调用；不理解 MRAC 阶段。
 - `audit.py`：audit JSON 与 spec 外层格式校验、收敛状态。
 - `runner.py`：单 case 状态流转；仅依赖 adapter 接口。
+- `simple_flow.py` / `simple_audit.py`：初始化/裁决/冻结流程、严格输出契约和暂停恢复。
+- `execution.py` / `evidence.py`：共享只读调用，以及新协议不可变证据和 run 锁。
 - `runs.py`：输入快照、阶段状态、日志和最终结果。
 
-M1 不判断最终 spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由独立 audit 协议测量。suite/repeat、稳定发布 CLI、完整 resume 和其他 agent 实现尚未加入。
+Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由各自 audit 协议测量。suite/repeat、稳定发布 CLI、任意错误/崩溃状态的恢复和其他 agent 实现尚未加入。
 
 设计依据：[Milestone 1 Spec](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Spec.md) · [Milestone 1 Plan](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Plan.md)。验收证据见 [实施与验收记录](doc/Milestone%201%20Implementation%20Report.md)。Codex 集成参考：[官方非交互模式文档](https://learn.chatgpt.com/docs/non-interactive-mode)。

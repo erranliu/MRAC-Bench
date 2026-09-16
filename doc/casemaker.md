@@ -9,6 +9,7 @@
 3. 原样按字节复制 Spec 为 `spec.md`，保留编码、BOM 和换行，计算文件的 SHA-256。Spec 必须是非空 UTF-8 文件。
 4. 使用可拉取的仓库 URL 和完整 commit SHA，验证该 commit 存在且任务尚未实现。不自动提交、推送或切换用户工作区。
 5. Spec 或基线改变时递增 case version，不静默覆盖旧版本。不生成专用 protocol 或额外提示词。
+6. case 不绑定 protocol，不写入 `protocol` 字段。协议由 Bench 运行时选择；未显式选择时使用运行层默认值。
 
 ## 输出
 
@@ -33,8 +34,6 @@ task:
   sha256: "<spec.md 原始字节的 SHA-256，64 位十六进制>"
 track:
   type: spec
-protocol:
-  id: spec-mrac-v1
 ```
 
 交付前确认复制件与原文件逐字节相同，哈希一致，指定 commit 可拉取。纳入 Git 时，为产物目录设置 `-text` 属性以避免换行转换。当前 M1 不支持含 submodule 的仓库。

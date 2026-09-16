@@ -1,0 +1,32 @@
+id: spec-flow-simple-v1
+version: 1
+artifact_type: spec
+workflow: spec-init-freeze
+stages:
+  spec-init:
+    prompt: spec-init.md
+  spec-freeze-loop:
+    prompt: spec-freeze-loop.md
+  review:
+    prompt: review.md
+  repair-init:
+    prompt: repair-init.md
+  repair-freeze:
+    prompt: repair-freeze.md
+convergence:
+  type: consecutive_clean_audits
+  required_clean_audits: 2
+limits:
+  max_audit_rounds: 8
+source:
+  skill: mrac-flow-simple
+  repository_commit: 90666ff1f49ce9e9c8569c969177adcfef593470
+  skill_path: .codex/skills/mrac-flow-simple/SKILL.md
+  controller_path: .codex/skills/mrac-flow/scripts/mracflow.py
+  source_sha256:
+    skill: f230e9d4793adaf77c545896baf8b5250ea8e9b955979da6ece0947726a9a432
+    controller: 7901855cc9fa25d0c0dd2adaedac629833e924b6adb2dab7f8dd3cd2b5a6fcb0
+    audit_policy: ba1cb5ea1f55465b7304a798ad33f8117ebaef19b1e1004cebe4843ef8c1e3a7
+  profile: simple
+  extracted_stages: [spec-init, spec-freeze-loop]
+  adaptation: doc/Protocols.md

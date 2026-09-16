@@ -14,8 +14,6 @@ task:
   sha256: "bab61930836cfd61645e59f17e8f7370e47d2cbaf307d8347dff80308a6fb0a3"
 track:
   type: spec
-protocol:
-  id: spec-mrac-v1
 limits:
   max_audit_rounds: 8
   agent_timeout_seconds: 1800

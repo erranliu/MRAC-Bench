@@ -16,10 +16,10 @@ class Case:
     repository_url: str
     commit: str
     task: str
-    protocol_id: str
     max_audit_rounds: int | None
     timeout_seconds: int
     snapshots: dict[str, bytes]
+    related_specs: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,7 @@ class ProtocolDefinition:
     max_audit_rounds: int
     prompts: dict[str, str]
     snapshots: dict[str, bytes]
+    workflow: str = "generate-audit-repair"
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,8 @@ class RunConfig:
     model: str | None = None
     max_rounds: int | None = None
     timeout_seconds: int | None = None
+    protocol_id: str | None = None
+    reasoning_effort: str | None = None
 
 
 @dataclass(frozen=True)
@@ -50,6 +53,8 @@ class AgentRequest:
     timeout_seconds: int
     model: str | None = None
     readonly: bool = True
+    reasoning_effort: str | None = None
+    skip_git_repo_check: bool = False
 
 
 @dataclass
