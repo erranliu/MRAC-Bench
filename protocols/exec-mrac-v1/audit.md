@@ -11,8 +11,11 @@ relevant callers/consumers and direct dependencies in the candidate checkout as
 needed; use base_head for before/after comparisons. Unlike a published PR workflow,
 this candidate includes uncommitted and untracked product files: do not ignore them.
 The runner's workflow evidence lives outside the checkout and is not product code.
-Ignored paths are listed separately; report required product code or resources
-that were hidden outside the candidate patch. Generated test/build outputs alone
+Use read-only Git commands to inspect tracked changes and enumerate untracked
+additions; ordinary git diff alone does not cover the complete candidate.
+Use git ls-files --others --ignored --exclude-standard -- <relevant-path> to query
+ignored paths when needed. Report required product code or resources hidden outside
+the candidate patch. Generated test/build outputs alone
 are not product defects. Assess supplied validation records critically; absent,
 failed or claimed verification is not proof of correctness.
 

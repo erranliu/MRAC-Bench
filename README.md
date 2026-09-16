@@ -80,6 +80,10 @@ uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id>
 ```
 
 exec 先在 `<workspace-dir>/exec/<run-id>/` 实施，然后独立只读审计 Spec + 完整产品 diff。
+各阶段允许自行使用只读 Git 命令检查差异；普通 `git diff` 不含未跟踪文件，须同时
+枚举并读取新增文件。prompt 提供 Spec、checkout 路径、基线 SHA 和候选 patch 路径/身份，
+不提供完整文件清单。磁盘仅保存完整 patch 与候选身份元数据；校验时在内存计算整个
+checkout（含 ignored 输出）的文件哈希，保留审计写入检测，不落盘完整文件清单。
 所有发现（包括 P3）均需修复；相同 Spec、基线和代码候选连续两轮零问题才收敛。
 第六轮有问题时保存问题并暂停，不执行该轮修复；继续时总额度增加六次，先修复再审计。
 第六轮若是首次 clean，产品代码不变则继续保留。初次实施和修复不占 audit 预算。

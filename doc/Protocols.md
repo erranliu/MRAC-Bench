@@ -114,17 +114,25 @@ repair.md 根据这些约束编写，不声称逐字复制。
 的新增文件，支持二进制内容与文件模式。临时 index 放在 run 的 scratch 目录，不改变
 checkout 的真实暂存区。候选 hash 包含基线、完整候选 Git tree 和产品文件的实际字节 hash。
 
-Git 忽略的生成物不导出为产品 patch；单独记录其清单和 hash，并提供路径给审计员。
+各阶段均允许只读 Git 检查：`git --no-optional-locks status --short`、
+`git diff --no-ext-diff --no-textconv <base_head> --`、`git show` 和 `git ls-files`。
+普通 diff 不含未跟踪文件，必须通过 `git ls-files --others --exclude-standard` 枚举并
+读取新增文件；保存的完整 patch 仍为审计依据。prompt 仅传 Spec、checkout 路径、基线
+和候选 patch 路径/身份，不内联 product_changes 或 ignored_files，也不提供磁盘文件清单。
+
+Git 忽略的生成物不导出为产品 patch，也不单独保存完整清单。审计员按需用
+`git ls-files --others --ignored --exclude-standard -- <relevant-path>` 查询相关路径。
 必要产品代码/资源不得隐藏在 ignored 路径中；审计必须报告这种遗漏。分类相关性由审计
 判断，runner 不假装能自动识别任意文件是否属于实现。审计前后检查整个 checkout，
-包含 ignored 输出；审计员对这些文件的修改也属于违规。
+包含 ignored 输出；审计员对这些文件的修改也属于违规。完整文件哈希表仅在内存中
+临时计算，候选元数据仅保存基线、tree、签名、workspace 和 patch 哈希。
 
 Spec 原文复制到 `input/execution-spec.md`；记录选择路径与 SHA-256，后续用快照执行，
 不依赖外部源文件仍存在。每个变化的候选保存：
 
 ```text
 candidates/0001/changes.patch
-candidates/0001/manifest.json       # 基线、tree、签名、产品变更和工作文件/ignored hash
+candidates/0001/manifest.json       # 精简身份元数据，无完整文件清单（保留文件名以兼容旧 run）
 implementations/implement-01.json   # 实施总结、验证或缺失输入
 audits/audit-01.json
 repairs/repair-01.json              # 每项修复与验证证据

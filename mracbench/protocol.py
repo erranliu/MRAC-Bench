@@ -140,6 +140,16 @@ def render_exec_prompt(instruction: str, inputs: dict, *, readonly: bool) -> str
         instruction.rstrip()
         + "\n\nExecution constraints: "
         + boundary
+        + "Read-only Git inspection is allowed in every stage. In repository_path, use "
+        "git --no-optional-locks status --short and "
+        "git diff --no-ext-diff --no-textconv <base_head> -- for tracked changes. "
+        "Ordinary git diff omits untracked files: also run "
+        "git ls-files --others --exclude-standard and inspect those additions. "
+        "diff_path is the runner's complete saved patch, including untracked additions and "
+        "binary changes. No complete file inventory is supplied. Query relevant paths as needed "
+        "instead of dumping generated caches into context. Use "
+        "git ls-files --others --ignored --exclude-standard -- <relevant-path> to inspect "
+        "ignored paths when required. These read permissions do not authorize Git writes. "
         + "The supplied execution_spec is immutable authority. Do not modify its source or snapshot. "
         "Use only the supplied baseline, candidate, verification evidence and relevant repository "
         "files/instructions. Never read prior audits or other runs unless their findings are "
