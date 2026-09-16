@@ -3,14 +3,16 @@ import subprocess
 import sys
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from conftest import StubAgent, git
 from test_inputs import change_case
 
 from mracbench.codex_exec import CodexExecAdapter
-from mracbench.exec_flow import inspect_exec, resume_exec
+from mracbench.exec_flow import ExecEngine, inspect_exec, resume_exec
 from mracbench.models import AgentResult, BenchError
+from mracbench.protocol import render_exec_prompt
 from mracbench.runner import run_case
 
 
@@ -131,12 +133,29 @@ def test_patch_includes_untracked_binary_and_deleted_files(exec_config, tmp_path
     path, result = run_case(exec_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
     data = payload(agent.requests[1])
-    assert {entry["path"] for entry in data["product_changes"]} == {
-        "app.py",
-        "new code.py",
+    manifest = json.loads((path / result["flow"]["candidate"]["manifest"]).read_bytes())
+    assert "product_changes" not in data and "ignored_files" not in data
+    assert "candidate_manifest_path" not in data
+    assert set(manifest) == {"base_head", "tree", "signature", "workspace_sha256", "patch_sha256"}
+    assert len(json.dumps(manifest)) < 1000
+    assert (
+        git(
+            agent.requests[1].workspace,
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "--",
+            "ignored.txt",
+        )
+        == "ignored.txt"
+    )
+    checkout = agent.requests[1].workspace
+    assert git(checkout, "diff", "--name-only", data["base_head"], "--") == "app.py"
+    assert set(git(checkout, "ls-files", "--others", "--exclude-standard").splitlines()) == {
         "binary.bin",
+        "new code.py",
     }
-    assert data["ignored_files"] == ["ignored.txt"]
     target = tmp_path / "apply-target"
     subprocess.run(
         [
@@ -154,6 +173,39 @@ def test_patch_includes_untracked_binary_and_deleted_files(exec_config, tmp_path
     assert (target / "new code.py").read_text() == "value = 2\n"
     assert (target / "binary.bin").read_bytes() == bytes(range(256))
     assert not (target / "ignored.txt").exists()
+
+
+@pytest.mark.parametrize("readonly", [False, True])
+def test_exec_prompt_does_not_grow_with_generated_file_inventory(tmp_path, readonly):
+    engine = object.__new__(ExecEngine)
+    engine.spec = "# Fixed execution Spec"
+    engine.case = SimpleNamespace(commit="a" * 40)
+    engine.repo = SimpleNamespace(path=tmp_path / "checkout", last_snapshot={})
+    engine.store = SimpleNamespace(evidence=SimpleNamespace(path=lambda name: tmp_path / name))
+    engine.result = {"spec_sha256": "b" * 64}
+    engine.flow = {
+        "candidate": {
+            "signature": "c" * 64,
+            "tree": "d" * 40,
+            "patch": "candidates/0002/changes.patch",
+            "patch_sha256": "e" * 64,
+            "manifest": "candidates/0002/manifest.json",
+        },
+        "validation": [],
+    }
+    before = render_exec_prompt("Inspect the candidate.", engine.inputs(), readonly=readonly)
+    engine.repo.last_snapshot = {
+        "ignored_files": {
+            f"Merge-Blast/Library/PackageCache/generated-{number:05d}/artifact.bin": "f" * 64
+            for number in range(30000)
+        },
+        "changes": [{"status": "A", "path": f"new-{number}.py"} for number in range(30000)],
+    }
+    after = render_exec_prompt("Inspect the candidate.", engine.inputs(), readonly=readonly)
+    assert after == before
+    assert len(after) < 10000
+    assert "git ls-files --others --exclude-standard" in after
+    assert "git diff --no-ext-diff --no-textconv <base_head> --" in after
 
 
 def test_sixth_issue_pauses_before_repair_and_resume_adds_six(exec_config, project):
@@ -199,18 +251,24 @@ def test_accepted_p3_also_requires_code_repair(exec_config):
     assert all("current_findings" not in payload(r) for r in agent.requests if r.readonly)
 
 
-@pytest.mark.parametrize("target", ["product", "ignored", "spec"])
+@pytest.mark.parametrize("target", ["product", "ignored", "ignored_existing", "spec"])
 def test_auditor_writes_are_protocol_violations(exec_config, target):
+    def seed(request):
+        if target == "ignored_existing":
+            (request.workspace / "ignored.txt").write_text("original output")
+        return implement(request)
+
     def mutate(request):
         file = {
             "product": request.workspace / "app.py",
             "ignored": request.workspace / "ignored.txt",
+            "ignored_existing": request.workspace / "ignored.txt",
             "spec": request.raw_dir.parents[1] / "input/execution-spec.md",
         }[target]
         file.write_text("auditor mutation")
         return audit()(request)
 
-    _, result = run_case(exec_config, StubAgent([implement, mutate]))
+    _, result = run_case(exec_config, StubAgent([seed, mutate]))
     assert result["status"] == "PROTOCOL_VIOLATION", result["error"]
     assert result["protocol_violation"] and not result["clean_audit_ids"]
 

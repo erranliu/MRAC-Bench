@@ -69,7 +69,11 @@ def save_candidate(store, result, snapshot):
     manifest = record_json(
         store,
         folder + "/manifest.json",
-        {key: value for key, value in snapshot.items() if key != "patch"},
+        # Keep identity metadata, not a duplicate inventory of the checkout.
+        {
+            key: snapshot[key]
+            for key in ("base_head", "tree", "signature", "workspace_sha256", "patch_sha256")
+        },
     )
     candidate = {
         "signature": snapshot["signature"],
@@ -171,7 +175,7 @@ class ExecEngine:
         )
 
     def inputs(self):
-        snapshot, candidate = self.repo.last_snapshot, self.flow["candidate"]
+        candidate = self.flow["candidate"]
         return {
             "execution_spec": self.spec,
             "spec_sha256": self.result["spec_sha256"],
@@ -181,8 +185,6 @@ class ExecEngine:
             "candidate_tree": candidate["tree"],
             "diff_path": str(self.store.evidence.path(candidate["patch"])),
             "diff_sha256": candidate["patch_sha256"],
-            "product_changes": snapshot["changes"],
-            "ignored_files": list(snapshot["ignored_files"]),
             "validation": self.flow["validation"],
         }
 

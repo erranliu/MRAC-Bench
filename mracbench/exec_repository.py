@@ -125,13 +125,8 @@ class ExecRepository:
                 .split("\0")
             )
         changes = [{"status": names[i], "path": names[i + 1]} for i in range(0, len(names) - 1, 2)]
-        ignored = (
-            git_bytes(self.path, "ls-files", "--others", "--ignored", "--exclude-standard", "-z")
-            .decode("utf-8")
-            .split("\0")
-        )
-        # Raw-file hashes also cover ignored outputs: an auditor cannot mutate them
-        # invisibly, and two clean rounds refer to an identical actual checkout.
+        # Hash ignored outputs too so auditor writes cannot go undetected. Keep
+        # the full inventory local to this check; only aggregate hashes survive.
         for file in self.path.rglob("*"):
             if file.relative_to(self.path).parts[0] == ".git":
                 continue
@@ -156,8 +151,6 @@ class ExecRepository:
             "patch_sha256": digest(patch),
             "patch": patch,
             "changes": changes,
-            "working_files": manifest,
-            "ignored_files": {name: manifest[name] for name in ignored if name in manifest},
         }
 
     def inspect(self):
