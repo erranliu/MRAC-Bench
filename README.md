@@ -2,11 +2,11 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2` 原样复制输入 Spec，每轮结合固定仓库审计、裁决和修复；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1` 保留初始化审计后纯 Spec 冻结的流程；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@2` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1` 保留初始化审计后纯 Spec 冻结的流程；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
-v2 需要相同 Spec 字节和仓库基线上的两次独立、带仓库证据且经裁决的 clean；连续六轮接受 P0–P2 后，在第六轮修复完成时暂停。它没有 BLOCKED 状态，必要输入缺失时保留 FIX。显式总预算耗尽返回 `NON_CONVERGED`。
+v2 需要相同 Spec 字节和仓库基线上的两次独立、空 findings 审计才冻结。审计仅输出 `audit_id/findings`，不要求 checks 或证据覆盖率评审。每项发现都要修复，包括 P3。连续六轮出现 P0–P2，在第六轮修复完成时暂停；clean 或 P3-only 重置该计数。它没有 BLOCKED 状态，必要输入缺失时保留 FIX。显式总预算耗尽返回 `NON_CONVERGED`。
 
 ## 快速开始
 
@@ -70,7 +70,7 @@ uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C
 uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
 ```
 
-v2 的 `resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。旧 spec-flow-simple-v1 仍只支持 PAUSED 恢复，旧 BLOCKED 记录不会迁移。
+v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；使用新语义须新开 run，不能继承旧 clean。旧 spec-flow-simple-v1 仍只支持 PAUSED 恢复，旧 BLOCKED 记录不会迁移。
 
 ## 按 Spec 执行代码
 
@@ -118,7 +118,7 @@ runs/<run-id>/
     repository.log
 ```
 
-审计预算只统计已启动的 audit 调用，spec-flow-simple-v1 的初始化 audit 也计入；review 和 repair 单独计数。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
+审计预算只统计已启动的 audit 调用，spec-flow-simple-v1 的初始化 audit 也计入；repair 单独计数，仅有裁决的旧协议另外统计 review。v2 新运行按 reported_count/reported_by_severity 统计全部发现，不生成裁决记录。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
 
 所有历史 spec 都保留；连续 clean 的两轮必须审计同一 artifact。最终结果附带 `final_artifact`，正常耗尽预算时也能查看最后一份 spec。
 
@@ -152,7 +152,7 @@ uv run ruff format --check mracbench tests
 - `codex_exec.py`：Codex 进程调用；不理解 MRAC 阶段。
 - `audit.py`：audit JSON 与 spec 外层格式校验、收敛状态。
 - `runner.py`：单 case 状态流转；仅依赖 adapter 接口。
-- `repository_flow.py` / `repository_audit.py`：v2 仓库证据校验、审计裁决与 FIX、暂停/输入/未完成审计恢复及报告。
+- `repository_flow.py` / `repository_audit.py`：v2 审计 findings 直接进入 FIX、暂停/输入/未完成审计恢复及历史只读报告。
 - `simple_flow.py` / `simple_audit.py`：初始化/裁决/冻结流程、严格输出契约和暂停恢复。
 - `execution.py` / `evidence.py`：共享只读调用，以及新协议不可变证据和 run 锁。
 - `runs.py`：输入快照、阶段状态、日志和最终结果。
