@@ -84,6 +84,7 @@ class CodexExecAdapter:
             "model": request.model,
             "reasoning_effort": request.reasoning_effort,
             "timeout_seconds": request.timeout_seconds,
+            "readonly": request.readonly,
         }
         # Logs exist even if resolution or process creation fails.
         (raw / "stdout.txt").touch()
@@ -91,8 +92,6 @@ class CodexExecAdapter:
         (raw / "request.txt").write_text(request.prompt, encoding="utf-8")
         process = None
         try:
-            if not request.readonly:
-                raise OSError("Spec-MRAC requires read-only execution")
             command = [
                 *self.command(),
                 "exec",
@@ -100,7 +99,7 @@ class CodexExecAdapter:
                 "--ignore-rules",
                 "--ephemeral",
                 "--sandbox",
-                "read-only",
+                "read-only" if request.readonly else "workspace-write",
                 "--json",
                 "--color",
                 "never",
@@ -185,6 +184,12 @@ class CodexExecAdapter:
                     event = json.loads(line)
                     if isinstance(event, dict) and event.get("type") == "turn.completed":
                         result.usage = event.get("usage")
+                    if (
+                        isinstance(event, dict)
+                        and event.get("type") == "thread.started"
+                        and isinstance(event.get("thread_id"), str)
+                    ):
+                        invocation["thread_id"] = event["thread_id"]
                 except ValueError:
                     pass
             write_json(raw / "invocation.json", invocation)

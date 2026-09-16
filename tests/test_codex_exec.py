@@ -32,6 +32,7 @@ assert '中文' in prompt
 path = pathlib.Path(sys.argv[sys.argv.index('--output-last-message') + 1])
 path.write_text('# Spec\\n\\nBody.\\n', encoding='utf-8')
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':10,'output_tokens':5}}))
+print(json.dumps({'type':'thread.started','thread_id':'fresh-audit-session'}))
 print('diagnostic', file=sys.stderr)
 """,
     )
@@ -41,6 +42,7 @@ print('diagnostic', file=sys.stderr)
     assert "turn.completed" in response.stdout
     assert "diagnostic" in response.stderr
     assert response.usage["input_tokens"] == 10
+    assert response.metadata["thread_id"] == "fresh-audit-session"
     args = response.metadata["command"]
     assert "resume" not in args
     assert "--ephemeral" in args

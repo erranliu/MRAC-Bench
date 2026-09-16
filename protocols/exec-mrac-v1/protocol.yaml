@@ -1,0 +1,26 @@
+id: exec-mrac-v1
+version: 1
+artifact_type: code
+workflow: exec-mrac
+stages:
+  implement:
+    prompt: implement.md
+  audit:
+    prompt: audit.md
+  repair:
+    prompt: repair.md
+convergence:
+  type: consecutive_clean_audits
+  required_clean_audits: 2
+limits:
+  max_audit_rounds: 6
+source:
+  skill: mrac-flow-simple
+  repository_commit: 4e0559443a88fa5a2577d2c73c6b365128bdaaea
+  skill_path: .codex/skills/mrac-flow-simple/SKILL.md
+  controller_path: .codex/skills/mrac-flow/scripts/mracflow.py
+  source_sha256:
+    skill: 6e04ba21845a0e67d00b70ef24e86475fa31e4787a5df8a6bbdc20167b3f89b7
+    controller: d3c001a4ae00eff4b651be95fe39cbc302d591749f3f1712f64d4e3aeba2f76f
+  extracted_rules: [pr-loop, fix-code, apply-fix]
+  adaptation: doc/Protocols.md
