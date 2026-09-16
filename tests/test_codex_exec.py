@@ -1,6 +1,7 @@
 import json
 import sys
 import time
+from dataclasses import replace
 
 from mracbench.codex_exec import CodexExecAdapter
 from mracbench.models import AgentRequest
@@ -45,6 +46,22 @@ print('diagnostic', file=sys.stderr)
     assert "--ephemeral" in args
     assert args[args.index("--sandbox") + 1] == "read-only"
     assert args[-1] == "-"
+
+
+def test_spec_only_workspace_flags_and_explicit_effort(tmp_path):
+    command = fake_command(tmp_path, "print('ok')\n")
+    response = CodexExecAdapter(command=command).run(
+        replace(
+            request(tmp_path),
+            reasoning_effort="high",
+            skip_git_repo_check=True,
+        )
+    )
+    assert response.success
+    args = response.metadata["command"]
+    assert 'model_reasoning_effort="high"' in args
+    assert "--skip-git-repo-check" in args
+    assert response.metadata["reasoning_effort"] == "high"
 
 
 def test_timeout_preserves_partial_output_and_terminates(tmp_path):

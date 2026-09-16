@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import StubAgent
+from conftest import CLEAN, SPEC, StubAgent
 
 from mracbench.cases import load_case, load_yaml
 from mracbench.models import BenchError
-from mracbench.protocol import load_protocol
+from mracbench.protocol import DEFAULT_PROTOCOL_ID, load_protocol
 from mracbench.runner import run_case
 
 
@@ -24,7 +24,8 @@ def test_valid_inputs(project):
     assert len(case.commit) == 40
     assert case.timeout_seconds == 1800
     assert case.max_audit_rounds is None
-    assert load_protocol(project, case.protocol_id).max_audit_rounds == 8
+    assert not hasattr(case, "protocol_id")
+    assert load_protocol(project, DEFAULT_PROTOCOL_ID).max_audit_rounds == 8
 
 
 @pytest.mark.parametrize(
@@ -38,7 +39,6 @@ def test_valid_inputs(project):
         lambda d: d["track"].update(type="code"),
         lambda d: d.update(limits={"max_audit_rounds": 0}),
         lambda d: d.update(limits={"agent_timeout_seconds": False}),
-        lambda d: d["protocol"].update(id="../outside"),
         lambda d: d["task"].pop("sha256"),
         lambda d: d["task"].update(sha256=None),
         lambda d: d["task"].update(sha256=True),
@@ -106,3 +106,70 @@ def test_spec_filename_and_exact_bytes_are_supported(project):
 def test_bundled_case_has_a_valid_pinned_task():
     case = load_case(Path(__file__).resolve().parents[1], "psf__requests-1963")
     assert case.task
+
+
+def test_related_spec_pinned_bytes_and_snapshot(project):
+    raw = b"\xef\xbb\xbf# Related Spec\r\n\r\nAn existing ownership boundary.\r\n"
+    (project / "cases/sample/related.md").write_bytes(raw)
+    change_case(
+        project,
+        lambda d: d.update(
+            related_specs=[
+                {
+                    "file": "related.md",
+                    "sha256": hashlib.sha256(raw).hexdigest(),
+                }
+            ]
+        ),
+    )
+    case = load_case(project, "sample")
+    assert case.snapshots["related-spec-01.md"] == raw
+    assert case.related_specs[0]["content"] == raw.decode("utf-8-sig")
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        {"file": "related.md", "sha256": "0" * 64},
+        {"file": "../related.md", "sha256": "0" * 64},
+        {"file": "related.md"},
+        {"file": "task.md", "sha256": "0" * 64},
+    ],
+)
+def test_bad_related_spec_fails_before_agent(project, config, entry):
+    (project / "cases/sample/related.md").write_text("# Related\nBody\n")
+    change_case(project, lambda d: d.update(related_specs=[entry]))
+    agent = StubAgent([])
+    _, result = run_case(config, agent)
+    assert result["status"] == "CASE_ERROR"
+    assert agent.requests == []
+
+
+def test_unknown_workflow_is_rejected(project, config):
+    protocol = project / "protocols/spec-mrac-v1/protocol.yaml"
+    data = yaml.safe_load(protocol.read_text())
+    data["workflow"] = "arbitrary-workflow"
+    protocol.write_text(yaml.safe_dump(data))
+    _, result = run_case(config, StubAgent([]))
+    assert result["status"] == "CASE_ERROR"
+
+
+@pytest.mark.parametrize("protocol_id", ["does-not-exist", "../outside", ""])
+def test_explicit_protocol_is_validated_without_fallback(config, protocol_id):
+    _, result = run_case(replace(config, protocol_id=protocol_id), StubAgent([]))
+    assert result["status"] == "CASE_ERROR"
+
+
+@pytest.mark.parametrize("legacy", [{"id": "spec-flow-simple-v1"}, "invalid-legacy-value"])
+@pytest.mark.parametrize("selected", [None, "spec-mrac-v1"])
+def test_legacy_case_protocol_never_selects_or_blocks_a_run(project, config, legacy, selected):
+    change_case(project, lambda d: d.update(protocol=legacy))
+    original = (project / "cases/sample/case.yaml").read_bytes()
+    path, result = run_case(replace(config, protocol_id=selected), StubAgent([SPEC, CLEAN, CLEAN]))
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_id"] == DEFAULT_PROTOCOL_ID
+    metadata = yaml.safe_load((path / "run.yaml").read_text())
+    assert metadata["protocol_selection"] == ("explicit" if selected else "default")
+    assert "case_default_protocol" not in metadata
+    assert (path / "input/case.yaml").read_bytes() == original
+    assert (project / "cases/sample/case.yaml").read_bytes() == original

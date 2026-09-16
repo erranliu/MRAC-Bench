@@ -87,6 +87,13 @@ def load_case(project: Path, case_id: str) -> Case:
     if not root.is_relative_to((project / "cases").resolve()):
         raise BenchError("CASE_ERROR", "Case directory escapes cases root")
     raw = read_inside(root, "case.yaml")
+    return parse_case(case_id, raw, lambda name: read_inside(root, name))
+
+
+def parse_case(case_id: str, raw: bytes, read) -> Case:
+    """Validate a package, using either live package bytes or saved input snapshots."""
+    # Legacy protocol fields are inert historical data. Selection belongs to RunConfig.
+    identifier(case_id, "case id")
     data = load_yaml(raw, "case.yaml")
     if data.get("id") != case_id:
         raise BenchError("CASE_ERROR", "Case id must match its directory name")
@@ -110,10 +117,33 @@ def load_case(project: Path, case_id: str) -> Case:
     digest = string(task.get("sha256"), "task.sha256")
     if not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
         raise BenchError("CASE_ERROR", "task.sha256 must be a 64-digit hexadecimal SHA-256")
-    task_raw = read_inside(root, task.get("file"))
+    task_raw = read(task.get("file"))
     if hashlib.sha256(task_raw).hexdigest() != digest.lower():
         raise BenchError(
             "CASE_ERROR", "task.sha256 mismatch: task file bytes differ from the pinned Spec"
+        )
+    snapshots = {"case.yaml": raw, "task.md": task_raw}
+    related_specs = []
+    related = data.get("related_specs", [])
+    if not isinstance(related, list):
+        raise BenchError("CASE_ERROR", "related_specs must be a list")
+    seen = set()
+    for index, entry in enumerate(related, 1):
+        if not isinstance(entry, dict) or set(entry) != {"file", "sha256"}:
+            raise BenchError("CASE_ERROR", "Each related Spec requires file and sha256")
+        name = string(entry["file"], "related_specs.file")
+        if name in seen or name in {task.get("file"), "case.yaml"}:
+            raise BenchError("CASE_ERROR", "Duplicate related Spec input")
+        seen.add(name)
+        content = read(name)
+        digest = string(entry["sha256"], "related_specs.sha256")
+        if not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+            raise BenchError("CASE_ERROR", "Invalid related Spec SHA-256")
+        if hashlib.sha256(content).hexdigest() != digest.lower():
+            raise BenchError("CASE_ERROR", f"Related Spec SHA-256 mismatch: {name}")
+        snapshots[f"related-spec-{index:02d}.md"] = content
+        related_specs.append(
+            {"file": name, "sha256": digest.lower(), "content": decode_text(content, name)}
         )
     return Case(
         id=case_id,
@@ -121,8 +151,17 @@ def load_case(project: Path, case_id: str) -> Case:
         repository_url=url,
         commit=commit.lower(),
         task=decode_text(task_raw, "task"),
-        protocol_id=identifier(section(data, "protocol").get("id"), "protocol id"),
         max_audit_rounds=maximum,
         timeout_seconds=timeout,
-        snapshots={"case.yaml": raw, "task.md": task_raw},
+        snapshots=snapshots,
+        related_specs=related_specs,
     )
+
+
+def case_from_snapshots(case_id: str, snapshots: dict[str, bytes]) -> Case:
+    raw = snapshots["case.yaml"]
+    data = load_yaml(raw, "case.yaml")
+    files = {data["task"]["file"]: snapshots["task.md"]}
+    for index, entry in enumerate(data.get("related_specs", []), 1):
+        files[entry["file"]] = snapshots[f"related-spec-{index:02d}.md"]
+    return parse_case(case_id, raw, files.__getitem__)

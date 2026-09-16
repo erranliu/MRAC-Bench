@@ -82,6 +82,7 @@ class CodexExecAdapter:
             "started": False,
             "cwd": str(request.workspace),
             "model": request.model,
+            "reasoning_effort": request.reasoning_effort,
             "timeout_seconds": request.timeout_seconds,
         }
         # Logs exist even if resolution or process creation fails.
@@ -118,6 +119,10 @@ class CodexExecAdapter:
             ]
             if request.model:
                 command += ["--model", request.model]
+            if request.reasoning_effort:
+                command += ["-c", f'model_reasoning_effort="{request.reasoning_effort}"']
+            if request.skip_git_repo_check:
+                command.append("--skip-git-repo-check")
             command.append("-")
             invocation["command"] = command
             write_json(raw / "invocation.json", invocation)

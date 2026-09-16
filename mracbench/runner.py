@@ -5,8 +5,9 @@ from pathlib import Path
 
 from .audit import Convergence, blocking_count, parse_audit, parse_spec
 from .cases import load_case, positive_int
-from .models import AgentAdapter, AgentRequest, BenchError, RunConfig
-from .protocol import load_protocol, render_prompt
+from .execution import Invoker
+from .models import AgentAdapter, BenchError, RunConfig
+from .protocol import DEFAULT_PROTOCOL_ID, load_protocol, render_prompt
 from .repository import prepare_repository
 from .runs import RunStore, write_json
 
@@ -32,8 +33,9 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
         "final_artifact": None,
     }
     active_stage = "initialize"
+    invoke = None
     store.metadata["requested_config"] = {
-        key: str(value) if isinstance(value, Path) else value
+        key: str(value.resolve()) if isinstance(value, Path) else value
         for key, value in asdict(config).items()
     }
     store.save_metadata()
@@ -42,7 +44,10 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
         case = load_case(config.project_root, config.case_id)
         for name, content in case.snapshots.items():
             store.snapshot(name, content)
-        protocol = load_protocol(config.project_root, case.protocol_id)
+        protocol = load_protocol(
+            config.project_root,
+            config.protocol_id if config.protocol_id is not None else DEFAULT_PROTOCOL_ID,
+        )
         for name, content in protocol.snapshots.items():
             store.snapshot(name, content)
         maximum = positive_int(
@@ -66,6 +71,7 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
         store.metadata.update(
             case_id=case.id,
             case_version=case.version,
+            protocol_selection="explicit" if config.protocol_id is not None else "default",
             protocol_id=protocol.id,
             protocol_version=protocol.version,
             repository={"url": case.repository_url, "commit": case.commit},
@@ -75,11 +81,18 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
                 "agent_timeout_seconds": timeout,
                 "required_clean_audits": 2,
                 "model": config.model,
+                "reasoning_effort": config.reasoning_effort,
                 "readonly": True,
                 "ignore_user_config": True,
             },
         )
         store.save_metadata()
+        if protocol.workflow == "spec-init-freeze":
+            from .simple_flow import run_simple
+
+            return run_simple(
+                config, adapter, store, case, protocol, result, maximum, timeout, started
+            )
         active_stage = "repository"
         store.checkpoint(result, active_stage)
         with prepare_repository(case, config.workspace_dir, store.path) as repo:
@@ -87,64 +100,9 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
             store.metadata["repository"]["workspace"] = str(repo.path)
             store.save_metadata()
 
-            def invoke(stage: str, prompt: str, audit_item: dict | None = None):
-                nonlocal active_stage
-                active_stage = stage
-                raw = store.path / "raw" / stage
-                raw.mkdir(exist_ok=False)
-                before = repo.inspect()
-                write_json(raw / "repository-before.json", before)
-                if before["violation"]:
-                    raise BenchError("PROTOCOL_VIOLATION", "Repository changed before invocation")
-                (raw / "request.txt").write_text(prompt, encoding="utf-8")
-                store.checkpoint(result, stage + ":started")
-                execution = adapter.run(AgentRequest(prompt, repo.path, raw, timeout, config.model))
-                # Adapters may stream these themselves. Stubs only return the content.
-                for filename, content in (
-                    ("stdout.txt", execution.stdout),
-                    ("stderr.txt", execution.stderr),
-                    ("final.txt", execution.final_text),
-                ):
-                    if not (raw / filename).exists():
-                        (raw / filename).write_text(content, encoding="utf-8")
-                write_json(
-                    raw / "execution.json",
-                    {
-                        "started": execution.started,
-                        "exit_code": execution.exit_code,
-                        "duration_seconds": execution.duration_seconds,
-                        "error_type": execution.error_type,
-                        "error_message": execution.error_message,
-                        "usage": execution.usage,
-                        "metadata": execution.metadata,
-                    },
-                )
-                if execution.started:
-                    if audit_item is not None:
-                        result["audit_rounds"] += 1
-                        result["trajectory"].append(audit_item)
-                    elif stage.startswith("repair-"):
-                        result["repair_rounds"] += 1
-                after = repo.inspect()
-                write_json(raw / "repository-after.json", after)
-                if after["violation"]:
-                    error = BenchError(
-                        "PROTOCOL_VIOLATION", "Agent changed the fixed repository snapshot"
-                    )
-                elif not execution.success:
-                    error = BenchError(
-                        execution.error_type or "AGENT_ERROR",
-                        execution.error_message or "Agent invocation failed",
-                    )
-                else:
-                    error = None
-                if error:
-                    if audit_item is not None and execution.started:
-                        audit_item["status"] = error.kind
-                    store.checkpoint(result, stage + ":failed")
-                    raise error
-                store.checkpoint(result, stage + ":completed")
-                return execution.final_text
+            invoke = Invoker(
+                store, result, repo, adapter, config.model, timeout, config.reasoning_effort
+            )
 
             spec = parse_spec(
                 invoke(
@@ -203,13 +161,17 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
     except BenchError as exc:
         result["status"] = exc.kind
         result["protocol_violation"] = exc.kind == "PROTOCOL_VIOLATION"
-        result["error"] = {"type": exc.kind, "message": str(exc), "stage": active_stage}
+        result["error"] = {
+            "type": exc.kind,
+            "message": str(exc),
+            "stage": invoke.stage if invoke else active_stage,
+        }
     except (Exception, KeyboardInterrupt) as exc:  # noqa: BLE001 -- persist unexpected terminal failures
         result["status"] = "INTERNAL_ERROR"
         result["error"] = {
             "type": "INTERNAL_ERROR",
             "message": str(exc) or type(exc).__name__,
-            "stage": active_stage,
+            "stage": invoke.stage if invoke else active_stage,
         }
     result["usage"]["wall_time_seconds"] = round(time.monotonic() - started, 3)
     store.finish(result)
