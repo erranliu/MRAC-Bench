@@ -1,0 +1,23 @@
+id: psf__requests-1963
+version: 1
+source:
+  benchmark: SWE-bench Lite
+  upstream_id: psf__requests-1963
+  dataset: https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite
+  upstream_url: https://github.com/psf/requests/pull/1963
+  created_at: "2014-03-15T17:42:11Z"
+repository:
+  url: https://github.com/psf/requests.git
+  commit: 110048f9837f8441ea536804115e80b69f400277
+task:
+  file: task.md
+track:
+  type: spec
+protocol:
+  id: spec-mrac-v1
+limits:
+  max_audit_rounds: 8
+  agent_timeout_seconds: 1800
+metadata:
+  language: python
+  tags: [bug, http, redirect]

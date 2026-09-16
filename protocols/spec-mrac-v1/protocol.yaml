@@ -1,0 +1,15 @@
+id: spec-mrac-v1
+version: 1
+artifact_type: spec
+stages:
+  generate:
+    prompt: generate.md
+  audit:
+    prompt: audit.md
+  repair:
+    prompt: repair.md
+convergence:
+  type: consecutive_clean_audits
+  required_clean_audits: 2
+limits:
+  max_audit_rounds: 8
