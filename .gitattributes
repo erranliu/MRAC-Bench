@@ -1,0 +1,2 @@
+# Preserve case inputs byte-for-byte for task.sha256, including on Windows.
+cases/** -text

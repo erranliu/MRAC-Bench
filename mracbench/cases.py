@@ -1,3 +1,4 @@
+import hashlib
 import re
 from pathlib import Path
 
@@ -105,7 +106,15 @@ def load_case(project: Path, case_id: str) -> Case:
     if "max_audit_rounds" in limits:
         positive_int(maximum, "limits.max_audit_rounds")
     timeout = positive_int(limits.get("agent_timeout_seconds", 1800), "agent_timeout_seconds")
-    task_raw = read_inside(root, section(data, "task").get("file"))
+    task = section(data, "task")
+    digest = string(task.get("sha256"), "task.sha256")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        raise BenchError("CASE_ERROR", "task.sha256 must be a 64-digit hexadecimal SHA-256")
+    task_raw = read_inside(root, task.get("file"))
+    if hashlib.sha256(task_raw).hexdigest() != digest.lower():
+        raise BenchError(
+            "CASE_ERROR", "task.sha256 mismatch: task file bytes differ from the pinned Spec"
+        )
     return Case(
         id=case_id,
         version=positive_int(data.get("version"), "case.version"),

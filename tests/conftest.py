@@ -1,3 +1,4 @@
+import hashlib
 import json
 import shutil
 import subprocess
@@ -41,17 +42,18 @@ def project(tmp_path):
     case_dir = root / "cases" / "sample"
     case_dir.mkdir(parents=True)
     shutil.copytree(PROJECT / "protocols", root / "protocols")
+    task_raw = b"Correct the behavior of app.py.\n"
     data = {
         "id": "sample",
         "version": 1,
         "repository": {"url": source.as_uri(), "commit": git(source, "rev-parse", "HEAD")},
-        "task": {"file": "task.md"},
+        "task": {"file": "task.md", "sha256": hashlib.sha256(task_raw).hexdigest()},
         "track": {"type": "spec"},
         "protocol": {"id": "spec-mrac-v1"},
         "metadata": {"secret_prompt_marker": "METADATA_MUST_NOT_LEAK"},
     }
     (case_dir / "case.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
-    (case_dir / "task.md").write_text("Correct the behavior of app.py.\n", encoding="utf-8")
+    (case_dir / "task.md").write_bytes(task_raw)
     return root
 
 

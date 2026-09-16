@@ -69,6 +69,7 @@ repository:
 
 task:
   file: task.md
+  sha256: "<task 文件原始字节的 SHA-256，64 位十六进制>"
 
 track:
   type: spec
@@ -90,6 +91,7 @@ metadata:
 - `id`、正整数 `version`、`repository.url`、`repository.commit`、`task.file`、track 与 protocol id 必须存在且类型正确。
 - `repository.commit` MUST 是完整 commit SHA，不能使用分支名、tag 或短 SHA。
 - `task.file` MUST 解析到 case 目录内的普通文件；缺失或越出 case 目录均为 `CASE_ERROR`。
+- `task.sha256` MUST 为文件原始字节的 SHA-256（64 位十六进制）；缺失、格式错误或不匹配均在启动 agent 前返回 `CASE_ERROR`。固定输入原样封装，不从对话或其他上下文补写；Spec 或基线变化时更新 case version。
 - `track.type` 在本里程碑只接受 `spec`。
 - `max_audit_rounds` 未填写时默认为 8，且必须大于 0；命令行覆盖（若开发入口支持）必须记录进 effective config。
 - metadata 不进入 agent prompt。task 文件内容是原始任务的唯一权威文本。

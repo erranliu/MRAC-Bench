@@ -11,6 +11,7 @@ repository:
   commit: 110048f9837f8441ea536804115e80b69f400277
 task:
   file: task.md
+  sha256: "bab61930836cfd61645e59f17e8f7370e47d2cbaf307d8347dff80308a6fb0a3"
 track:
   type: spec
 protocol:

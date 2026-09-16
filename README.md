@@ -20,6 +20,10 @@ uv run python -m mracbench run --case psf__requests-1963 --model <model-name>
 
 内置 case 来自 [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite)，固定 Requests 的 commit `110048f9837f8441ea536804115e80b69f400277`。只需读取目标源码，不安装或运行目标仓库的依赖和测试。
 
+从其他项目制作 case：将 [casemaker.md](doc/casemaker.md) 交给该项目中的 AI，指定已定稿的 Spec 文件和实现前的仓库 commit。制作器原样封装 Spec，不从上下文补写需求；将生成的 case 目录复制到本仓库的 `cases/` 下即可。
+
+`task.file` 指向固定输入文件（新 case 使用 `spec.md`），必填 `task.sha256` 为该文件原始字节的 SHA-256。loader 在启动 agent 前校验；缺失、格式错误或不匹配均返回 `CASE_ERROR`。已有 case 需补齐哈希。Spec 或基线变化时递增 case version；本仓库通过 `.gitattributes` 保留 case 文件的原始换行。
+
 ## 配置
 
 ```bash
