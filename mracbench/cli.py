@@ -1,5 +1,8 @@
 import argparse
+import sys
 from pathlib import Path
+
+from mrac_contracts.execution import ContractError
 
 from .codex_exec import CodexExecAdapter
 from .exec_flow import inspect_exec, resume_exec
@@ -11,7 +14,24 @@ from .simple_flow import resume_run
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m mracbench")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "machine":
+        from .machine import main as machine_main
+
+        return machine_main(argv[1:])
+    if (
+        any(word in {"case", "batch", "orchestrator", "repo", "workspace"} for word in argv[:1])
+        or "--managed" in argv
+        or "--bench-home" in argv
+    ):
+        from mrac_orchestrator.cli import main as managed_main
+
+        return managed_main(argv)
+    parser = argparse.ArgumentParser(
+        prog="python -m mracbench",
+        epilog="Managed commands: case, batch, orchestrator, repo, workspace; use <command> --help. "
+        "Registered single runs: run --managed --case <number-or-name> --model <model>.",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="Run one Spec-MRAC case")
     run.add_argument("--case", required=True, dest="case_id")
@@ -53,6 +73,18 @@ def main(argv=None) -> int:
             child.add_argument("--reason", required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command in {"resume", "abort"} and (args.run_dir / "owner.json").exists():
+            import json
+
+            owner = json.loads((args.run_dir / "owner.json").read_bytes())
+            if owner.get("batch_id"):
+                raise BenchError(
+                    "RESUME_ERROR", "Batch-owned run: use batch recover/continue/answer/cancel"
+                )
+            if args.command == "resume":
+                from mrac_orchestrator.cli import managed_resume
+
+                return managed_resume(args.run_dir, args.input_file, args.spec_file)
         if args.command in {"status", "report", "abort"}:
             inspect = (
                 inspect_exec
@@ -101,8 +133,8 @@ def main(argv=None) -> int:
                 args.spec_file,
             )
             path, result = run_case(config, adapter)
-    except BenchError as exc:
-        print(f"{exc.kind}: {exc}")
+    except (BenchError, ContractError) as exc:
+        print(f"{getattr(exc, 'kind', 'CONTRACT_ERROR')}: {exc}")
         return 2
     except OSError as exc:
         # An unwritable output root cannot hold even an error result.

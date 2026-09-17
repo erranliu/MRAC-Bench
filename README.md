@@ -138,12 +138,24 @@ Spec 协议采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 
 
 只读检查发现改动时，`PROTOCOL_VIOLATION` 优先于 agent/解析错误；差异保存在对应阶段的 `repository-after.json`。普通 agent 错误为 `AGENT_ERROR`，超时为 `TIMEOUT`，无效输出为 `PARSE_ERROR`。这些都不是正常未收敛。
 
+## 多任务并行编排
+
+新增独立持久化编排服务、Windows Supervisor、case 注册和集中 repo 管理。只读 run 跨批次复用固定 repo，可写 run 各自拥有 checkout；批次证据与单次证据分别放在同一个批次目录中。case 支持编号、名称及旧名称调用。
+
+```powershell
+uv run mracbench case register cases/psf__requests-1963 --name requests-1963 --request-id register-requests-v1 --bench-home C:\mrac-data
+uv run mracbench batch submit examples/batch.yaml --request-id comparison-001 --bench-home C:\mrac-data
+uv run mracbench orchestrator serve --total 4 --group codex-main=2 --bench-home C:\mrac-data
+```
+
+先按账户可用模型调整示例 YAML。提交可离线排队；恢复不扩预算，exec 暂停后显式 continue 才增加六次 audit。操作和清理规则见[使用说明](doc/Parallel%20Orchestration%20Guide.md)，设计依据见 [Spec](doc/Parallel%20Orchestration%20Spec.md) 和 [Plan](doc/Parallel%20Orchestration%20Plan.md)，验证与真实环境限制见[实施记录](doc/Parallel%20Orchestration%20Implementation%20Report.md)。
+
 ## 验证与开发
 
 ```bash
 uv run pytest -q
-uv run ruff check mracbench tests
-uv run ruff format --check mracbench tests
+uv run ruff check mracbench mrac_contracts mrac_resources mrac_orchestrator tests scripts
+uv run ruff format --check mracbench mrac_contracts mrac_resources mrac_orchestrator tests scripts
 ```
 
 常规测试使用本地临时 Git 仓库、stub adapter 和临时 CLI 程序；不联网、不调用真实模型。测试覆盖输入校验、audit 解析、收敛状态机、runner 错误和不可变产物、仓库污染，以及真实子进程的输出分流、非零退出和超时终止。
@@ -161,6 +173,6 @@ uv run ruff format --check mracbench tests
 - `execution.py` / `evidence.py`：共享只读调用，以及新协议不可变证据和 run 锁。
 - `runs.py`：输入快照、阶段状态、日志和最终结果。
 
-Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由各自 audit 协议测量。suite/repeat、稳定发布 CLI、任意损坏状态的自动恢复和其他 agent 实现尚未加入；v2 只从可校验的检查点恢复。
+Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由各自 audit 协议测量。批次已支持矩阵和 repeat；任意损坏状态的自动恢复和其他 agent 实现尚未加入，恢复仍要求可校验的检查点。受管进程监督当前只验收 Windows 10/11。
 
 设计依据：[Milestone 1 Spec](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Spec.md) · [Milestone 1 Plan](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Plan.md)。验收证据见 [实施与验收记录](doc/Milestone%201%20Implementation%20Report.md)。Codex 集成参考：[官方非交互模式文档](https://learn.chatgpt.com/docs/non-interactive-mode)。

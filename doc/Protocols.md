@@ -1,5 +1,7 @@
 # 并存协议管理
 
+受管批次通过独立编排服务调用公共 machine 接口，协议内审计、修复和收敛仍由 runner 控制。recover 仅处理可验证中断，不增加预算；exec 的 PAUSED 经显式 continue 批准另外六次 audit。answer 保存必要输入，不授予额外预算。旧协议的中断恢复能力不因编排而扩展，spec-flow-simple-v1 仍只支持原有 PAUSED 续跑。入口见[编排使用说明](./Parallel%20Orchestration%20Guide.md)。
+
 本文件是 MRAC Bench 协议的索引、行为契约和维护规范。可执行配置位于
 `protocols/<id>/protocol.yaml`，提示词与配置一同保存到每次 run 的 `input/`。
 修改协议时必须同步这里的登记与差异说明。本文描述现有实现；早期 Milestone 1

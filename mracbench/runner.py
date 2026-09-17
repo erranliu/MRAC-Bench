@@ -14,7 +14,7 @@ from .runs import RunStore, write_json
 
 def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
     started = time.monotonic()
-    store = RunStore(config.runs_dir, config.case_id, config.project_root)
+    store = RunStore(config.runs_dir, config.case_id, config.project_root, config.run_id)
     result = {
         "run_id": store.run_id,
         "case_id": config.case_id,

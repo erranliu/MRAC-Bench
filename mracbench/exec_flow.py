@@ -538,13 +538,13 @@ def reconcile_failed_call(store, result, invocation):
         flow.update(active_audit=None, clean=[])
 
 
-def resume_exec(path, adapter, input_file=None):
+def resume_exec(path, adapter, input_file=None, *, recover=False):
     path = path.resolve()
     if not path.is_dir():
         raise BenchError("RESUME_ERROR", "Run directory does not exist")
     with session_lock(path):
         store, result, case, protocol, config = load_exec(path)
-        if result["status"] not in RESUMABLE:
+        if result["status"] not in RESUMABLE and not (recover and result["status"] == "RUNNING"):
             raise BenchError("RESUME_ERROR", f"Cannot resume {result['status']}")
         invocation = unfinished_invocation(store, result)
         if (
@@ -571,6 +571,11 @@ def resume_exec(path, adapter, input_file=None):
             },
         )
         reconcile_failed_call(store, result, invocation)
+        if result["audit_rounds"] >= flow["audit_limit"] and recover:
+            flow["resume_count"] = number
+            result.update(status="PAUSED", terminal_reason="Recovery does not extend audit budget")
+            store.finish(result)
+            return path, result
         if result["audit_rounds"] >= flow["audit_limit"]:
             extension = {
                 "at": utc_now(),

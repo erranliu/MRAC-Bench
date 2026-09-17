@@ -1,0 +1,21 @@
+schema_version: 1
+name: requests-spec-comparison
+concurrency:
+  total: 2
+  groups:
+    codex-main: 2
+retry:
+  max_auto_recoveries: 1
+groups:
+  - id: spec-v2
+    cases:
+      - selector: requests-1963
+        version: 1
+    model_configs:
+      - model: gpt-5.6-luna
+        reasoning_effort: high
+        resource_group: codex-main
+    protocols: [spec-mrac-v2]
+    repeat: 2
+    timeout_seconds: 1800
+    max_audit_rounds: 8
