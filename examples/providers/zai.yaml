@@ -1,0 +1,7 @@
+schema_version: 1
+id: zai
+name: Z.AI
+base_url: https://api.z.ai/api/v1
+wire_api: responses
+env_key: ZAI_API_KEY
+model_catalog_file: glm-models.json

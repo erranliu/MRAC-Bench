@@ -71,16 +71,17 @@ def export_batch(store, batch_id):
             "",
             f"State: {data['state']} · Event revision: {high}",
             "",
-            "| Task | Case | Repeat | Model / Protocol | State / Outcome | Evidence |",
-            "|---|---|---:|---|---|---|",
+            "| Task | Case | Repeat | Provider | Model / Protocol | State / Outcome | Evidence |",
+            "|---|---|---:|---|---|---|---|",
         ]
         for task in data["tasks"]:
             for row in [*task["history"], task]:
                 execution = row["execution"]
                 case, settings = execution["case"], execution["settings"]
                 label = f"{case['case_key']} {case['name']} v{case['version']}".replace("|", "\\|")
+                provider_id = (settings.get("provider") or {}).get("id", "openai")
                 lines.append(
-                    f"| {row['id']} | {label} | {row['repeat']} | {settings['model']} / {settings['protocol_id']} | {row['state']} / {row.get('outcome') or '—'} | [{row['run_id']}](../runs/{row['run_id']}/) {row['evidence_validity']} |"
+                    f"| {row['id']} | {label} | {row['repeat']} | {provider_id} | {settings['model']} / {settings['protocol_id']} | {row['state']} / {row.get('outcome') or '—'} | [{row['run_id']}](../runs/{row['run_id']}/) {row['evidence_validity']} |"
                 )
         lines += [
             "",

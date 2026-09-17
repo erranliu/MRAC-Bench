@@ -15,6 +15,7 @@ from mrac_contracts.execution import (
     utf8_stdio,
     validate_request,
 )
+from mrac_contracts.providers import normalize_provider, validate_selection
 from mrac_resources.home import inventory
 from mrac_resources.locks import BusyError, file_lock
 from mrac_resources.repositories import RepoPool
@@ -57,6 +58,10 @@ def seal(path):
 
 def validate(bundle, settings):
     bundle = Path(bundle)
+    provider = normalize_provider(settings.get("provider"))
+    validate_selection(provider, settings.get("model"), settings.get("reasoning_effort"))
+    if provider is not None:
+        settings = {**settings, "provider": provider}
     case = load_case(bundle, settings["case_id"])
     protocol = load_protocol(bundle, settings["protocol_id"])
     maximum = settings.get("max_rounds")
@@ -172,7 +177,12 @@ def execute(request, adapter=None):
         raise ContractError("Frozen input bundle changed")
     if code_identity() != request["code_identity"]:
         raise ContractError("Runner execution environment changed")
-    adapter = adapter or CodexExecAdapter(request.get("codex_executable", "codex"))
+    provider = normalize_provider(request["settings"].get("provider"))
+    if provider is not None and read_json(bundle / "provider.json") != provider:
+        raise ContractError("Provider settings differ from the frozen bundle")
+    adapter = adapter or CodexExecAdapter(
+        request.get("codex_executable", "codex"), provider=provider
+    )
     if adapter.version() != request["agent_version"]:
         raise ContractError("Agent executable version changed")
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -249,6 +259,7 @@ def execute(request, adapter=None):
                     if (bundle / "execution-spec.md").exists()
                     else None,
                     request["run_id"],
+                    provider=provider,
                 )
                 _, result = run_case(config, adapter)
             else:

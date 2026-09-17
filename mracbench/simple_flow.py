@@ -11,6 +11,7 @@ from .evidence import Evidence, digest, run_lock
 from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import protocol_from_snapshots, render_simple_prompt
+from .providers import check_adapter
 from .repository import prepare_repository
 from .runs import RunStore, utc_now
 from .simple_audit import assign_ids, parse_findings, parse_repair, parse_review
@@ -359,7 +360,9 @@ def resume_run(path: Path, adapter):
                 timeout_seconds=timeout,
                 protocol_id=protocol.id,
                 reasoning_effort=settings.get("reasoning_effort"),
+                provider=settings.get("provider"),
             )
+            check_adapter(adapter, config.provider, config.model, config.reasoning_effort)
             if (
                 result["agent"]["type"] != adapter.agent_type
                 or result["agent"]["version"] != adapter.version()

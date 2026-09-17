@@ -29,6 +29,8 @@ uv run mracbench case unarchive C000001 --bench-home C:\mrac-data
 
 修改 [examples/batch.yaml](../examples/batch.yaml) 中的 case、模型和预算。每组按 case × model_configs × protocols × repeat 展开。resource_group 是限额分组，不是凭证。
 
+外部模型通过批次顶层 providers 和 model_configs.provider 选择，支持同一批次混合 provider。参见 [Provider 接入](./Providers.md) 与 [batch-providers.yaml](../examples/batch-providers.yaml)。凭证要设置在启动服务的环境中，提交端不保存或转发其值。
+
 ```powershell
 uv run mracbench batch submit examples/batch.yaml --request-id comparison-001 --project-root . --bench-home C:\mrac-data
 uv run mracbench orchestrator serve --total 4 --group codex-main=2 --bench-home C:\mrac-data

@@ -3,11 +3,21 @@ import os
 import shutil
 import signal
 import subprocess
+import tempfile
 import time
 from collections.abc import Sequence
 from pathlib import Path
 
+from mrac_contracts.providers import (
+    ProviderError,
+    credential,
+    normalize_provider,
+    provider_identity,
+    validate_selection,
+)
+
 from .models import AgentRequest, AgentResult
+from .redaction import RedactedPipe
 from .runs import utc_now, write_json
 
 
@@ -49,9 +59,31 @@ def kill_tree(process: subprocess.Popen):
 class CodexExecAdapter:
     agent_type = "codex_exec"
 
-    def __init__(self, executable: str = "codex", command: Sequence[str] | None = None):
+    def __init__(
+        self, executable: str = "codex", command: Sequence[str] | None = None, *, provider=None
+    ):
         self.executable = executable
         self._command = list(command) if command else None
+        self.provider = normalize_provider(provider)
+
+    def provider_arguments(self, raw):
+        if self.provider is None:
+            return []
+        provider = self.provider
+        values = {"model_provider": provider["id"]}
+        for key in ("name", "base_url", "wire_api", "env_key"):
+            if provider.get(key) is not None:
+                values[f"model_providers.{provider['id']}.{key}"] = provider[key]
+        values[f"model_providers.{provider['id']}.requires_openai_auth"] = False
+        if "model_catalog" in provider:
+            path = raw / "model-catalog.json"
+            write_json(path, provider["model_catalog"])
+            values["model_catalog_json"] = str(path.resolve())
+        return [
+            part
+            for key, value in values.items()
+            for part in ("-c", f"{key}={json.dumps(value, ensure_ascii=False)}")
+        ]
 
     def command(self) -> list[str]:
         return self._command or resolve_command(self.executable)
@@ -91,7 +123,17 @@ class CodexExecAdapter:
         (raw / "stderr.txt").touch()
         (raw / "request.txt").write_text(request.prompt, encoding="utf-8")
         process = None
+        final_directory = None
+        output_path = final_path
+        secret = None
         try:
+            validate_selection(self.provider, request.model, request.reasoning_effort)
+            secret = credential(self.provider)
+            if secret:
+                final_directory = tempfile.TemporaryDirectory(prefix="mrac-provider-final-")
+                output_path = Path(final_directory.name) / "final.txt"
+            if self.provider:
+                invocation["provider"] = provider_identity(self.provider)
             command = [
                 *self.command(),
                 "exec",
@@ -114,8 +156,9 @@ class CodexExecAdapter:
                 "--cd",
                 str(request.workspace),
                 "--output-last-message",
-                str(final_path),
+                str(output_path),
             ]
+            command += self.provider_arguments(raw)
             if request.model:
                 command += ["--model", request.model]
             if request.reasoning_effort:
@@ -133,11 +176,19 @@ class CodexExecAdapter:
                     command,
                     cwd=request.workspace,
                     stdin=subprocess.PIPE,
-                    stdout=stdout,
-                    stderr=stderr,
+                    stdout=subprocess.PIPE if secret else stdout,
+                    stderr=subprocess.PIPE if secret else stderr,
                     start_new_session=os.name != "nt",
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
                 )
+                readers = []
+                if secret:
+                    readers = [
+                        RedactedPipe(process.stdout, stdout, secret),
+                        RedactedPipe(process.stderr, stderr, secret),
+                    ]
+                    # communicate() owns stdin/wait; the readers exclusively own output pipes.
+                    process.stdout = process.stderr = None
                 result.started = True
                 invocation.update(started=True, pid=process.pid)
                 write_json(raw / "invocation.json", invocation)
@@ -153,20 +204,30 @@ class CodexExecAdapter:
                     result.error_type = "INTERNAL_ERROR"
                     result.error_message = "Run interrupted by user"
                     kill_tree(process)
+                finally:
+                    for reader in readers:
+                        reader.finish()
                 result.exit_code = process.returncode
             if result.exit_code != 0 and result.error_type is None:
                 result.error_type = "AGENT_ERROR"
                 result.error_message = (
                     f"Codex exited with code {result.exit_code}; see raw stderr/stdout"
                 )
-            if final_path.exists():
-                result.final_text = final_path.read_text(encoding="utf-8")
-        except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+            if output_path.exists():
+                result.final_text = output_path.read_text(encoding="utf-8")
+                if secret:
+                    result.final_text = result.final_text.replace(secret, "[REDACTED]")
+                    final_path.write_text(result.final_text, encoding="utf-8")
+        except (OSError, UnicodeError, subprocess.SubprocessError, ProviderError) as exc:
             if process is not None and process.poll() is None:
                 kill_tree(process)
-            result.error_type = "AGENT_ERROR"
-            result.error_message = str(exc)
+            result.error_type = (
+                "PROVIDER_ERROR" if isinstance(exc, ProviderError) else "AGENT_ERROR"
+            )
+            result.error_message = str(exc).replace(secret, "[REDACTED]") if secret else str(exc)
         finally:
+            if final_directory:
+                final_directory.cleanup()
             result.duration_seconds = time.monotonic() - start
             result.stdout = (raw / "stdout.txt").read_text(encoding="utf-8", errors="replace")
             result.stderr = (raw / "stderr.txt").read_text(encoding="utf-8", errors="replace")

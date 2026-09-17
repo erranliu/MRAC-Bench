@@ -12,6 +12,7 @@ from mrac_contracts.execution import (
     parse_yaml,
     read_json,
 )
+from mrac_contracts.providers import ProviderError, load_providers
 from mrac_resources.cases import Registry
 from mrac_resources.home import checked
 from mrac_resources.locks import file_lock
@@ -51,9 +52,10 @@ def submit(store, backend, source, project, request_id, codex="codex"):
                 raise ContractError("Uncommitted batch request differs")
         else:
             data = parse_yaml(raw)
-            keys(data, {"schema_version", "name", "concurrency", "retry", "groups"})
+            keys(data, {"schema_version", "name", "concurrency", "retry", "groups", "providers"})
             if data.get("schema_version") != 1:
                 raise ContractError("Unsupported batch schema")
+            providers = load_providers(data.get("providers", {}), source.parent)
             concurrency = data.get("concurrency", {"total": 1, "groups": {}})
             keys(concurrency, {"total", "groups"})
             positive(concurrency["total"])
@@ -112,7 +114,14 @@ def submit(store, backend, source, project, request_id, codex="codex"):
                         seen.add(key)
                         resolved.append(case)
                     for model in group["model_configs"]:
-                        keys(model, {"model", "reasoning_effort", "resource_group"})
+                        keys(model, {"model", "reasoning_effort", "resource_group", "provider"})
+                        selection = model.get("provider", "openai")
+                        if (
+                            not isinstance(selection, str)
+                            or selection != "openai"
+                            and selection not in providers
+                        ):
+                            raise ProviderError("model_configs references an undeclared provider")
                         if not model.get("model") or model["resource_group"] not in concurrency.get(
                             "groups", {}
                         ):
@@ -130,6 +139,9 @@ def submit(store, backend, source, project, request_id, codex="codex"):
                             "max_rounds": group.get("max_audit_rounds"),
                             "timeout_seconds": group.get("timeout_seconds"),
                         }
+                        provider = providers.get(model.get("provider", "openai"))
+                        if provider is not None:
+                            settings["provider"] = provider
                         slot = orchestration / "inputs" / f"input-{len(tasks) + 1:06d}"
                         spec = (
                             (source.parent / group["execution_spec_file"]).resolve()

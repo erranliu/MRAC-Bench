@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from mrac_contracts.execution import ContractError, atomic, digest, envelope, read_json
+from mrac_contracts.providers import normalize_provider
 from mrac_resources.home import copy_package, inventory
 
 from ..supervisor import alive, spawn, tree_alive
@@ -40,6 +41,10 @@ class MRACBackend:
         copy_package(Path(project) / "protocols" / protocol_id, bundle / "protocols" / protocol_id)
         if spec_file:
             atomic(bundle / "execution-spec.md", Path(spec_file).read_bytes(), raw=True)
+        provider = normalize_provider(settings.get("provider"))
+        if provider is not None:
+            settings = {**settings, "provider": provider}
+            atomic(bundle / "provider.json", provider)
         query = directory / "validate.json"
         settings = {**settings, "case_id": case["source_id"], "protocol_id": protocol_id}
         atomic(query, {"bundle": str(bundle), "settings": settings})
