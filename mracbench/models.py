@@ -44,6 +44,7 @@ class RunConfig:
     protocol_id: str | None = None
     reasoning_effort: str | None = None
     spec_file: Path | None = None
+    run_id: str | None = None
 
 
 @dataclass(frozen=True)

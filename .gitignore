@@ -8,3 +8,4 @@ dist/
 .workspaces/
 runs/
 .ruff_cache/
+.validation/

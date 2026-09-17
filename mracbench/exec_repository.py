@@ -32,6 +32,10 @@ def git_bytes(path, *args, index=None):
 
 def checkout_path(root, run_path):
     root, run_path = root.resolve(), run_path.resolve()
+    if (root / ".managed.json").is_file():
+        from mrac_resources.repositories import RepoPool
+
+        return RepoPool(root.parent).writable_path(run_path.name)
     path = (root / "exec" / run_path.name).resolve()
     if (
         not path.is_relative_to(root)

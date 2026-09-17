@@ -15,7 +15,7 @@ def git(path: Path, *args: str, log: Path | None = None) -> str:
             command,
             capture_output=True,
             timeout=180,
-            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_OPTIONAL_LOCKS": "0"},
             encoding="utf-8",
             errors="replace",
             check=False,
@@ -87,6 +87,16 @@ class Repository:
 @contextmanager
 def prepare_repository(case: Case, root: Path, run_path: Path):
     root = root.resolve()
+    if (root / ".managed.json").is_file():
+        from mrac_contracts.execution import ContractError
+        from mrac_resources.repositories import RepoPool
+
+        try:
+            with RepoPool(root.parent).readonly(case.repository_url, case.commit, run_path) as item:
+                yield Repository(item[0], case.commit, item[1])
+        except ContractError as exc:
+            raise BenchError("REPOSITORY_ERROR", str(exc)) from exc
+        return
     key = hashlib.sha256(case.repository_url.encode()).hexdigest()[:16] + "-" + case.commit
     path = (root / key[:16] / case.commit).resolve()
     if path.is_relative_to(run_path) or run_path.is_relative_to(path):

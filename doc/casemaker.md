@@ -39,3 +39,7 @@ track:
 交付前确认复制件与原文件逐字节相同，哈希一致，指定 commit 可拉取。纳入 Git 时，为产物目录设置 `-text` 属性以避免换行转换。当前 M1 不支持含 submodule 的仓库。
 
 最后只报告 case 路径、固定 commit 和校验结果。固定 Spec 是任务输入；模型生成和修复的 spec 属于 run 产物。制作 case 不启动模型 benchmark。
+
+## 注册到受管 case 库
+
+用户选定交付包后，可运行 `uv run mracbench case register <case目录> --name <名称> --request-id <注册请求标识> --bench-home <管理根目录>`。注册按原字节保存版本并返回永久编号；之后可用编号或名称提交批次。追加版本使用 `--case C000001`，不能覆盖同版本的不同内容。不自动注册其他包，不把编号写回原 case.yaml 的 id。见[编排使用说明](./Parallel%20Orchestration%20Guide.md)。
