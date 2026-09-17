@@ -11,6 +11,7 @@ from .exec_repository import prepare_exec_repository
 from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import protocol_from_snapshots, render_exec_prompt
+from .providers import check_adapter
 from .repository_flow import SessionStore, read_spec, session_lock, unfinished_invocation
 from .runs import RunStore, atomic_text, utc_now, write_json
 from .simple_audit import assign_ids
@@ -18,6 +19,7 @@ from .simple_audit import assign_ids
 WORKFLOW = "exec-mrac"
 BATCH_SIZE = 6
 RESUMABLE = {
+    "PROVIDER_ERROR",
     "PAUSED",
     "NEEDS_INPUT",
     "AGENT_ERROR",
@@ -496,6 +498,7 @@ def load_exec(path):
             protocol.id,
             settings.get("reasoning_effort"),
             Path(pinned["execution_spec"]["source"]),
+            provider=settings.get("provider"),
         )
         return ExecStore(base, evidence), result, case, protocol, config
     except (OSError, KeyError, TypeError, ValueError) as exc:
@@ -544,6 +547,7 @@ def resume_exec(path, adapter, input_file=None, *, recover=False):
         raise BenchError("RESUME_ERROR", "Run directory does not exist")
     with session_lock(path):
         store, result, case, protocol, config = load_exec(path)
+        check_adapter(adapter, config.provider, config.model, config.reasoning_effort)
         if result["status"] not in RESUMABLE and not (recover and result["status"] == "RUNNING"):
             raise BenchError("RESUME_ERROR", f"Cannot resume {result['status']}")
         invocation = unfinished_invocation(store, result)

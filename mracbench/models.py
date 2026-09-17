@@ -45,6 +45,7 @@ class RunConfig:
     reasoning_effort: str | None = None
     spec_file: Path | None = None
     run_id: str | None = None
+    provider: dict | None = None
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from mrac_contracts.execution import ContractError, atomic, digest, new_id, read_json, utf8_stdio
+from mrac_contracts.providers import load_provider
 from mrac_resources.cases import Registry
 from mrac_resources.home import home
 from mrac_resources.locks import BusyError, file_lock
@@ -94,6 +95,7 @@ def parser():
     child.add_argument("--operation-id", required=True)
     child = commands.add_parser("run")
     child.add_argument("--managed", action="store_true", required=True)
+    child.add_argument("--provider-file", type=Path)
     child.add_argument("--case", required=True)
     child.add_argument("--case-version", type=int)
     child.add_argument("--project-root", type=Path, default=Path.cwd())
@@ -230,6 +232,7 @@ def managed_run(root, args):
     finally:
         registry.close()
     backend = MRACBackend(root)
+    provider = load_provider(args.provider_file) if args.provider_file else None
     run_id = new_id("run")
     directory = root / "control/standalone" / run_id
     execution = backend.freeze(
@@ -242,6 +245,7 @@ def managed_run(root, args):
             "reasoning_effort": args.reasoning_effort,
             "max_rounds": args.max_rounds,
             "timeout_seconds": args.timeout,
+            **({"provider": provider} if provider else {}),
         },
         spec_file=args.spec_file,
         codex=args.codex_executable,

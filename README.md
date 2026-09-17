@@ -20,7 +20,7 @@ codex --version
 uv run python -m mracbench run --case psf__requests-1963 --protocol spec-mrac-v1 --model <model-name>
 ```
 
-模型名称必须是当前 Codex 账户可用的模型。建议显式指定 `--model`，以便准确记录实验条件。未指定时使用 Codex 内置默认模型，并在结果中记录 `model: null`；不会继承用户 config 中的模型或执行配置。
+默认 OpenAI provider 下，模型名称必须是当前 Codex 账户可用的模型。建议显式指定 `--model`，以便准确记录实验条件。未指定时使用 Codex 内置默认模型，并在结果中记录 `model: null`；不会继承用户 config 中的模型或执行配置。外部 Responses provider 使用 `--provider-file` 和其服务支持的明确模型名，见[Provider 接入](doc/Providers.md)。
 
 内置 case 来自 [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite)，固定 Requests 的 commit `110048f9837f8441ea536804115e80b69f400277`。只需读取目标源码，不安装或运行目标仓库的依赖和测试。
 
@@ -48,6 +48,7 @@ uv run python -m mracbench run \
 | `--spec-file` | exec-mrac-v1 必填：显式选定的不可变执行 Spec；其他 run 协议不接受 |
 | `--project-root` | case/protocol 所在项目根目录，默认当前目录 |
 | `--model` | 传给每次 `codex exec` 的模型名 |
+| `--provider-file` | 可选的 Responses provider YAML/JSON；凭证通过配置中的 env_key 从环境读取 |
 | `--reasoning-effort` | 显式推理强度，保存并用于各阶段；不指定则使用 CLI/模型默认值 |
 | `--max-rounds` | 覆盖最大 audit invocation 数，必须为正整数 |
 | `--timeout` | 每次 agent invocation 超时秒数，必须为正整数 |
@@ -149,6 +150,8 @@ uv run mracbench orchestrator serve --total 4 --group codex-main=2 --bench-home 
 ```
 
 先按账户可用模型调整示例 YAML。提交可离线排队；恢复不扩预算，exec 暂停后显式 continue 才增加六次 audit。操作和清理规则见[使用说明](doc/Parallel%20Orchestration%20Guide.md)，设计依据见 [Spec](doc/Parallel%20Orchestration%20Spec.md) 和 [Plan](doc/Parallel%20Orchestration%20Plan.md)，验证与真实环境限制见[实施记录](doc/Parallel%20Orchestration%20Implementation%20Report.md)。
+
+批次可在顶层声明 providers，由各 model_configs 选择。可以在同一批次比较 OpenAI 与 GLM-5.3-Flash；provider 和模型目录在提交时固定，恢复不会重读原配置文件。完整示例：[混合 provider 批次](examples/batch-providers.yaml)、[Z.AI 配置](examples/providers/zai.yaml)、[接入说明](doc/Providers.md)。
 
 ## 验证与开发
 

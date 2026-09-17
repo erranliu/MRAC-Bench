@@ -3,11 +3,13 @@ import sys
 from pathlib import Path
 
 from mrac_contracts.execution import ContractError
+from mrac_contracts.providers import load_provider
 
 from .codex_exec import CodexExecAdapter
 from .exec_flow import inspect_exec, resume_exec
 from .models import BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID
+from .providers import saved_provider
 from .repository_flow import inspect_repository_run, render_report, resume_repository_run
 from .runner import run_case
 from .simple_flow import resume_run
@@ -57,6 +59,7 @@ def main(argv=None) -> int:
         help="Explicit model reasoning effort, saved for every stage and resume",
     )
     run.add_argument("--codex-executable", default="codex")
+    run.add_argument("--provider-file", type=Path, help="Explicit Responses provider YAML/JSON")
     resume = sub.add_parser(
         "resume", help="Resume a supported saved run without changing its protocol"
     )
@@ -101,7 +104,12 @@ def main(argv=None) -> int:
                 elif (path / "run-report.md").exists():
                     print((path / "run-report.md").read_text(encoding="utf-8"))
         elif args.command == "resume":
-            adapter = CodexExecAdapter(args.codex_executable)
+            provider = saved_provider(args.run_dir)
+            adapter = (
+                CodexExecAdapter(args.codex_executable, provider=provider)
+                if provider
+                else CodexExecAdapter(args.codex_executable)
+            )
             if (args.run_dir / "exec-state.json").is_file():
                 if args.spec_file:
                     raise BenchError(
@@ -118,7 +126,12 @@ def main(argv=None) -> int:
                     raise BenchError("RESUME_ERROR", "Input/Spec import is supported only by v2")
                 path, result = resume_run(args.run_dir, adapter)
         else:
-            adapter = CodexExecAdapter(args.codex_executable)
+            provider = load_provider(args.provider_file) if args.provider_file else None
+            adapter = (
+                CodexExecAdapter(args.codex_executable, provider=provider)
+                if provider
+                else CodexExecAdapter(args.codex_executable)
+            )
             project = args.project_root.resolve()
             config = RunConfig(
                 project,
@@ -131,6 +144,7 @@ def main(argv=None) -> int:
                 args.protocol_id,
                 args.reasoning_effort,
                 args.spec_file,
+                provider=provider,
             )
             path, result = run_case(config, adapter)
     except (BenchError, ContractError) as exc:

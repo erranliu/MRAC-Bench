@@ -1,0 +1,30 @@
+schema_version: 1
+name: compare-openai-and-glm
+providers:
+  zai:
+    file: providers/zai.yaml
+concurrency:
+  total: 2
+  groups:
+    openai-account: 1
+    zai-account: 1
+retry:
+  max_auto_recoveries: 1
+groups:
+  - id: spec-comparison
+    cases:
+      - selector: requests-1963
+        version: 1
+    model_configs:
+      - provider: openai
+        model: gpt-5.6-luna
+        reasoning_effort: high
+        resource_group: openai-account
+      - provider: zai
+        model: glm-5.3-flash
+        reasoning_effort: high
+        resource_group: zai-account
+    protocols: [spec-mrac-v2]
+    repeat: 1
+    max_audit_rounds: 8
+    timeout_seconds: 1800

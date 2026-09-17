@@ -11,6 +11,7 @@ from .evidence import Evidence, digest
 from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import protocol_from_snapshots, render_repository_prompt
+from .providers import check_adapter
 from .repository import git, prepare_repository
 from .repository_audit import parse_audit, parse_repair
 from .runs import RunStore, atomic_text, utc_now, write_json
@@ -20,6 +21,7 @@ WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
 PROTOCOL_VERSION = 2
 RESUMABLE = {
+    "PROVIDER_ERROR",
     "RUNNING",
     "PAUSED",
     "NEEDS_INPUT",
@@ -602,6 +604,7 @@ def load_session(path, *, allow_historical=False):
             timeout,
             protocol.id,
             settings.get("reasoning_effort"),
+            provider=settings.get("provider"),
         )
         store = SessionStore(base, evidence)
         current = read_spec(evidence.path("working/spec.md"))
@@ -663,6 +666,7 @@ def resume_repository_run(path, adapter, input_file=None, spec_file=None):
     read_checkpoint(path)
     with session_lock(path):
         store, result, case, protocol, config, current = load_session(path)
+        check_adapter(adapter, config.provider, config.model, config.reasoning_effort)
         if result["status"] not in RESUMABLE:
             raise BenchError("RESUME_ERROR", f"Cannot resume {result['status']}; start a new run")
         invocation = unfinished_invocation(store, result)

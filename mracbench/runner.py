@@ -1,18 +1,24 @@
 import hashlib
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
+
+from mrac_contracts.execution import canonical
+from mrac_contracts.providers import ProviderError, normalize_provider, provider_identity
 
 from .audit import Convergence, blocking_count, parse_audit, parse_spec
 from .cases import load_case, positive_int
 from .execution import Invoker
 from .models import AgentAdapter, BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID, load_protocol, render_prompt
+from .providers import check_adapter
 from .repository import prepare_repository
 from .runs import RunStore, write_json
 
 
 def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
+    config = replace(config, provider=normalize_provider(config.provider))
+    check_adapter(adapter, config.provider, config.model, config.reasoning_effort)
     started = time.monotonic()
     store = RunStore(config.runs_dir, config.case_id, config.project_root, config.run_id)
     result = {
@@ -44,6 +50,9 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
         case = load_case(config.project_root, config.case_id)
         for name, content in case.snapshots.items():
             store.snapshot(name, content)
+        if config.provider is not None:
+            store.snapshot("provider.json", canonical(config.provider))
+            result["agent"]["provider"] = provider_identity(config.provider)
         protocol = load_protocol(
             config.project_root,
             config.protocol_id if config.protocol_id is not None else DEFAULT_PROTOCOL_ID,
@@ -106,6 +115,9 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
             },
         )
         store.save_metadata()
+        if config.provider is not None:
+            store.metadata["effective_config"]["provider"] = config.provider
+            store.save_metadata()
         if protocol.workflow == "exec-mrac":
             from .exec_flow import run_exec
 
@@ -187,7 +199,7 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
                     item["repair_artifact"] = current
                     result["final_artifact"] = current
                     store.checkpoint(result, f"repair-{repair_number:02d}:saved")
-    except BenchError as exc:
+    except (BenchError, ProviderError) as exc:
         result["status"] = exc.kind
         result["protocol_violation"] = exc.kind == "PROTOCOL_VIOLATION"
         result["error"] = {
