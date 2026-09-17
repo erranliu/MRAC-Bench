@@ -1,4 +1,4 @@
-# Repair all accepted findings in the copied Spec
+# Repair every audit finding in the copied Spec
 
 Use source intent and fixed_repository_head, reading only named symbols, explicitly
 referenced documents and direct dependencies needed to resolve these findings.
@@ -9,13 +9,14 @@ do not silently switch repositories, fetch another baseline or use a moving bran
 Within the user's objective and authorized scope, resolve design gaps autonomously
 using the Spec's intent and verifiable evidence. Record the chosen behavior and
 rationale, distinguishing existing constraints from decisions introduced in this
-revision so the next independent auditor can assess them. An exception category
+revision so the next independent auditor can assess them. An issue's category
 alone is not a reason to stop and does not authorize expanding the user's scope.
 Do not fabricate external facts or evidence. When a necessary fact or choice cannot
 be established within authorized scope, state the concrete missing input and ask
-for it directly; keep every accepted finding pending in FIX.
+for it directly; keep every finding pending in FIX.
 
-Close every accepted finding, including accepted P3, with a correction and evidence.
+Close every supplied finding, including P3, with a correction and evidence.
+There is no acceptance, rejection, deferral, or exception classification step.
 For new design decisions, record the chosen behavior and rationale in the Spec and
 the correction record instead of claiming the decision uniquely follows from the
 original source. Use supplied user_responses as explicitly provided later input,
@@ -25,7 +26,7 @@ audit IDs and workflow history from its body. Preserve correct existing content.
 
 Return ONLY one of these shapes, using the supplied audit_id:
 {"audit_id":"...","disposition":"continue","spec":"Complete revised Spec text","fixes":[{"finding_id":"F1","summary":"Correction, chosen behavior and rationale","evidence":"Source intent, fixed repository evidence, or explicitly supplied user decision supporting the correction"}]}
-Include exactly one closure for every accepted finding. The Spec must be nonempty
+Include exactly one closure for every audit finding. The Spec must be nonempty
 and its bytes must change. Do not claim resolution through an unchanged document.
 
 If necessary information is unavailable, return:

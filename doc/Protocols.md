@@ -9,7 +9,7 @@ Spec、Plan 和验收报告保留为历史设计记录。
 
 | ID | version | workflow | 输入含义 | 起点 | 收敛含义 |
 |---|---:|---|---|---|---|
-| `spec-mrac-v2` | 1 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立且证据充分的裁决 clean |
+| `spec-mrac-v2` | 2 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
 | `spec-mrac-v1` | 1 | `generate-audit-repair` | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
 | `spec-flow-simple-v1` | 1 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
 | `exec-mrac-v1` | 1 | `exec-mrac` | 显式选定的执行 Spec | 独立可写 checkout 中实施代码 | 同一 Spec、基线和完整产品候选快照连续两轮零问题 |
@@ -188,115 +188,117 @@ spec-mrac-v2，只有显式选择 exec-mrac-v1 才进入可写阶段。
 
 ## 默认协议：spec-mrac-v2
 
-参考 3bb0 checkout 的 `.codex/skills/mrac-spec/SKILL.md`、`scripts/mracspec.py` 和
-`references/controller.md`，固定来源 commit 为 `4e0559443a88fa5a2577d2c73c6b365128bdaaea`。
-来源 state version 为 2；原文件 SHA-256 保存在协议 YAML 中。运行时不依赖该本机 checkout。
+当前修订为 `spec-mrac-v2@2`，参考 1df0 checkout 的
+`.codex/skills/mrac-spec/SKILL.md`、`scripts/mracspec.py` 和
+`references/controller.md`，固定来源 commit 为
+`a21a921d4ed9039bce606b35e1c3267a0dea0de6`。来源和 Bench 状态版本均为 3；
+来源文件 SHA-256 保存在协议 YAML 中。运行时不依赖该本机 checkout。
 
 ### 起点、审计和仓库规则
 
-原样复制输入 Spec 后直接 `AUDIT → 裁决 → FIX（如有接受项）→ AUDIT → FROZEN`。
-没有 generate、单独 spec-init、Plan、实现或后置审查。每一轮都必须检查固定仓库，
-包括最终 clean 轮；可以读原始意图核对新引入的设计选择。不能将“拟新增能力尚未存在”
-本身判为缺陷，应检查前提、契约、所有权和验收是否在声明范围内可实现。
+原样复制输入 Spec 后直接 `AUDIT → FIX（有发现时）→ AUDIT → FROZEN`。
+没有 generate、单独 spec-init、裁决、Plan、实现或后置审查。审计核心指令与源技能一致：
+“对 Spec 的正确性和可实施性做审计。”每轮必须检查固定仓库，包括 clean 轮。
 
 输入明确提供当前 Spec、原始 Spec 及 hash、固定 commit、仓库位置和附件。
 `input/repository-instructions.json` 保存固定提交中 `AGENTS.md` / `AGENTS.override.md`
-的路径索引；各阶段按需要用 `git show <commit>:<path>` 读取相关规则，遵循目录作用域，
-但不能覆盖只读、实验输入和授权范围。CLI 仍禁用自动用户配置/规则加载，因此不会混入
-本机配置或未提交的指令。审计与修复都使用 case 的固定 commit；Spec 引用其他版本时，
-在本基线上明确核对差异，不自动换仓库或 fetch 别的提交。
+的路径索引；各阶段按需要读取相关固定版本规则，但不能覆盖只读、实验输入和授权范围。
+CLI 禁用自动用户配置/规则加载。Spec 引用其他版本时，在 case 固定基线上核对差异，
+不自动换仓库或 fetch 别的提交。
 
-审计 JSON 为：
+新审计输出和 `audits/audit-NN.json` 只要求：
 
 ```json
-{"audit_id":"...","repository_review":{"base_head":"<固定 SHA>","checks":[{"path":"src/loader.py","symbol":"load","conclusion":"具体仓库事实及其对 Spec 可实现性的影响"}]},"findings":[{"severity":"P1","title":"缺口","evidence":"Spec 条款、固定提交中的路径和符号"}]}
+{"audit_id":"...","findings":[{"severity":"P1","title":"缺口","evidence":"Spec 条款、固定提交中的路径和符号/章节"}]}
 ```
 
-`checks` 在 findings 为空时仍必须非空。控制器用 Git 验证完整 commit 一致，以及路径
-确实是该提交的文件（blob）；不接受工作区新增文件、目录、绝对路径或路径逃逸。
-这不是对结论真假的机械证明。每次 CLI 审计创建新会话，记录其 `thread_id`；已记录的
-审计会话 ID 不能复用。测试 adapter 使用显式独立调用标识，不伪装为真实模型会话。
+无问题时 `findings: []`。不再要求 `repository_review`、`checks` 或
+`repository_assessment`；没有证据覆盖率评审或 insufficient 停止分支。
+每条 finding 保留依据，控制器检查格式、Spec hash、固定基线和审计员独立性，
+不机械证明仓库检查覆盖率或结论真假。无法读取基线等执行错误不能冒充 clean。
 
-### 裁决、FIX 和必要输入
+为对齐源技能，解析器仍接受旧输出中的可选 `repository_review`：
+若提供则验证 commit、非空 checks 及固定提交中的文件路径，并原样保留；
+新提示词不请求此字段，也不为新输出补造检查清单。这不允许恢复旧版运行。
 
-逐条裁决 P0–P3。rejected 和 deferred 都要具体原因，仅 P3 可以 deferred；所有
-accepted（包括 P3）都进入 FIX。`product-decision`、`scope-expansion`、
-`external-dependency` 只是可选分类元数据，不触发 BLOCKED，也不授予越界权限。
+每次 CLI 审计创建新会话，记录 `thread_id`；已记录的审计会话 ID 不能复用。
+原始模型输出保存在 raw 中，合法审计记录不改写 finding 内容，runner 分配 F1、F2 等内部 ID。
+无效 JSON 保持 AUDIT_INVALID，不自动纠正或转换成 clean。
 
-自动主控的 review JSON 在源技能的 `audit_id/decisions` 外增加
-`repository_assessment: {status: supported|insufficient, reason: ...}`，明确记录原技能中
-父会话“证据是否相关且充分”的监督职责。insufficient 不计 clean，保存原记录并保持
-未完成审计，返回 REVIEW_INVALID；显式 resume 后用新审计员重新检查。
+### 直接 FIX 和必要输入
 
-修复可在用户目标和授权范围内自主补足设计，区分既有约束和本次新增决定，并记录依据。
-continue 返回完整 Spec 和覆盖每一接受项的 summary/evidence；字节必须变化。
-确实缺少事实或必要选择时，repair 返回 `needs_input`、具体 reason 和非空 questions，
-不返回部分 Spec。Bench 状态为 NEEDS_INPUT，协议阶段仍为 FIX，保留全部 pending findings。
-这只是“需要输入”的执行状态，不是新的 BLOCKED 语义。没有通用 Block 或 RecoverBlocked。
+审计记录成功即完成本轮：有发现则所有 P0–P3 直接进入 FIX，无接受、驳回、暂缓或
+exception 分类。修复输入为 `findings`，待修复项存为 `pending_fix.findings`。
+不再调用 review，不生成 reviews、decisions、accepted_count、review_rounds 或 deferred_p3。
+轮次统计使用 `reported_count` 和 `reported_by_severity`；blocking_issue_count
+仍统计 P0–P2，但 P3-only 也必须修复，不能计 clean。
+
+修复使用用户意图和固定仓库，在授权范围内自主补足设计，区分既有约束和本次新增决定。
+continue 返回完整 Spec 和覆盖每项 finding 的 summary/evidence；Spec 字节必须变化。
+缺少必要事实或选择时，返回 needs_input、具体 reason 和非空 questions，保留全部
+pending findings，Bench 状态为 NEEDS_INPUT，阶段仍为 FIX。没有 BLOCKED。
 
 ```powershell
-# 默认 v2；不传 --max-rounds 时无总 audit 硬上限
-uv run python -m mracbench run --case <id> --model gpt-5.6-luna --reasoning-effort high
+uv run python -m mracbench run --case <case-id> --model gpt-5.6-luna --reasoning-effort high
 uv run python -m mracbench status --run-dir C:\mrac-runs\<run-id>
 uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C:\answers.md
 uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
 uv run python -m mracbench abort --run-dir C:\mrac-runs\<run-id> --reason "停止本次实验"
 ```
 
-回答文件是非空 UTF-8 文本，只能用于 pending FIX，保存在本 run 的 responses 中；原始
-Spec 快照不变。模型将它作为明确的后续用户输入，不能声称原始 Spec 已隐含该决定。
-NEEDS_INPUT 下不提供新回答或修订 Spec 的 resume 只报告现有问题，不再次调用模型。
+回答只能用于 pending FIX，保存在本 run 的 responses 中。原始 Spec 快照不变；
+回答作为明确的后续输入，不能声称原始 Spec 已隐含该决定。
+NEEDS_INPUT 下没有新回答或修订 Spec 的 resume 只报告问题，不再次调用模型。
 
-### 冻结、暂停与总预算
+### 冻结、暂停与预算
 
-两次不同新审计员、相同 Spec 字节与同一基线、仓库证据经核验且没有接受项，才冻结。
-修复、废弃轮或外部修订打断 clean。冻结记录包含两个 audit ID、真实审计会话 ID、
-frozen hash、固定基线和证据结论；Bench 状态映射为 CONVERGED，阶段为 FROZEN。
+两个不同新审计员在相同 Spec 字节和同一基线上，连续两轮返回空 findings，
+且无 pending 修复项，才进入 FROZEN（Bench 状态 CONVERGED）。
+修复、废弃轮或外部修订清空 clean。冻结记录包含两个 audit ID、审计会话 ID、
+frozen hash 和固定基线。冻结记录的是审计员的设计可实施性判断，不是覆盖率证明。
 
-连续六轮包含 accepted P0–P2 后，完成第六轮的所有修复再 PAUSED，此时无 pending fix。
-clean 或仅接受 P3 的一轮都会清除 P0–P2 连续计数；接受的 P3 仍须修复。
-暂停后显式 resume 清零连续计数，重新开始独立审计。
+连续六轮包含 P0–P2 findings，完成第六轮全部修复后 PAUSED。clean 或 P3-only
+重置此计数；P3-only 仍进入 FIX。暂停后显式 resume 清零计数并开始新审计。
 
-v2 不读取 case 的 `max_audit_rounds`，协议默认总上限为 null。只有显式 `--max-rounds`
-或专门修订协议 limits 才添加总审计硬上限。硬上限仅限制新的 audit，最后一轮的裁决
-和已接受项修复仍会完成。若随后仍不收敛，返回 NON_CONVERGED；与六轮暂停同时发生时
-硬预算终止优先，不能通过 resume 扩充预算。NEEDS_INPUT 则保留 FIX，回答后先完成该轮
-修复，再执行硬预算停止条件。timeout 仍按运行参数 / case 配置生效，默认每调用 1800 秒。
+默认没有 audit 总硬上限，不读取 case 的 max_audit_rounds；仅显式 --max-rounds
+或协议 limits 设置总上限。最后一轮的全部修复仍完成，随后耗尽则 NON_CONVERGED。
+硬预算终止优先于六轮暂停，resume 不扩充预算。NEEDS_INPUT 保留 FIX，回答后先完成
+修复再检查预算。每次模型调用超时按 CLI / case 生效，默认 1800 秒。
 
-### 检查点和恢复
+### 检查点、历史与恢复
 
-`repository-state.json` 是 v2 的原子规范检查点，含状态、已计数调用、当前 audit、pending
-findings 和不可变证据 hash。`state.json`、`result.json` 和 `run-report.md` 是展示/终态
-记录。`working/spec.md` 是允许用户修订的当前副本，`artifacts/` 中的历史版本保持不可变。
+`repository-state.json` 是原子规范检查点（schema_version 3），含阶段、计数、
+待修复 findings 和不可变证据 hash。`state.json`、`result.json` 和报告是展示记录。
+`working/spec.md` 允许用户修订，artifacts 中的历史版本不可变。
 
-- 未完成/校验失败的 AUDIT：保存原记录、标记 abandoned、清除 clean，用新 ID 审计。
-  已实际启动的失败调用仍计入 audit 预算，不把错误输出转换成 clean。
-- FIX：保留全部接受项，恢复后继续修复；不得直接跳到新审计。
-- 工作副本被外部修改：活动轮报 AUDIT_STALE；resume 将新字节保存为新的 artifact 并
-  废弃旧活动轮。也可用 `resume --spec-file <修订文件>` 显式导入。历史 artifact 被改写
-  是证据损坏，不能用工作副本导入来绕过。
-- FROZEN：状态/报告验证冻结 hash；改变冻结副本会报 FROZEN_SPEC_CHANGED，必须新开 run。
-- 执行失败：保留阶段与检查点；允许从列明的调用/解析/验证错误恢复，不允许迁移其他
-  协议或旧 state schema 的 clean 计数。模型、推理强度、adapter 版本、基线和预算固定。
-- 活跃执行持有 OS run 锁；旧审计子进程仍活着时拒绝恢复。因强制退出遗留的 Git 缓存锁
-  仍需确认旧进程树已结束后处理，不自动删除未知锁。无法验证的崩溃证据不声称可恢复。
-- Abort 保存原因和待修复证据，进入 ABORTED；不作为成功冻结，也不能继续该 run。
+- 未完成或无效审计：恢复时保留原记录、标记 abandoned、清除 clean，用新 ID 审计。
+  已启动的失败调用仍计入 audit 预算。
+- FIX：保留全部问题，恢复后先修复，不直接跳到新审计。
+- 外部修订：活动轮报 AUDIT_STALE；resume 保存新 artifact 并废弃旧活动轮。
+  可用 --spec-file 显式导入，但不能以此绕过历史 evidence 损坏。
+- FROZEN：检查冻结 hash；改变后报 FROZEN_SPEC_CHANGED，必须新开 run。
+- 配置与输入从 run 快照恢复，模型、推理强度、adapter 版本、基线和预算固定。
+- 活跃 run 使用 OS 锁；旧 agent 仍活着时拒绝恢复。未知 Git 缓存锁不自动删除。
+- Abort 保留原因和待修复证据，进入 ABORTED，不能继续。
 
-CLI 的 status/report/abort 用于 v2；resume 会根据保存的协议选择旧或新恢复器。
+`spec-mrac-v2@1` / state version 2 使用旧裁决语义，仅支持 status/report 只读查看。
+不重写其检查点、审计、报告或 clean 计数，不允许 resume、导入 Spec/回答或 abort；
+要使用新语义必须从选定 Spec 新开 run。报告明确标注历史裁决语义。
+旧版本 clean 可能包含已驳回或暂缓的问题，不能带入新版本。state version 1 不支持。
+
 NEEDS_INPUT 退出码为 5，ABORTED 为 6，PAUSED 为 3；其他校验/执行错误为 2。
-只读 status 查询正在运行的 run 返回 0，含 RUNNING 状态，不表示收敛。
+status 返回 RUNNING 时退出码为 0，不表示收敛。
 
 ### 与源技能的适配边界
 
-Bench 用固定 checkout 和新 CLI 会话替代交互主控/子 agent；用带固定输入的独立 review、
-repair 调用替代父会话，显式保存语义证据判断和缺失输入请求。它不继承父会话隐式历史，
-不自动创建 Beads 任务或产品分支。模型不写文件，runner 保存返回文本和证据；仍检查
-仓库内容不变。源技能允许 HEAD 移动后继续按 captured commit 读取，Bench 的 checkout
-则要求整个 run 保持该固定 HEAD。这些执行差异必须在跨环境比较时一同报告。
+Bench 用固定 checkout 和新 CLI 会话替代交互主控/子 agent；用独立 repair 调用
+完成父会话的修复职责。模型返回完整 Spec，runner 保存文本及修复记录并检查仓库不变。
+没有独立裁决调用，不继承父会话历史，不创建 Beads 任务或产品分支。
+Bench 要求整个 run 的 checkout 保持固定 HEAD；源技能允许按捕获 commit 读取。
+冻结不证明代码编译、产品测试、部署资源存在或未来实现正确。
 
-冻结只表示两轮独立的、带仓库证据的设计可实现性审查通过；不证明代码编译、产品测试、
-部署资源存在或未来实现正确。原 `spec-mrac-v1` 和 `spec-flow-simple-v1` 保持各自语义，
-旧 BLOCKED / document-only 结果不升级为 v2 的仓库核验冻结。
+其余三个协议保持各自语义；spec-flow-simple-v1 仍有裁决，其旧 BLOCKED / document-only
+结果不迁移到本协议。
 
 ## 旧协议：spec-mrac-v1
 
@@ -482,7 +484,8 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 - 旧协议的输出、错误和预算行为；无协议字段的 case 可默认/显式运行；遗留字段不影响选择。
 - 原始字节复制、初始化无生成、初始化不计入冻结 clean、初始化修复直接进入冻结。
 - 分阶段输入隔离、固定附件及 hash；审计保持独立。
-- 每项恰好裁决一次、P3 接受/延期、结构性例外与 repair 主动 block。
+- v2 仅 audit/repair 调用、紧凑 findings 输出、全部 P0–P3 直接 FIX、旧裁决运行只读。
+- 旧 spec-flow-simple-v1 每项恰好裁决一次、P3 接受/延期、结构性例外与 repair 主动 block。
 - 相同内容双 clean、修复重置、六轮暂停及 clean 重置计数。
 - 预算边界、暂停恢复、输入/证据/配置篡改、锁和仓库违规。
 
@@ -499,3 +502,4 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 
 - 2026-09-16：新增默认协议 `spec-mrac-v2@1`，对齐 3bb0 的 mrac-spec state v2；所有轮次要求仓库证据，移除该协议的 BLOCKED，保留 FIX，暂停发生在修复之后。
 - 2026-09-16：新增独立执行协议 `exec-mrac-v1@1`，参考 3bb0 的 pr-loop/fix-code；每批六次 audit，耗尽后保留问题，显式续跑增加六次并先修复。
+- 2026-09-16：`spec-mrac-v2@2` 对齐 1df0 的 mrac-spec state v3，移除裁决调用与证据覆盖率评审；全部 findings 直接修复，仅空 findings 计 clean。旧 state 2 仅保留只读查看。

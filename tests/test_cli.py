@@ -100,9 +100,8 @@ def test_cli_v2_reports_questions_resumes_fix_and_verifies_frozen_report(
     from test_repository_flow import audit as repo_audit
     from test_repository_flow import clean as repo_clean
     from test_repository_flow import needs_input, repair
-    from test_repository_flow import review as repo_review
 
-    agent = StubAgent([repo_audit("P1"), repo_review(), needs_input])
+    agent = StubAgent([repo_audit("P1"), needs_input])
     monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
     assert (
         main(["run", "--case", "sample", "--project-root", str(project), "--model", "test-model"])

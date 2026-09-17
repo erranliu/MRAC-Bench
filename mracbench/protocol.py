@@ -9,7 +9,7 @@ DEFAULT_PROTOCOL_ID = "spec-mrac-v2"
 WORKFLOWS = {
     "generate-audit-repair": ("generate", "audit", "repair"),
     "spec-init-freeze": ("spec-init", "spec-freeze-loop", "review", "repair-init", "repair-freeze"),
-    "repository-spec-freeze": ("audit", "review", "repair"),
+    "repository-spec-freeze": ("audit", "repair"),
     "exec-mrac": ("implement", "audit", "repair"),
 }
 
@@ -41,7 +41,11 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
     snapshots = {"protocol.yaml": raw}
     prompts = {}
     stages = section(data, "stages")
-    for stage in WORKFLOWS[workflow]:
+    required_stages = WORKFLOWS[workflow]
+    if workflow == "repository-spec-freeze" and data.get("version") == 1:
+        # Historical snapshots remain readable; they cannot execute under the new semantics.
+        required_stages = ("audit", "review", "repair")
+    for stage in required_stages:
         content = read(stage, section(stages, stage).get("prompt"))
         snapshots[f"{stage}.md"] = content
         prompts[stage] = decode_text(content, stage)

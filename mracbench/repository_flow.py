@@ -1,4 +1,4 @@
-"""Repository-backed MRAC-Spec v2. No BLOCKED state; pending findings stay in FIX."""
+"""Repository-backed MRAC-Spec: every audit finding enters FIX without adjudication."""
 
 import json
 import os
@@ -12,12 +12,13 @@ from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import protocol_from_snapshots, render_repository_prompt
 from .repository import git, prepare_repository
-from .repository_audit import parse_audit, parse_repair, parse_review
+from .repository_audit import parse_audit, parse_repair
 from .runs import RunStore, atomic_text, utc_now, write_json
 from .simple_audit import assign_ids
 
 WORKFLOW = "repository-spec-freeze"
-STATE_VERSION = 2
+STATE_VERSION = 3
+PROTOCOL_VERSION = 2
 RESUMABLE = {
     "RUNNING",
     "PAUSED",
@@ -26,7 +27,6 @@ RESUMABLE = {
     "TIMEOUT",
     "PARSE_ERROR",
     "AUDIT_INVALID",
-    "REVIEW_INVALID",
     "FIX_INVALID",
     "AUDIT_STALE",
     "INTERNAL_ERROR",
@@ -152,6 +152,8 @@ def save_artifact(store, name, raw):
 
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
+    if protocol.version != PROTOCOL_VERSION:
+        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@2")
     with session_lock(base.path):
         base.snapshot(
             "execution-config.json",
@@ -181,10 +183,8 @@ def run_repository_flow(config, adapter, base, case, protocol, result, maximum, 
         working.write_bytes(raw)
         result.update(
             workflow=WORKFLOW,
-            review_rounds=0,
             frozen_spec_sha256=None,
             clean_audit_ids=[],
-            deferred_p3=[],
             terminal_reason=None,
             final_artifact=current,
             flow={
@@ -265,7 +265,7 @@ class Engine:
         self.store.checkpoint(self.result, stage + ":returned")
         return text
 
-    def supervisor_inputs(self):
+    def repair_inputs(self):
         inputs = self.inputs()
         inputs["user_responses"] = [
             {
@@ -278,12 +278,12 @@ class Engine:
 
     def repair(self, maximum):
         pending = self.flow["pending_fix"]
-        inputs = self.supervisor_inputs()
-        inputs.update(audit_id=pending["audit_id"], accepted_findings=pending["accepted"])
+        inputs = self.repair_inputs()
+        inputs.update(audit_id=pending["audit_id"], findings=pending["findings"])
         self.flow["repair_sequence"] += 1
         stage = f"repair-{self.flow['repair_sequence']:02d}"
         repair = parse_repair(
-            self.call(stage, "repair", inputs), pending["audit_id"], pending["accepted"]
+            self.call(stage, "repair", inputs), pending["audit_id"], pending["findings"]
         )
         save_record(self.store, "repairs", stage, repair)
         if repair["disposition"] == "needs_input":
@@ -303,7 +303,7 @@ class Engine:
             phase="AUDIT", artifact_sha256=digest(raw), pending_fix=None, clean=[], questions=[]
         )
         self.store.checkpoint(self.result, stage + ":saved")
-        # The source skill pauses AFTER the sixth repair, never with an unclosed accepted item.
+        # Pause AFTER the sixth repair, never with an unclosed finding.
         if maximum is not None and self.result["audit_rounds"] >= maximum:
             self.result.update(
                 status="NON_CONVERGED", terminal_reason="Explicit audit budget exhausted"
@@ -312,7 +312,7 @@ class Engine:
         if self.flow["failure_streak"] >= 6:
             self.flow["phase"] = "PAUSED"
             self.result.update(
-                status="PAUSED", terminal_reason="Six accepted P0-P2 rounds; repairs recorded"
+                status="PAUSED", terminal_reason="Six rounds with P0-P2 findings; repairs recorded"
             )
             save_record(
                 self.store,
@@ -359,42 +359,29 @@ class Engine:
             audit = parse_audit(text, audit_id, self.repo)
             item["audit"] = save_record(self.store, "audits", stage, audit)
             findings = assign_ids(audit)
-            review_inputs = self.supervisor_inputs()
-            review_inputs.update(
-                audit_id=audit_id, findings=findings, repository_review=audit["repository_review"]
-            )
-            review, accepted, deferred = parse_review(
-                self.call(f"review-{self.flow['sequence']:02d}", "review", review_inputs),
-                audit_id,
-                findings,
-            )
-            item["review"] = save_record(self.store, "reviews", stage, review)
-            if review["repository_assessment"]["status"] != "supported":
-                raise BenchError("REVIEW_INVALID", review["repository_assessment"]["reason"])
         except BenchError as exc:
             item["status"] = exc.kind
             raise
-        blockers = sum(f["severity"] in ("P0", "P1", "P2") for f in accepted)
+        blockers = sum(f["severity"] in ("P0", "P1", "P2") for f in findings)
         item.update(
-            status="issues_found" if accepted else "clean",
+            status="issues_found" if findings else "clean",
             reported_count=len(findings),
-            accepted_count=len(accepted),
             blocking_issue_count=blockers,
-            accepted_by_severity={
-                s: sum(f["severity"] == s for f in accepted) for s in ("P0", "P1", "P2", "P3")
+            reported_by_severity={
+                s: sum(f["severity"] == s for f in findings) for s in ("P0", "P1", "P2", "P3")
             },
-            repository_review=audit["repository_review"],
         )
-        self.result["deferred_p3"].extend({"audit_id": audit_id, **f} for f in deferred)
+        if "repository_review" in audit:
+            item["repository_review"] = audit["repository_review"]
         self.flow["active_audit"] = None
-        if accepted:
+        if findings:
             self.flow.update(
                 phase="FIX",
                 clean=[],
                 questions=[],
                 pending_fix={
                     "audit_id": audit_id,
-                    "accepted": accepted,
+                    "findings": findings,
                     "before_sha256": self.flow["artifact_sha256"],
                 },
             )
@@ -420,17 +407,17 @@ class Engine:
                     convergence_round=self.result["audit_rounds"],
                     frozen_spec_sha256=self.flow["artifact_sha256"],
                     clean_audit_ids=[r["audit_id"] for r in self.flow["clean"]],
-                    terminal_reason="Two repository-backed clean reviews at the fixed baseline",
+                    terminal_reason="Two empty-findings audits at the fixed baseline",
                 )
         item["clean_streak"] = len(self.flow["clean"])
-        self.store.checkpoint(self.result, stage + ":reviewed")
+        self.store.checkpoint(self.result, stage + ":recorded")
 
     def drive(self, maximum):
         while self.result["status"] == "RUNNING":
             self.guard()
             if self.flow["phase"] == "FIX":
                 self.repair(maximum)
-                # Finish accepted repairs even at the last explicitly budgeted audit.
+                # Finish every repair even at the last explicitly budgeted audit.
                 continue
             if maximum is not None and self.result["audit_rounds"] >= maximum:
                 self.result.update(
@@ -498,15 +485,21 @@ def execute(
     return store.path, result
 
 
-def write_report(store, result):
+def render_report(result):
     lines = [
-        f"# MRAC-Spec: {store.run_id}",
+        f"# MRAC-Spec: {result['run_id']}",
         "",
         f"Status: {result['status']}",
         f"Phase: {result['flow']['phase']}",
         f"Baseline: {result['flow']['base_head']}",
         f"Spec: {result['final_artifact']}",
     ]
+    historical = result["flow"]["schema_version"] == 2
+    if historical:
+        lines += [
+            "Historical adjudicated run (read-only); clean rounds may include rejected/deferred findings.",
+            "Start a new run to use direct findings; historical clean counts cannot be carried over.",
+        ]
     if result.get("terminal_reason"):
         lines += [result["terminal_reason"]]
     if result.get("frozen_spec_sha256"):
@@ -515,12 +508,12 @@ def write_report(store, result):
             "Clean audits: " + ", ".join(result["clean_audit_ids"]),
         ]
     for row in result["trajectory"]:
-        counts = row.get("accepted_by_severity", {})
+        counts = row.get("accepted_by_severity" if historical else "reported_by_severity", {})
         summary = " ".join(f"{s}x{counts[s]}" for s in ("P0", "P1", "P2", "P3") if counts.get(s))
         lines += ["", f"R{row['audit_round']}, {summary or row['status']}", row["audit_id"]]
         for check in row.get("repository_review", {}).get("checks", []):
             lines.append(f"Evidence: {check['path']}::{check['symbol']} — {check['conclusion']}")
-    for finding in result["deferred_p3"]:
+    for finding in result.get("deferred_p3", []):
         lines.append(
             f"Deferred P3 ({finding['audit_id']}): {finding['title']} — {finding['reason']}"
         )
@@ -533,16 +526,40 @@ def write_report(store, result):
             "proof of intent entailment, or deployment resource verification."
         ),
     ]
-    atomic_text(store.path / "run-report.md", "\n".join(lines) + "\n")
+    return "\n".join(lines) + "\n"
 
 
-def load_session(path):
-    """Read a v2 checkpoint, never migrate old clean counts or infer state from logs."""
+def write_report(store, result):
+    atomic_text(store.path / "run-report.md", render_report(result))
+
+
+def read_checkpoint(path, *, allow_historical=False):
+    """Check the version before any mutation, including creating a run-lock file."""
     try:
         checkpoint = json.loads((path / "repository-state.json").read_bytes())
         result = checkpoint["result"]
-        if checkpoint["schema_version"] != STATE_VERSION or result["workflow"] != WORKFLOW:
+        version = checkpoint["schema_version"]
+        if (
+            version not in {2, STATE_VERSION}
+            or result["workflow"] != WORKFLOW
+            or result["flow"]["schema_version"] != version
+        ):
             raise BenchError("RESUME_ERROR", "Unsupported state version/workflow; start a new run")
+        if version != STATE_VERSION and not allow_historical:
+            raise BenchError(
+                "RESUME_ERROR",
+                "Historical adjudicated runs are read-only; start a new run without old clean counts",
+            )
+        return checkpoint
+    except (OSError, KeyError, ValueError, TypeError) as exc:
+        raise BenchError("RESUME_ERROR", f"Cannot validate run checkpoint: {exc}") from exc
+
+
+def load_session(path, *, allow_historical=False):
+    """Read the canonical checkpoint without migrating historical clean counts."""
+    try:
+        checkpoint = read_checkpoint(path, allow_historical=allow_historical)
+        version, result = checkpoint["schema_version"], checkpoint["result"]
         if result["flow"]["phase"] not in {"AUDIT", "FIX", "FROZEN", "PAUSED", "ABORTED"}:
             raise BenchError("RESUME_ERROR", "Unknown phase; BLOCKED states cannot be migrated")
         evidence = Evidence(path, checkpoint["evidence_sha256"])
@@ -561,6 +578,13 @@ def load_session(path):
             raise BenchError("RESUME_ERROR", "Pinned execution settings changed")
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
+        expected_protocol_version = 1 if version == 2 else PROTOCOL_VERSION
+        if (
+            protocol.version != expected_protocol_version
+            or result["protocol_version"] != protocol.version
+            or pinned["protocol_version"] != protocol.version
+        ):
+            raise BenchError("RESUME_ERROR", "Protocol/state version mismatch; start a new run")
         if protocol.workflow != WORKFLOW or result["flow"]["base_head"] != case.commit:
             raise BenchError("RESUME_ERROR", "Protocol or baseline changed")
         settings, requested = pinned["effective_config"], pinned["requested_config"]
@@ -636,6 +660,7 @@ def resume_repository_run(path, adapter, input_file=None, spec_file=None):
     path = path.resolve()
     if not path.is_dir():
         raise BenchError("RESUME_ERROR", "Run directory does not exist")
+    read_checkpoint(path)
     with session_lock(path):
         store, result, case, protocol, config, current = load_session(path)
         if result["status"] not in RESUMABLE:
@@ -716,8 +741,10 @@ def inspect_repository_run(path, *, abort_reason=None):
     path = path.resolve()
     if not path.is_dir():
         raise BenchError("RESUME_ERROR", "Run directory does not exist")
+    if abort_reason is not None:
+        read_checkpoint(path)
     with session_lock(path) if abort_reason is not None else nullcontext():
-        store, result, _, _, _, current = load_session(path)
+        store, result, _, _, _, current = load_session(path, allow_historical=abort_reason is None)
         if abort_reason is not None:
             if not abort_reason.strip() or result["flow"]["phase"] in {"FROZEN", "ABORTED"}:
                 raise BenchError(
@@ -743,6 +770,6 @@ def inspect_repository_run(path, *, abort_reason=None):
             and digest(current) != result["flow"]["active_audit"]["artifact_sha256"]
         ):
             raise BenchError("AUDIT_STALE", "Working Spec changed; resume to abandon the old round")
-        if result["status"] != "RUNNING":
+        if result["status"] != "RUNNING" and result["flow"]["schema_version"] == STATE_VERSION:
             write_report(store, result)
         return path, result

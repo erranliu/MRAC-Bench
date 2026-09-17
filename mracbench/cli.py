@@ -5,7 +5,7 @@ from .codex_exec import CodexExecAdapter
 from .exec_flow import inspect_exec, resume_exec
 from .models import BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID
-from .repository_flow import inspect_repository_run, resume_repository_run
+from .repository_flow import inspect_repository_run, render_report, resume_repository_run
 from .runner import run_case
 from .simple_flow import resume_run
 
@@ -62,8 +62,12 @@ def main(argv=None) -> int:
             path, result = inspect(
                 args.run_dir, abort_reason=args.reason if args.command == "abort" else None
             )
-            if args.command == "report" and (path / "run-report.md").exists():
-                print((path / "run-report.md").read_text(encoding="utf-8"))
+            if args.command == "report":
+                if inspect is inspect_repository_run:
+                    # Historical runs are rendered in memory, never rewritten or migrated.
+                    print(render_report(result))
+                elif (path / "run-report.md").exists():
+                    print((path / "run-report.md").read_text(encoding="utf-8"))
         elif args.command == "resume":
             adapter = CodexExecAdapter(args.codex_executable)
             if (args.run_dir / "exec-state.json").is_file():
