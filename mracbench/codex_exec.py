@@ -85,6 +85,34 @@ class CodexExecAdapter:
             for part in ("-c", f"{key}={json.dumps(value, ensure_ascii=False)}")
         ]
 
+    @staticmethod
+    def mcp_arguments(servers):
+        values = {}
+        for name, config in (servers or {}).items():
+            if not name.replace("_", "").isalnum() or not isinstance(config, dict):
+                raise ValueError("Invalid MCP server configuration")
+            if not isinstance(config.get("command"), str) or not config["command"]:
+                raise ValueError(f"MCP server {name} requires an executable command")
+            if not isinstance(config.get("args", []), list) or any(
+                not isinstance(value, str) for value in config.get("args", [])
+            ):
+                raise ValueError(f"MCP server {name} args must be strings")
+            for key, value in config.items():
+                if key not in {
+                    "command",
+                    "args",
+                    "enabled",
+                    "startup_timeout_sec",
+                    "tool_timeout_sec",
+                }:
+                    raise ValueError(f"Unsupported MCP server option: {key}")
+                values[f"mcp_servers.{name}.{key}"] = value
+        return [
+            part
+            for key, value in values.items()
+            for part in ("-c", f"{key}={json.dumps(value, ensure_ascii=False)}")
+        ]
+
     def command(self) -> list[str]:
         return self._command or resolve_command(self.executable)
 
@@ -159,6 +187,7 @@ class CodexExecAdapter:
                 str(output_path),
             ]
             command += self.provider_arguments(raw)
+            command += self.mcp_arguments(request.mcp_servers)
             if request.model:
                 command += ["--model", request.model]
             if request.reasoning_effort:
@@ -231,6 +260,15 @@ class CodexExecAdapter:
             result.duration_seconds = time.monotonic() - start
             result.stdout = (raw / "stdout.txt").read_text(encoding="utf-8", errors="replace")
             result.stderr = (raw / "stderr.txt").read_text(encoding="utf-8", errors="replace")
+            if (
+                result.error_type is None
+                and "blocked by policy" in (result.stdout + "\n" + result.stderr).casefold()
+            ):
+                result.error_type = "EXECUTION_POLICY_ERROR"
+                result.error_message = (
+                    "Codex could not execute a requested repository command because the "
+                    "execution policy rejected it; see raw stderr/stdout"
+                )
             invocation.update(
                 ended_at=utc_now(),
                 exit_code=result.exit_code,
@@ -251,6 +289,18 @@ class CodexExecAdapter:
                         and isinstance(event.get("thread_id"), str)
                     ):
                         invocation["thread_id"] = event["thread_id"]
+                    item = event.get("item") if isinstance(event, dict) else None
+                    if (
+                        isinstance(item, dict)
+                        and event.get("type") == "item.completed"
+                        and item.get("type") in {"command_execution", "shell"}
+                    ):
+                        invocation.setdefault("command_executions", []).append(
+                            {
+                                "command": str(item.get("command", ""))[:4096],
+                                "exit_code": item.get("exit_code"),
+                            }
+                        )
                 except ValueError:
                     pass
             write_json(raw / "invocation.json", invocation)

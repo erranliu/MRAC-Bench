@@ -70,7 +70,7 @@ def test_bad_review_cannot_hide_or_skip_a_finding(decisions):
         {"disposition": "block", "reason": "No authority"},
     ],
 )
-def test_repair_requires_all_closures_and_no_partial_block(change):
+def test_repair_requires_all_closures_and_continue(change):
     data = {
         "audit_id": "A",
         "disposition": "continue",

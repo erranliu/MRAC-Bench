@@ -67,7 +67,7 @@ def test_cli_uses_run_default_for_case_without_protocol(project, monkeypatch, ca
     assert json.loads(results[0].read_text())["protocol_id"] == "spec-mrac-v2"
 
 
-def test_cli_blocked_exit_code(project, monkeypatch, capsys):
+def test_cli_rejects_removed_simple_exception(project, monkeypatch, capsys):
     agent = StubAgent([audit("P1"), review(exception="product-decision")])
     monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
     assert (
@@ -82,9 +82,9 @@ def test_cli_blocked_exit_code(project, monkeypatch, capsys):
                 "spec-flow-simple-v1",
             ]
         )
-        == 4
+        == 2
     )
-    assert "BLOCKED" in capsys.readouterr().out
+    assert "PARSE_ERROR" in capsys.readouterr().out
 
 
 def test_cli_resume_rejects_missing_run_without_mutation(tmp_path, capsys):

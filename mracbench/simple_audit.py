@@ -5,8 +5,6 @@ import json
 from .audit import _unique, parse_spec
 from .models import BenchError
 
-EXCEPTIONS = {"product-decision", "scope-expansion", "external-dependency"}
-
 
 def obj(value, required, optional=()):
     if not isinstance(value, dict) or not set(required) <= set(value) <= set(required) | set(
@@ -57,9 +55,9 @@ def parse_review(text, audit_id, findings):
             raise ValueError("Audit ID or decisions mismatch")
         by_id = {f["finding_id"]: f for f in findings}
         seen = set()
-        accepted, deferred, exceptions = [], [], []
+        accepted, deferred = [], []
         for decision in data["decisions"]:
-            obj(decision, {"finding_id", "outcome"}, {"exception", "reason"})
+            obj(decision, {"finding_id", "outcome"}, {"reason"})
             fid, outcome = decision["finding_id"], decision["outcome"]
             nonempty(fid)
             nonempty(outcome)
@@ -72,14 +70,7 @@ def parse_review(text, audit_id, findings):
                 if "reason" in decision:
                     raise ValueError("Only rejections carry reason")
                 accepted.append(by_id[fid])
-                if "exception" in decision:
-                    nonempty(decision["exception"])
-                    if decision["exception"] not in EXCEPTIONS:
-                        raise ValueError("Unknown exception")
-                    exceptions.append(decision["exception"])
             else:
-                if "exception" in decision:
-                    raise ValueError("Only accepted findings carry exception")
                 if outcome == "rejected":
                     reason = decision.get("reason")
                     nonempty(reason)
@@ -91,7 +82,7 @@ def parse_review(text, audit_id, findings):
                     deferred.append(by_id[fid])
         if seen != set(by_id):
             raise ValueError("Every finding needs exactly one decision")
-        return data, accepted, deferred, exceptions
+        return data, accepted, deferred
     except (ValueError, TypeError, RecursionError) as exc:
         raise BenchError("PARSE_ERROR", f"Invalid review JSON: {exc}") from exc
 
@@ -101,10 +92,7 @@ def parse_repair(text, audit_id, accepted):
         data = decode(text)
         if not isinstance(data, dict):
             raise TypeError("Expected repair object")
-        if data.get("disposition") == "block":
-            obj(data, {"audit_id", "disposition", "reason"})
-            nonempty(data["reason"])
-        elif data.get("disposition") == "continue":
+        if data.get("disposition") == "continue":
             obj(data, {"audit_id", "disposition", "spec", "fixes"})
             parse_spec(data["spec"])
             if not isinstance(data["fixes"], list):
@@ -120,7 +108,7 @@ def parse_repair(text, audit_id, accepted):
             if seen != {row["finding_id"] for row in accepted}:
                 raise ValueError("Every accepted finding needs a closure record")
         else:
-            raise ValueError("Unknown repair disposition")
+            raise ValueError("Repair disposition must be continue")
         if data["audit_id"] != audit_id:
             raise ValueError("Audit ID mismatch")
         return data

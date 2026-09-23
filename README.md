@@ -2,7 +2,7 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2@2` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1` 保留初始化审计后纯 Spec 冻结的流程；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@2` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@4` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
@@ -58,7 +58,7 @@ uv run python -m mracbench run \
 
 v2 的总审计上限默认为无，仅使用 `--max-rounds` 或协议配置，不读取 case 的历史轮数预算。两个旧 Spec 协议仍按命令参数 → case limits → protocol limits（默认 8）。exec-mrac-v1 每批固定 6 次 audit，耗尽后显式 resume 增加 6 次。超时优先级仍为命令参数 → case limits（默认 1800 秒）。连续 clean 固定要求 2 次。
 
-运行退出码：`0` 为 `CONVERGED`，`1` 为 `NON_CONVERGED`，`2` 为配置/执行/校验错误，`3` 为 `PAUSED`；v2 另有 `5`（`NEEDS_INPUT`，阶段仍是 FIX）和 `6`（`ABORTED`）。`4`（BLOCKED）仅用于旧的 spec-flow-simple-v1。v2 最少两次 audit 即可冻结。
+运行退出码：`0` 为 `CONVERGED`，`1` 为 `NON_CONVERGED`，`2` 为配置/执行/校验错误，`3` 为 `PAUSED`；v2 另有 `5`（`NEEDS_INPUT`，阶段仍是 FIX）和 `6`（`ABORTED`）。当前协议不产生 BLOCKED；历史 spec-flow-simple-v1@1 的 BLOCKED 结果仅保留查看。v2 最少两次 audit 即可冻结。
 
 运行 v2、查看状态和提供必要输入：
 
@@ -71,7 +71,7 @@ uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C
 uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
 ```
 
-v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；使用新语义须新开 run，不能继承旧 clean。旧 spec-flow-simple-v1 仍只支持 PAUSED 恢复，旧 BLOCKED 记录不会迁移。
+v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；使用新语义须新开 run，不能继承旧 clean。spec-flow-simple-v1@4（state 3）只支持 PAUSED 恢复；@1/state 1、@2/state 2 与 @3/state 3 的历史运行只读，不迁移旧 clean。
 
 ## 按 Spec 执行代码
 
@@ -123,7 +123,7 @@ runs/<run-id>/
     repository.log
 ```
 
-审计预算只统计已启动的 audit 调用，spec-flow-simple-v1 的初始化 audit 也计入；repair 单独计数，仅有裁决的旧协议另外统计 review。v2 新运行按 reported_count/reported_by_severity 统计全部发现，不生成裁决记录。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
+审计预算只统计已启动的 audit 调用，spec-flow-simple-v1 的仓库读取 preflight 不计 audit，初始化 audit 计入；repair 单独计数，仅有裁决的旧协议另外统计 review。v2 新运行按 reported_count/reported_by_severity 统计全部发现，不生成裁决记录。失败 audit 也有 trajectory 项，blocking 数为 `null`，状态为错误类型。调用未启动时保留 raw 错误记录但不计入 audit 轮数。无效 JSON 不会转换成 clean，也不会自动重试。
 
 所有历史 spec 都保留；连续 clean 的两轮必须审计同一 artifact。最终结果附带 `final_artifact`，正常耗尽预算时也能查看最后一份 spec。
 
@@ -131,13 +131,13 @@ usage 的总 token/cost 当前记为 `null`；每次调用若有 Codex usage 则
 
 ## 独立性与仓库保护
 
-每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1 的冻结审计只接收当前 Spec 和标识/hash，使用空工作目录。v2 每轮必须读取固定基线仓库，显式提供固定提交中的仓库指令路径，由 prompt 要求读取相关规则；不会自动加载本机用户规则。
+每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 启动时先通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；init/review/repair 可以调用这些仓库限定工具，冻结审计不获得仓库工具且只接收当前 Spec 和标识/hash，使用空工作目录。v2 每轮必须读取固定基线仓库，显式提供固定提交中的仓库指令路径，由 prompt 要求读取相关规则；不会自动加载本机用户规则。
 
 Spec 协议采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 状态与文件内容哈希；包括忽略文件在内的新增/删除/修改均视为违规。exec 的 IMPLEMENT/FIX 使用 workspace-write，允许专属 checkout 的产品修改；AUDIT 只读并检查包括 ignored 文件在内的写入变化，所有阶段保护固定基线和 Git 控制状态。历史结果放在 checkout 外。隔离边界不等同于容器或严格的文件读取白名单：禁止读取父目录、历史 run 和外部来源也通过 protocol prompt 约束。
 
 缓存以 URL 哈希和固定 SHA 区分，每次只 fetch 指定 commit。已污染的缓存不会自动 reset 或删除，下一次运行会返回 `REPOSITORY_ERROR`。排查后可选择新的 `--workspace-dir`。Spec 协议同一 checkout 的锁覆盖整个 run；exec 使用每个 run 独有的 checkout 和 run 锁。异常退出后残留锁需要确认原进程已结束再手动处理。M1 不支持 submodule 仓库。
 
-只读检查发现改动时，`PROTOCOL_VIOLATION` 优先于 agent/解析错误；差异保存在对应阶段的 `repository-after.json`。普通 agent 错误为 `AGENT_ERROR`，超时为 `TIMEOUT`，无效输出为 `PARSE_ERROR`。这些都不是正常未收敛。
+只读检查发现改动时，`PROTOCOL_VIOLATION` 优先于 agent/解析错误；差异保存在对应阶段的 `repository-after.json`。普通 agent 错误为 `AGENT_ERROR`，策略拒绝为 `EXECUTION_POLICY_ERROR`，仓库读取预检失败为 `REPOSITORY_ACCESS_ERROR`，超时为 `TIMEOUT`，无效输出为 `PARSE_ERROR`。这些都不是正常未收敛。
 
 ## 多任务并行编排
 

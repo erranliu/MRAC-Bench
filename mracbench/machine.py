@@ -147,6 +147,8 @@ def inspect(path):
             actions = (
                 ["continue"]
                 if result.get("protocol_id") == "spec-flow-simple-v1"
+                and result.get("flow", {}).get("schema_version") == 3
+                and result.get("protocol_version") == 4
                 and result["status"] == "PAUSED"
                 else []
             )
@@ -326,7 +328,7 @@ def main(argv=None):
                     "spec-mrac-v2": 2,
                     "exec-mrac-v1": 1,
                     "spec-mrac-v1": 1,
-                    "spec-flow-simple-v1": 1,
+                    "spec-flow-simple-v1": 4,
                 },
             }
         elif args.command == "inspect":
