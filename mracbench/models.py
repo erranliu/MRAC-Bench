@@ -58,6 +58,7 @@ class AgentRequest:
     readonly: bool = True
     reasoning_effort: str | None = None
     skip_git_repo_check: bool = False
+    mcp_servers: dict[str, dict] | None = None
 
 
 @dataclass

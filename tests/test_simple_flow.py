@@ -9,6 +9,7 @@ from test_inputs import change_case
 
 from mracbench.cases import load_case
 from mracbench.evidence import run_lock
+from mracbench.machine import inspect
 from mracbench.models import AgentResult, BenchError
 from mracbench.repository import prepare_repository
 from mracbench.runner import run_case
@@ -116,7 +117,10 @@ def test_copied_bytes_and_distinct_stage_inputs(project, simple_config):
         assert request.reasoning_effort == "high"
         data = payload(request)
         assert "METADATA_MUST_NOT_LEAK" not in request.prompt
-        if request.raw_dir.name.startswith("spec-freeze-loop"):
+        if request.raw_dir.name.startswith("repository-read-check"):
+            assert set(data) == {"repository_path", "fixed_repository_head"}
+            assert request.workspace == agent.requests[0].workspace
+        elif request.raw_dir.name.startswith("spec-freeze-loop"):
             assert set(data) == {"current_spec", "audit_id", "spec_sha256"}
             assert request.workspace != agent.requests[0].workspace
             assert not list(request.workspace.iterdir())
@@ -131,6 +135,7 @@ def test_initial_repair_goes_directly_to_freeze(simple_config):
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
     assert [r.raw_dir.name for r in agent.requests] == [
+        "repository-read-check-01",
         "spec-init-01",
         "review-01",
         "repair-01",
@@ -176,17 +181,18 @@ def test_accepted_p3_requires_repair(simple_config):
 @pytest.mark.parametrize(
     "exception", ["product-decision", "scope-expansion", "external-dependency"]
 )
-def test_structural_exception_blocks_and_cannot_resume(simple_config, exception):
+def test_removed_review_exception_is_invalid_not_blocked(simple_config, exception):
     path, result = run_case(simple_config, StubAgent([audit("P1"), review(exception=exception)]))
-    assert result["status"] == "BLOCKED", result["error"]
-    assert result["terminal_reason"] == exception
+    assert result["status"] == "PARSE_ERROR", result["error"]
+    assert result["flow"]["clean"] == []
+    assert result["repair_rounds"] == 0
     before = (path / "result.json").read_bytes()
     with pytest.raises(BenchError, match="Only PAUSED"):
         resume_run(path, StubAgent([]))
     assert (path / "result.json").read_bytes() == before
 
 
-def test_repair_can_block_without_partial_spec(simple_config):
+def test_removed_block_disposition_is_invalid_and_preserves_pending_findings(simple_config):
     def block(request):
         return json.dumps(
             {
@@ -197,9 +203,77 @@ def test_repair_can_block_without_partial_spec(simple_config):
         )
 
     path, result = run_case(simple_config, StubAgent([audit("P1"), review(), block]))
-    assert result["status"] == "BLOCKED", result["error"]
+    assert result["status"] == "PARSE_ERROR", result["error"]
+    assert result["flow"]["pending_fix"]["accepted"]
+    assert result["flow"]["clean"] == []
     assert len(list((path / "artifacts").iterdir())) == 1
     assert result["repair_rounds"] == 1
+
+
+def test_ambiguity_is_repaired_then_independently_audited(project, simple_config):
+    source = b"# Spec\nDefine the failure result. Two outcomes need a decision.\n"
+    (project / "cases/sample/task.md").write_bytes(source)
+    change_case(project, lambda d: d["task"].update(sha256=hashlib.sha256(source).hexdigest()))
+    agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
+    path, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 4
+    assert result["flow"]["schema_version"] == 3
+    assert result["repair_rounds"] == 1
+    assert (path / "input/task.md").read_bytes() == source
+
+
+@pytest.mark.parametrize("status", ["PAUSED", "BLOCKED"])
+def test_historical_simple_results_are_read_only(simple_config, status):
+    path, result = run_case(replace(simple_config, max_rounds=12), StubAgent(six_failures()))
+    result["flow"]["schema_version"] = 1
+    result["protocol_version"] = 1
+    result["status"] = status
+    raw = json.dumps(result).encode()
+    (path / "result.json").write_bytes(raw)
+    metadata = yaml.safe_load((path / "run.yaml").read_text())
+    metadata["result_sha256"] = hashlib.sha256(raw).hexdigest()
+    (path / "run.yaml").write_text(yaml.safe_dump(metadata))
+    agent = StubAgent([])
+    with pytest.raises(BenchError, match="Historical Simple runs are read-only"):
+        resume_run(path, agent)
+    assert not agent.requests
+    assert (path / "result.json").read_bytes() == raw
+
+
+def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_config):
+    protocol_path = project / "protocols/spec-flow-simple-v1/protocol.yaml"
+    data = yaml.safe_load(protocol_path.read_text())
+    data["version"] = 1
+    protocol_path.write_text(yaml.safe_dump(data))
+    agent = StubAgent([])
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CASE_ERROR"
+    assert not agent.requests
+
+
+@pytest.mark.parametrize("schema,protocol_version,actions", [(1, 1, []), (3, 4, ["continue"])])
+def test_machine_only_offers_continue_for_current_simple_schema(
+    tmp_path, schema, protocol_version, actions
+):
+    path = tmp_path / "run-simple"
+    path.mkdir()
+    (path / "lifecycle.json").write_text(
+        json.dumps({"schema_version": 1, "run_id": path.name, "lifecycle": "PAUSED"})
+    )
+    (path / "result.json").write_text(
+        json.dumps(
+            {
+                "protocol_id": "spec-flow-simple-v1",
+                "protocol_version": protocol_version,
+                "status": "PAUSED",
+                "flow": {"schema_version": schema},
+            }
+        )
+    )
+    status = inspect(path)
+    assert status["checkpoint_valid"]
+    assert status["allowed_actions"] == actions
 
 
 def test_pause_preserves_pending_repair_and_resume_uses_snapshots(project, simple_config):
@@ -227,7 +301,7 @@ def test_pause_preserves_pending_repair_and_resume_uses_snapshots(project, simpl
     assert (result["audit_rounds"], result["repair_rounds"]) == (9, 6)
     assert result["review_rounds"] == 9
     assert result["flow"]["resume_count"] == 1
-    assert agent.requests[0].raw_dir.name == "repair-06"
+    assert agent.requests[1].raw_dir.name == "repair-06"
     assert all("CHANGED live" not in request.prompt for request in agent.requests)
     assert all(request.reasoning_effort == "high" for request in agent.requests)
     assert all(p.read_bytes() == content for p, content in originals.items())
@@ -327,7 +401,9 @@ def test_related_specs_reach_init_review_and_repair_but_never_freeze(project, si
     assert (path / "input/related-spec-01.md").read_bytes() == raw
     for request in agent.requests:
         data = payload(request)
-        if request.raw_dir.name.startswith("spec-freeze-loop"):
+        if request.raw_dir.name.startswith("repository-read-check"):
+            assert set(data) == {"repository_path", "fixed_repository_head"}
+        elif request.raw_dir.name.startswith("spec-freeze-loop"):
             assert "related_specs" not in data
         else:
             assert data["related_specs"][0]["content"] == raw.decode()

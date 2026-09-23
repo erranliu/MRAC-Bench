@@ -1,6 +1,7 @@
 """Two explicit Spec stages extracted from MRAC-Flow Simple (no product workflow)."""
 
 import json
+import sys
 import time
 from contextlib import nullcontext
 from pathlib import Path
@@ -36,7 +37,32 @@ def baseline_inputs(case, repo, spec):
     }
 
 
+def repository_mcp_servers(store, repo, case, stage):
+    evidence_log = store.path / "raw" / stage / "repository-read-events.jsonl"
+    return {
+        "mrac_repository": {
+            "command": sys.executable,
+            "args": [
+                "-m",
+                "mracbench.repository_mcp",
+                "--repository",
+                str(repo.path),
+                "--head",
+                case.commit,
+                "--manifest",
+                str(store.path / "input" / "repository-manifest.json"),
+                "--audit-log",
+                str(evidence_log),
+            ],
+            "startup_timeout_sec": 20,
+            "tool_timeout_sec": 45,
+        }
+    }
+
+
 def run_simple(config, adapter, store, case, protocol, result, maximum, timeout, started):
+    if protocol.version < 4:
+        raise BenchError("CASE_ERROR", "Simple protocol versions below 4 are read-only")
     with run_lock(store.path):
         store.snapshot(
             "execution-config.json",
@@ -63,7 +89,7 @@ def run_simple(config, adapter, store, case, protocol, result, maximum, timeout,
             deferred_p3=[],
             terminal_reason=None,
             flow={
-                "schema_version": 1,
+                "schema_version": 3,
                 "phase": "spec-init",
                 "failure_streak": 0,
                 "clean": [],
@@ -128,6 +154,21 @@ def execute_simple(
                 evidence.check,
                 evidence.capture,
             )
+            probe_number = result["flow"]["resume_count"] + 1
+            probe_stage = f"repository-read-check-{probe_number:02d}"
+            probe_prompt = render_simple_prompt(
+                protocol.prompts["repository-read-check"],
+                {
+                    "repository_path": str(repo.path),
+                    "fixed_repository_head": case.commit,
+                },
+            )
+            invoke(
+                probe_stage,
+                probe_prompt,
+                mcp_servers=repository_mcp_servers(store, repo, case, probe_stage),
+            )
+            verify_repository_read_probe(store.path / "raw" / probe_stage, case.commit)
             drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.check()
     except BenchError as exc:
@@ -156,6 +197,66 @@ def execute_simple(
     return store.path, result
 
 
+def verify_repository_read_probe(raw, expected_head):
+    try:
+        events = [
+            json.loads(line)
+            for line in (raw / "repository-read-events.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line
+        ]
+        value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
+        if set(value) != {"head", "path", "match", "excerpt"}:
+            raise ValueError("Unexpected response fields")
+        if value["head"] != expected_head:
+            raise ValueError("Repository HEAD mismatch")
+        if not isinstance(value["path"], str) or not isinstance(value["match"], str):
+            raise TypeError("Probe path and match must be strings")
+        if not isinstance(value["excerpt"], str) or not value["excerpt"].strip():
+            raise ValueError("Source excerpt is empty")
+
+        heads = [
+            event.get("result", {}).get("head")
+            for event in events
+            if event.get("tool") == "repository_head" and event.get("ok") is True
+        ]
+        if expected_head not in heads:
+            raise ValueError("No successful repository_head MCP call for the fixed commit")
+
+        matches = [
+            match
+            for event in events
+            if event.get("tool") == "repository_search"
+            and event.get("ok") is True
+            and event.get("result", {}).get("query") is None
+            for match in event.get("result", {}).get("matches", [])
+            if isinstance(match, dict)
+        ]
+        if not any(
+            match.get("path") == value["path"] and match.get("text") == value["match"]
+            for match in matches
+        ):
+            raise ValueError("Reported match was not returned by repository_search")
+
+        reads = [
+            event.get("result", {})
+            for event in events
+            if event.get("tool") == "repository_read"
+            and event.get("ok") is True
+            and event.get("arguments", {}).get("path") == value["path"]
+        ]
+        if not any(
+            value["excerpt"] in [line.get("text") for line in read.get("lines", [])]
+            for read in reads
+        ):
+            raise ValueError("Reported excerpt was not returned by repository_read")
+    except (OSError, TypeError, ValueError) as exc:
+        raise BenchError(
+            "REPOSITORY_ACCESS_ERROR", f"Invalid repository read probe: {exc}"
+        ) from exc
+
+
 def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence):
     flow = result["flow"]
     while True:
@@ -176,14 +277,15 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             inputs.update(audit_id=pending["audit_id"], accepted_findings=pending["accepted"])
             prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
             repair = parse_repair(
-                invoke(stage, render_simple_prompt(protocol.prompts[prompt_stage], inputs)),
+                invoke(
+                    stage,
+                    render_simple_prompt(protocol.prompts[prompt_stage], inputs),
+                    mcp_servers=repository_mcp_servers(store, repo, case, stage),
+                ),
                 pending["audit_id"],
                 pending["accepted"],
             )
             save_evidence(store, evidence, f"repairs/{stage}.json", repair)
-            if repair["disposition"] == "block":
-                result.update(status="BLOCKED", terminal_reason=repair["reason"])
-                return
             replacement = parse_spec(repair["spec"])
             if replacement.encode("utf-8") == spec_bytes:
                 raise BenchError("PARSE_ERROR", "Accepted repair did not change Spec bytes")
@@ -227,6 +329,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             render_simple_prompt(protocol.prompts[kind], inputs, spec_only=spec_only),
             item,
             workspace=workspace,
+            mcp_servers=(None if spec_only else repository_mcp_servers(store, repo, case, stage)),
         )
         try:
             audit = parse_findings(text, audit_id)
@@ -234,10 +337,11 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
             review_inputs.update(audit_id=audit_id, audit_kind=kind, findings=findings)
-            review, accepted, deferred, exceptions = parse_review(
+            review, accepted, deferred = parse_review(
                 invoke(
                     f"review-{number:02d}",
                     render_simple_prompt(protocol.prompts["review"], review_inputs),
+                    mcp_servers=repository_mcp_servers(store, repo, case, f"review-{number:02d}"),
                 ),
                 audit_id,
                 findings,
@@ -276,9 +380,6 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             flow["phase"] = "spec-freeze-loop"
         item["clean_streak"] = len(flow["clean"])
         store.checkpoint(result, stage + ":reviewed")
-        if exceptions:
-            result.update(status="BLOCKED", terminal_reason=", ".join(sorted(set(exceptions))))
-            return
         if len(flow["clean"]) == 2:
             result.update(
                 status="CONVERGED",
@@ -327,12 +428,12 @@ def resume_run(path: Path, adapter):
             if digest(raw_result) != store.metadata["result_sha256"]:
                 raise BenchError("RESUME_ERROR", "Saved result checkpoint changed")
             result = json.loads(raw_result)
-            if result["workflow"] != "spec-init-freeze" or result["flow"]["schema_version"] != 1:
-                raise BenchError("RESUME_ERROR", "Unsupported resumable workflow")
-            if result["status"] != "PAUSED":
+            if result["workflow"] != "spec-init-freeze" or result["flow"]["schema_version"] != 3:
                 raise BenchError(
-                    "RESUME_ERROR", "Only PAUSED runs can resume; BLOCKED needs a new run"
+                    "RESUME_ERROR", "Historical Simple runs are read-only; start a new run"
                 )
+            if result["status"] != "PAUSED":
+                raise BenchError("RESUME_ERROR", "Only PAUSED runs can resume")
             evidence = Evidence(path, store.metadata["evidence_sha256"])
             evidence.empty_workspaces = list((path / "audit-workspaces").glob("*"))
             evidence.check()
@@ -343,6 +444,10 @@ def resume_run(path: Path, adapter):
             }
             case = case_from_snapshots(result["case_id"], snapshots)
             protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
+            if protocol.version < 4:
+                raise BenchError(
+                    "RESUME_ERROR", "Historical Simple protocol versions are read-only"
+                )
             pinned = json.loads(snapshots["execution-config.json"])
             settings = pinned["effective_config"]
             if any(store.metadata[key] != pinned[key] for key in pinned):

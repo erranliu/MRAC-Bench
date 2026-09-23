@@ -13,22 +13,16 @@ do not introduce code-only defects or new intent-comparison findings in this sta
 Use source intent and Spec-named symbols/direct semantic dependencies at the fixed
 baseline only to assess the supplied findings and whether a correction is entailed.
 Source intent wins; code may clarify an existing rule, not create product behavior.
-If an explicit implementation baseline in source intent differs from the supplied
-fixed_repository_head, do not fetch another revision or silently substitute it.
-Treat the missing required baseline as an external-dependency exception when a
-finding depends on it.
-
-For an accepted finding requiring new product behavior not determined by immutable
-intent, use exception "product-decision". For a new durable surface outside current
-authority use "scope-expansion". For an unresolved external/later-task dependency
-use "external-dependency". These exceptions block; do not bypass them to obtain clean.
+Use only the supplied fixed_repository_head; do not fetch another revision or
+silently substitute it. All accepted findings enter repair. Judge the defect on
+its evidence, not on whether its correction is easy or already uniquely determined.
+When repository evidence is needed to assess a finding, use the supplied
+mrac_repository MCP tools; do not use shell commands to inspect the repository.
 Do not edit or rewrite the Spec, and do not decide the controller's next action.
 
 Return ONLY {"audit_id":"...","decisions":[...]} using the supplied audit_id.
 Each decision is exactly one of:
 {"finding_id":"F1","outcome":"accepted"}
-{"finding_id":"F1","outcome":"accepted","exception":"product-decision"}
 {"finding_id":"F1","outcome":"rejected","reason":"Specific counter-evidence, one line, at most 500 characters."}
 {"finding_id":"F1","outcome":"deferred"}
-The exception values are product-decision, scope-expansion, external-dependency.
 Only rejected decisions carry reason. Empty findings require an empty decisions array.

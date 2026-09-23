@@ -49,6 +49,15 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
         content = read(stage, section(stages, stage).get("prompt"))
         snapshots[f"{stage}.md"] = content
         prompts[stage] = decode_text(content, stage)
+    preflight = data.get("preflight")
+    if preflight is not None:
+        if workflow != "spec-init-freeze" or not isinstance(preflight, dict):
+            raise BenchError("CASE_ERROR", "Only Simple protocols may define a preflight")
+        if set(preflight) != {"prompt"}:
+            raise BenchError("CASE_ERROR", "Simple repository-read preflight has invalid fields")
+        content = read("repository-read-check", preflight["prompt"])
+        snapshots["repository-read-check.md"] = content
+        prompts["repository-read-check"] = decode_text(content, "repository-read-check")
     limits = data.get("limits", {})
     if not isinstance(limits, dict):
         raise BenchError("CASE_ERROR", "Protocol limits must be a mapping")
@@ -78,8 +87,10 @@ def render_simple_prompt(instruction: str, inputs: dict, *, spec_only: bool = Fa
         "Use only current_spec in the supplied JSON. Do not read any files, repository code, "
         "source Spec, related Specs, Plan, or prior evidence; do not call tools. "
         if spec_only
-        else "Read only supplied inputs and the fixed repository snapshot. Read no live external "
-        "Specs; related Specs outside the repository are supplied as pinned JSON content. "
+        else "Read only supplied inputs and the fixed repository snapshot. Use only the supplied "
+        "mrac_repository MCP tools for repository reads; do not use shell commands to inspect "
+        "the repository. Read no live external Specs; related Specs outside the repository are "
+        "supplied as pinned JSON content. "
     )
     return (
         instruction.rstrip()

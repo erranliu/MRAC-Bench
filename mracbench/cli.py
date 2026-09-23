@@ -168,7 +168,6 @@ def main(argv=None) -> int:
         "CONVERGED": 0,
         "NON_CONVERGED": 1,
         "PAUSED": 3,
-        "BLOCKED": 4,
         "NEEDS_INPUT": 5,
         "ABORTED": 6,
         "RUNNING": 0,

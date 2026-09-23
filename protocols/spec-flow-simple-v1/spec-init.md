@@ -11,6 +11,8 @@ propose repairs or report concerns that do not affect closure.
 
 The supplied source_spec is immutable intent. The copied current_spec is the audit
 target. Inspect code and in-repository related Specs only at fixed_repository_head.
+Use the supplied mrac_repository MCP tools for source search and file reads; do not
+use shell commands to inspect the repository.
 External related Specs are limited to the supplied related_specs snapshots.
 Evidence must cite current_spec; cite code/in-repository Specs against the fixed
 base, and cite each external related Spec by its supplied file and SHA-256.

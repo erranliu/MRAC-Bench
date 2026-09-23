@@ -80,6 +80,67 @@ class StubAgent:
 
     def run(self, request):
         self.requests.append(request)
+        if request.raw_dir.name.startswith("repository-read-check-"):
+            server = request.mcp_servers["mrac_repository"]
+            args = server["args"]
+            root = Path(args[args.index("--repository") + 1])
+            head = args[args.index("--head") + 1]
+            source_path = next(root.rglob("*.py"), None) or next(root.rglob("*.md"), None)
+            assert source_path is not None
+            relative = source_path.relative_to(root).as_posix()
+            excerpt = source_path.read_text(encoding="utf-8").splitlines()[0]
+            match = {"path": relative, "line": 1, "text": excerpt}
+            log = Path(args[args.index("--audit-log") + 1])
+            log.write_text(
+                "\n".join(
+                    json.dumps(event)
+                    for event in [
+                        {
+                            "tool": "repository_head",
+                            "arguments": {},
+                            "ok": True,
+                            "result": {"head": head},
+                        },
+                        {
+                            "tool": "repository_search",
+                            "arguments": {
+                                "query": None,
+                                "globs": ["*.py", "*.md"],
+                                "max_results": 5,
+                            },
+                            "ok": True,
+                            "result": {
+                                "query": None,
+                                "matches": [match],
+                                "scanned_files": 1,
+                                "truncated": False,
+                            },
+                        },
+                        {
+                            "tool": "repository_read",
+                            "arguments": {"path": relative, "start_line": 1, "max_lines": 1},
+                            "ok": True,
+                            "result": {
+                                "path": relative,
+                                "sha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                                "start_line": 1,
+                                "lines": [{"line": 1, "text": excerpt}],
+                                "truncated": True,
+                            },
+                        },
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            return AgentResult(
+                final_text=json.dumps(
+                    {"head": head, "path": relative, "match": excerpt, "excerpt": excerpt}
+                ),
+                stdout="repository MCP probe",
+                exit_code=0,
+                started=True,
+            )
         reply = next(self.replies)
         if callable(reply):
             reply = reply(request)

@@ -19,7 +19,16 @@ class Invoker:
         self.capture = capture
         self.stage = "repository"
 
-    def __call__(self, stage, prompt, audit_item=None, *, workspace=None, readonly=True):
+    def __call__(
+        self,
+        stage,
+        prompt,
+        audit_item=None,
+        *,
+        workspace=None,
+        readonly=True,
+        mcp_servers=None,
+    ):
         self.stage = stage
         store, result, repo = self.store, self.result, self.repo
         raw = store.path / "raw" / stage
@@ -33,6 +42,8 @@ class Invoker:
         begin_invocation = getattr(repo, "begin_invocation", None)
         if begin_invocation is not None:
             begin_invocation(readonly=readonly)
+        if mcp_servers:
+            write_json(raw / "mcp-servers.json", mcp_servers)
         (raw / "request.txt").write_text(prompt, encoding="utf-8")
         store.checkpoint(result, stage + ":started")
         execution = self.adapter.run(
@@ -45,6 +56,7 @@ class Invoker:
                 readonly=readonly,
                 reasoning_effort=self.effort,
                 skip_git_repo_check=workspace is not None,
+                mcp_servers=mcp_servers,
             )
         )
         for filename, content in (
