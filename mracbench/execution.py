@@ -28,11 +28,15 @@ class Invoker:
         workspace=None,
         readonly=True,
         mcp_servers=None,
+        output_schema=None,
+        workspace_setup=None,
     ):
         self.stage = stage
         store, result, repo = self.store, self.result, self.repo
         raw = store.path / "raw" / stage
         raw.mkdir(exist_ok=False)
+        if workspace_setup is not None:
+            workspace_setup(raw)
         before = repo.inspect()
         write_json(raw / "repository-before.json", before)
         if before["violation"]:
@@ -57,6 +61,7 @@ class Invoker:
                 reasoning_effort=self.effort,
                 skip_git_repo_check=workspace is not None,
                 mcp_servers=mcp_servers,
+                output_schema=output_schema,
             )
         )
         for filename, content in (
@@ -84,6 +89,8 @@ class Invoker:
                 result["trajectory"].append(audit_item)
             elif stage.startswith("repair-"):
                 result["repair_rounds"] += 1
+            elif stage.startswith("closure-"):
+                result["closure_rounds"] = result.get("closure_rounds", 0) + 1
             elif stage.startswith("review-"):
                 result["review_rounds"] += 1
             elif stage.startswith("implement-"):

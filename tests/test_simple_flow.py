@@ -4,7 +4,7 @@ from dataclasses import replace
 
 import pytest
 import yaml
-from conftest import StubAgent
+from conftest import StubAgent as BaseStubAgent
 from test_inputs import change_case
 
 from mracbench.cases import load_case
@@ -13,7 +13,48 @@ from mracbench.machine import inspect
 from mracbench.models import AgentResult, BenchError
 from mracbench.repository import prepare_repository
 from mracbench.runner import run_case
-from mracbench.simple_flow import resume_run
+from mracbench.simple_audit import parse_closure_v6, parse_review
+from mracbench.simple_flow import resume_run, verify_repository_read_probe
+
+
+class StubAgent(BaseStubAgent):
+    def __init__(self, replies, *, closure_replies=()):
+        super().__init__(replies)
+        self.closure_replies = iter(closure_replies)
+
+    def run(self, request):
+        if request.raw_dir.name.startswith("closure-"):
+            self.requests.append(request)
+            server = request.mcp_servers["mrac_candidate"]
+            args = server["args"]
+            log = args[args.index("--audit-log") + 1]
+            with open(log, "w", encoding="utf-8") as stream:
+                stream.writelines(
+                    json.dumps(
+                        {
+                            "tool": "candidate_read",
+                            "arguments": {"path": name},
+                            "ok": True,
+                            "result": {"path": name},
+                        }
+                    )
+                    + "\n"
+                    for name in (
+                        "spec.md",
+                        "previous-spec.md",
+                        "source-spec.md",
+                        "accepted-findings.json",
+                        "diff.txt",
+                    )
+                )
+            reply = next(self.closure_replies, "CLOSED")
+            return AgentResult(
+                final_text=reply if isinstance(reply, str) else json.dumps(reply),
+                stdout="closure response",
+                exit_code=0,
+                started=True,
+            )
+        return super().run(request)
 
 
 def payload(request):
@@ -58,16 +99,20 @@ def review(outcome="accepted", exception=None):
 
 
 def repair(request):
+    if request.raw_dir.name.startswith("repair-") and request.workspace.name == "workspace":
+        candidate = request.workspace / "spec.md"
+        current = candidate.read_text(encoding="utf-8-sig")
+        candidate.write_text(
+            "# Revised Spec\n\n" + current + "\nFailure returns null.\n", encoding="utf-8"
+        )
+        return "Updated spec.md"
     data = payload(request)
     return json.dumps(
         {
-            "audit_id": data["audit_id"],
-            "disposition": "continue",
             "spec": "# Revised Spec\n\n" + data["current_spec"] + "\nFailure returns null.\n",
             "fixes": [
                 {
                     "finding_id": finding["finding_id"],
-                    "summary": "Defined failure output.",
                     "evidence": "Source acceptance and fixed app.py entail the null result.",
                 }
                 for finding in data["accepted_findings"]
@@ -130,6 +175,84 @@ def test_copied_bytes_and_distinct_stage_inputs(project, simple_config):
     assert (project / "cases/sample/task.md").read_bytes() == original
 
 
+@pytest.mark.parametrize("query,allow_query", [(None, False), ("a", True)])
+def test_v9_preflight_uses_matching_mcp_events_with_optional_query(tmp_path, query, allow_query):
+    raw = tmp_path / "probe"
+    raw.mkdir()
+    head = "a" * 40
+    path = "app.py"
+    line = "value = 1"
+    events = [
+        {"tool": "repository_head", "ok": True, "result": {"head": head}},
+        {
+            "tool": "repository_search",
+            "ok": True,
+            "arguments": {"query": query},
+            "result": {"query": query, "matches": [{"path": path, "line": 1, "text": line}]},
+        },
+        {
+            "tool": "repository_read",
+            "ok": True,
+            "arguments": {"path": path},
+            "result": {"path": path, "lines": [{"line": 1, "text": line}]},
+        },
+    ]
+    (raw / "repository-read-events.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8"
+    )
+    (raw / "final.txt").write_text('```json\n{"head":"wrong"}\n```', encoding="utf-8")
+    verify_repository_read_probe(raw, head, event_only=True, allow_query=allow_query)
+    if query is not None:
+        with pytest.raises(BenchError, match="Invalid repository read probe"):
+            verify_repository_read_probe(raw, head, event_only=True)
+    with pytest.raises(BenchError, match="Invalid repository read probe"):
+        verify_repository_read_probe(raw, head)
+
+
+def test_v7_accepts_fenced_audit_and_review_json(simple_config):
+    def fenced(reply):
+        return lambda request: "```json\n" + reply(request) + "\n```"
+
+    agent = StubAgent(
+        [
+            fenced(audit()),
+            fenced(review()),
+            fenced(audit()),
+            fenced(review()),
+            fenced(audit()),
+            fenced(review()),
+        ]
+    )
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 9
+
+
+def test_v8_accepts_one_terminal_json_block_after_analysis(simple_config):
+    def narrated_review(request):
+        return "Checked every finding against the Spec.\n\n```json\n" + review()(request) + "\n```"
+
+    agent = StubAgent([audit(), narrated_review] + clean() + clean())
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 9
+
+    audit_id = "run-example-spec-freeze-loop-02"
+    findings = [{"finding_id": "F1", "severity": "P1", "title": "Issue", "evidence": "Spec text"}]
+    decision = json.dumps(
+        {"audit_id": audit_id, "decisions": [{"finding_id": "F1", "outcome": "accepted"}]}
+    )
+    ambiguous = f"```json\n{{}}\n```\n```json\n{decision}\n```"
+    with pytest.raises(BenchError, match="Invalid review JSON"):
+        parse_review(
+            ambiguous,
+            audit_id,
+            findings,
+            allow_fence=True,
+            allow_trailing_fence=True,
+        )
+
+
 def test_initial_repair_goes_directly_to_freeze(simple_config):
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
@@ -139,14 +262,159 @@ def test_initial_repair_goes_directly_to_freeze(simple_config):
         "spec-init-01",
         "review-01",
         "repair-01",
+        "closure-01",
         "spec-freeze-loop-02",
         "review-02",
         "spec-freeze-loop-03",
         "review-03",
     ]
     assert result["repair_rounds"] == 1
-    assert (path / "repairs/repair-01.json").exists()
+    saved = json.loads((path / "repairs/repair-01.json").read_text(encoding="utf-8"))
+    assert saved["disposition"] == "continue"
+    assert saved["audit_id"] == result["trajectory"][0]["audit_id"]
+    assert agent.requests[3].output_schema is None
+    assert agent.requests[3].readonly
+    assert set(agent.requests[3].mcp_servers) == {"mrac_repository", "mrac_candidate"}
+    assert set(agent.requests[4].mcp_servers) == {"mrac_candidate"}
+    assert agent.requests[4].output_schema is None
+    assert result["closure_rounds"] == 1
     assert result["flow"]["failure_streak"] == 0
+
+
+def test_v6_repair_accepts_and_preserves_metadata_before_title(project, simple_config):
+    original = b"source_task: pinned\n# Input Spec\nFailure is unclear.\n"
+    (project / "cases/sample/task.md").write_bytes(original)
+    change_case(project, lambda d: d["task"].update(sha256=hashlib.sha256(original).hexdigest()))
+
+    def repaired(request):
+        candidate = request.workspace / "spec.md"
+        candidate.write_text(
+            candidate.read_text(encoding="utf-8") + "Failure returns null.\n",
+            encoding="utf-8",
+        )
+        return "Updated candidate"
+
+    path, result = run_case(
+        simple_config, StubAgent([audit("P1"), review(), repaired] + clean() + clean())
+    )
+    assert result["status"] == "CONVERGED", result["error"]
+    assert (
+        (path / "artifacts/spec.round-01.md")
+        .read_text()
+        .startswith("source_task: pinned\n# Input Spec")
+    )
+
+
+def test_v6_placeholder_repair_gets_one_recorded_retry(simple_config):
+    def placeholder(request):
+        (request.workspace / "spec.md").write_text("verifying", encoding="utf-8")
+        return "verifying"
+
+    agent = StubAgent([audit("P1"), review(), placeholder, repair] + clean() + clean())
+    path, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert (result["repair_rounds"], result["closure_rounds"]) == (2, 1)
+    first = json.loads((path / "repairs/repair-01.json").read_text())
+    second = json.loads((path / "repairs/repair-02.json").read_text())
+    assert first["status"] == "REPAIR_INVALID"
+    assert second["status"] == "accepted"
+    assert "retry_feedback" in payload(agent.requests[4])
+
+
+def test_v6_unresolved_closure_retries_without_new_audit(simple_config):
+    agent = StubAgent(
+        [audit("P1"), review(), repair, repair] + clean() + clean(),
+        closure_replies=[
+            {"unresolved": [{"finding_id": "F1", "reason": "Failure output is still missing"}]},
+            {"unresolved": []},
+        ],
+    )
+    path, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert (result["audit_rounds"], result["repair_rounds"], result["closure_rounds"]) == (
+        3,
+        2,
+        2,
+    )
+    assert json.loads((path / "repairs/repair-01.json").read_text())["status"] == "REPAIR_INVALID"
+    assert json.loads((path / "repairs/repair-02.json").read_text())["status"] == "accepted"
+
+
+def test_v6_closure_without_read_evidence_gets_one_retry(simple_config):
+    class NoReadFirst(StubAgent):
+        def __init__(self, replies):
+            super().__init__(replies)
+            self.skipped = False
+
+        def run(self, request):
+            if request.raw_dir.name.startswith("closure-") and not self.skipped:
+                self.skipped = True
+                self.requests.append(request)
+                return AgentResult(final_text="CLOSED", exit_code=0, started=True)
+            return super().run(request)
+
+    agent = NoReadFirst([audit("P1"), review(), repair] + clean() + clean())
+    path, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert (result["repair_rounds"], result["closure_rounds"]) == (1, 2)
+    first = json.loads((path / "closures/closure-01.json").read_text())
+    second = json.loads((path / "closures/closure-01-retry.json").read_text())
+    assert first["status"] == "CLOSURE_INVALID"
+    assert second["unresolved"] == []
+
+
+def test_v6_closure_accepts_short_text_and_legacy_json_alias():
+    accepted = [{"finding_id": "F1"}]
+    assert parse_closure_v6("CLOSED", accepted) == {"unresolved": []}
+    assert parse_closure_v6("F1: Failure result is still unclear", accepted) == {
+        "unresolved": [{"finding_id": "F1", "reason": "Failure result is still unclear"}]
+    }
+    assert parse_closure_v6('{"unresolved_findings":[]}', accepted) == {"unresolved": []}
+
+
+def test_v6_repair_cannot_change_immutable_workspace_input(simple_config):
+    def tamper(request):
+        (request.workspace / "source-spec.md").write_text("changed", encoding="utf-8")
+        return repair(request)
+
+    _, result = run_case(simple_config, StubAgent([audit("P1"), review(), tamper]))
+    assert result["status"] == "PROTOCOL_VIOLATION", result["error"]
+    assert "Immutable repair input changed" in result["error"]["message"]
+
+
+def test_v4_repair_keeps_original_format_contract(project, simple_config):
+    protocol_path = project / "protocols/spec-flow-simple-v1/protocol.yaml"
+    data = yaml.safe_load(protocol_path.read_text())
+    data["version"] = 4
+    data.pop("output_schemas", None)
+    protocol_path.write_text(yaml.safe_dump(data))
+
+    def legacy_repair(request):
+        response = json.loads(repair(request))
+        response.update(audit_id=payload(request)["audit_id"], disposition="continue")
+        for fix in response["fixes"]:
+            fix["summary"] = "Defined the failure output."
+        return json.dumps(response)
+
+    agent = StubAgent([audit("P1"), review(), legacy_repair] + clean() + clean())
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 4
+    assert agent.requests[3].output_schema is None
+
+
+def test_v5_repair_keeps_json_contract(project, simple_config):
+    protocol_path = project / "protocols/spec-flow-simple-v1/protocol.yaml"
+    data = yaml.safe_load(protocol_path.read_text())
+    data["version"] = 5
+    del data["stages"]["closure"]
+    data["output_schemas"] = {"repair": {"type": "object"}}
+    protocol_path.write_text(yaml.safe_dump(data))
+    agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 5
+    assert agent.requests[3].output_schema == {"type": "object"}
 
 
 def test_repair_resets_freeze_streak(simple_config):
@@ -192,22 +460,21 @@ def test_removed_review_exception_is_invalid_not_blocked(simple_config, exceptio
     assert (path / "result.json").read_bytes() == before
 
 
-def test_removed_block_disposition_is_invalid_and_preserves_pending_findings(simple_config):
+def test_v6_ignores_final_message_and_rejects_missing_file_repair(simple_config):
     def block(request):
         return json.dumps(
             {
-                "audit_id": payload(request)["audit_id"],
                 "disposition": "block",
                 "reason": "Two product outcomes are equally consistent with intent.",
             }
         )
 
-    path, result = run_case(simple_config, StubAgent([audit("P1"), review(), block]))
-    assert result["status"] == "PARSE_ERROR", result["error"]
+    path, result = run_case(simple_config, StubAgent([audit("P1"), review(), block, block]))
+    assert result["status"] == "REPAIR_INVALID", result["error"]
     assert result["flow"]["pending_fix"]["accepted"]
     assert result["flow"]["clean"] == []
     assert len(list((path / "artifacts").iterdir())) == 1
-    assert result["repair_rounds"] == 1
+    assert result["repair_rounds"] == 2
 
 
 def test_ambiguity_is_repaired_then_independently_audited(project, simple_config):
@@ -217,7 +484,7 @@ def test_ambiguity_is_repaired_then_independently_audited(project, simple_config
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 4
+    assert result["protocol_version"] == 9
     assert result["flow"]["schema_version"] == 3
     assert result["repair_rounds"] == 1
     assert (path / "input/task.md").read_bytes() == source
@@ -252,7 +519,18 @@ def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_
     assert not agent.requests
 
 
-@pytest.mark.parametrize("schema,protocol_version,actions", [(1, 1, []), (3, 4, ["continue"])])
+@pytest.mark.parametrize(
+    "schema,protocol_version,actions",
+    [
+        (1, 1, []),
+        (3, 4, ["continue"]),
+        (3, 5, ["continue"]),
+        (3, 6, ["continue"]),
+        (3, 7, ["continue"]),
+        (3, 8, ["continue"]),
+        (3, 9, ["continue"]),
+    ],
+)
 def test_machine_only_offers_continue_for_current_simple_schema(
     tmp_path, schema, protocol_version, actions
 ):
@@ -405,6 +683,11 @@ def test_related_specs_reach_init_review_and_repair_but_never_freeze(project, si
             assert set(data) == {"repository_path", "fixed_repository_head"}
         elif request.raw_dir.name.startswith("spec-freeze-loop"):
             assert "related_specs" not in data
+        elif request.raw_dir.name.startswith("repair-"):
+            name = data["related_specs"][0]["path"]
+            assert (request.workspace / name).read_bytes() == raw
+        elif request.raw_dir.name.startswith("closure-"):
+            assert "related_specs" not in data
         else:
             assert data["related_specs"][0]["content"] == raw.decode()
 
@@ -470,10 +753,9 @@ def test_unchanged_repair_is_rejected(project, simple_config):
     change_case(project, lambda d: d["task"].update(sha256=hashlib.sha256(raw).hexdigest()))
 
     def unchanged(request):
-        data = json.loads(repair(request))
-        data["spec"] = payload(request)["current_spec"]
-        return json.dumps(data)
+        return "I did not change spec.md"
 
-    _, result = run_case(simple_config, StubAgent([audit("P1"), review(), unchanged]))
-    assert result["status"] == "PARSE_ERROR"
+    _, result = run_case(simple_config, StubAgent([audit("P1"), review(), unchanged, unchanged]))
+    assert result["status"] == "REPAIR_INVALID"
+    assert result["repair_rounds"] == 2
     assert "did not change" in result["error"]["message"]

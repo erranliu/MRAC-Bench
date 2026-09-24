@@ -28,6 +28,28 @@ SOURCE_GLOBS = [
 ]
 
 
+def server_config(repository: Path, head: str, manifest: Path, audit_log: Path):
+    return {
+        "mrac_repository": {
+            "command": sys.executable,
+            "args": [
+                "-m",
+                "mracbench.repository_mcp",
+                "--repository",
+                str(repository),
+                "--head",
+                head,
+                "--manifest",
+                str(manifest),
+                "--audit-log",
+                str(audit_log),
+            ],
+            "startup_timeout_sec": 20,
+            "tool_timeout_sec": 45,
+        }
+    }
+
+
 class RepositoryReader:
     def __init__(self, root: Path, head: str, manifest: Path, audit_log: Path):
         self.root = root.resolve(strict=True)
@@ -235,7 +257,7 @@ def send(value):
     sys.stdout.flush()
 
 
-def serve(reader):
+def serve(reader, *, tools=TOOLS, server_name="mracbench-readonly-repository"):
     for line in sys.stdin:
         try:
             request = json.loads(line)
@@ -255,14 +277,14 @@ def serve(reader):
                                 "protocolVersion", "2024-11-05"
                             ),
                             "capabilities": {"tools": {"listChanged": False}},
-                            "serverInfo": {"name": "mracbench-readonly-repository", "version": "1"},
+                            "serverInfo": {"name": server_name, "version": "1"},
                         },
                     }
                 )
             elif method == "ping":
                 send({"jsonrpc": "2.0", "id": request_id, "result": {}})
             elif method == "tools/list":
-                send({"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}})
+                send({"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}})
             elif method == "tools/call":
                 params = request.get("params", {})
                 name = params.get("name")

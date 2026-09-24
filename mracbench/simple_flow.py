@@ -11,11 +11,36 @@ from .cases import case_from_snapshots, load_yaml, positive_int
 from .evidence import Evidence, digest, run_lock
 from .execution import Invoker
 from .models import BenchError, RunConfig
-from .protocol import protocol_from_snapshots, render_simple_prompt
+from .protocol import (
+    protocol_from_snapshots,
+    render_simple_prompt,
+    render_simple_workspace_prompt,
+    render_spec_checkout_prompt,
+    render_spec_closure_prompt,
+)
 from .providers import check_adapter
 from .repository import prepare_repository
+from .repository_mcp import server_config
 from .runs import RunStore, utc_now
-from .simple_audit import assign_ids, parse_findings, parse_repair, parse_review
+from .simple_audit import (
+    assign_ids,
+    parse_closure_v6,
+    parse_findings,
+    parse_repair,
+    parse_repair_v5,
+    parse_review,
+    parse_simple_spec,
+)
+from .simple_repair import (
+    closure_files,
+    prepare_workspace,
+    repair_files,
+    unified_spec_diff,
+    validate_candidate,
+    verify_candidate_reads,
+    verify_workspace,
+)
+from .spec_checkout import SpecCheckout, spec_path
 
 
 def save_evidence(store, evidence, name, data):
@@ -23,6 +48,14 @@ def save_evidence(store, evidence, name, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    evidence.record(name)
+
+
+def save_text_evidence(store, evidence, name, content):
+    path = evidence.path(name)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(content)
     evidence.record(name)
 
 
@@ -39,21 +72,32 @@ def baseline_inputs(case, repo, spec):
 
 def repository_mcp_servers(store, repo, case, stage):
     evidence_log = store.path / "raw" / stage / "repository-read-events.jsonl"
+    return server_config(
+        repo.path,
+        case.commit,
+        store.path / "input" / "repository-manifest.json",
+        evidence_log,
+    )
+
+
+def candidate_mcp_servers(workspace, *, writable):
+    raw = workspace.parent
+    args = [
+        "-m",
+        "mracbench.candidate_mcp",
+        "--workspace",
+        str(workspace),
+        "--manifest",
+        str(raw / "workspace-before.json"),
+        "--audit-log",
+        str(raw / "candidate-events.jsonl"),
+    ]
+    if writable:
+        args.append("--writable")
     return {
-        "mrac_repository": {
+        "mrac_candidate": {
             "command": sys.executable,
-            "args": [
-                "-m",
-                "mracbench.repository_mcp",
-                "--repository",
-                str(repo.path),
-                "--head",
-                case.commit,
-                "--manifest",
-                str(store.path / "input" / "repository-manifest.json"),
-                "--audit-log",
-                str(evidence_log),
-            ],
+            "args": args,
             "startup_timeout_sec": 20,
             "tool_timeout_sec": 45,
         }
@@ -97,6 +141,8 @@ def run_simple(config, adapter, store, case, protocol, result, maximum, timeout,
                 "resume_count": 0,
             },
         )
+        if protocol.version >= 6:
+            result["closure_rounds"] = 0
         evidence = Evidence(store.path)
         for name in store.metadata["input_sha256"]:
             evidence.record("input/" + name)
@@ -162,13 +208,19 @@ def execute_simple(
                     "repository_path": str(repo.path),
                     "fixed_repository_head": case.commit,
                 },
+                response_json=protocol.version < 7,
             )
             invoke(
                 probe_stage,
                 probe_prompt,
                 mcp_servers=repository_mcp_servers(store, repo, case, probe_stage),
             )
-            verify_repository_read_probe(store.path / "raw" / probe_stage, case.commit)
+            verify_repository_read_probe(
+                store.path / "raw" / probe_stage,
+                case.commit,
+                event_only=protocol.version >= 7,
+                allow_query=protocol.version >= 9,
+            )
             drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.check()
     except BenchError as exc:
@@ -197,7 +249,7 @@ def execute_simple(
     return store.path, result
 
 
-def verify_repository_read_probe(raw, expected_head):
+def verify_repository_read_probe(raw, expected_head, *, event_only=False, allow_query=False):
     try:
         events = [
             json.loads(line)
@@ -206,16 +258,6 @@ def verify_repository_read_probe(raw, expected_head):
             .splitlines()
             if line
         ]
-        value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
-        if set(value) != {"head", "path", "match", "excerpt"}:
-            raise ValueError("Unexpected response fields")
-        if value["head"] != expected_head:
-            raise ValueError("Repository HEAD mismatch")
-        if not isinstance(value["path"], str) or not isinstance(value["match"], str):
-            raise TypeError("Probe path and match must be strings")
-        if not isinstance(value["excerpt"], str) or not value["excerpt"].strip():
-            raise ValueError("Source excerpt is empty")
-
         heads = [
             event.get("result", {}).get("head")
             for event in events
@@ -229,10 +271,41 @@ def verify_repository_read_probe(raw, expected_head):
             for event in events
             if event.get("tool") == "repository_search"
             and event.get("ok") is True
-            and event.get("result", {}).get("query") is None
+            and (event.get("result", {}).get("query") is None or (event_only and allow_query))
             for match in event.get("result", {}).get("matches", [])
             if isinstance(match, dict)
         ]
+        if event_only:
+            for match in matches:
+                if (
+                    not isinstance(match.get("path"), str)
+                    or type(match.get("line")) is not int
+                    or not isinstance(match.get("text"), str)
+                    or not match["text"].strip()
+                ):
+                    continue
+                if any(
+                    event.get("tool") == "repository_read"
+                    and event.get("ok") is True
+                    and event.get("arguments", {}).get("path") == match["path"]
+                    and any(
+                        line.get("line") == match["line"] and line.get("text") == match["text"]
+                        for line in event.get("result", {}).get("lines", [])
+                    )
+                    for event in events
+                ):
+                    return
+            raise ValueError("No searched source line was verified by repository_read")
+
+        value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
+        if set(value) != {"head", "path", "match", "excerpt"}:
+            raise ValueError("Unexpected response fields")
+        if value["head"] != expected_head:
+            raise ValueError("Repository HEAD mismatch")
+        if not isinstance(value["path"], str) or not isinstance(value["match"], str):
+            raise TypeError("Probe path and match must be strings")
+        if not isinstance(value["excerpt"], str) or not value["excerpt"].strip():
+            raise ValueError("Source excerpt is empty")
         if not any(
             match.get("path") == value["path"] and match.get("text") == value["match"]
             for match in matches
@@ -257,6 +330,208 @@ def verify_repository_read_probe(raw, expected_head):
         ) from exc
 
 
+def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_bytes, pending):
+    feedback = None
+    seed = spec_bytes
+    for retry in range(2):
+        number = result["repair_rounds"] + 1
+        stage = f"repair-{number:02d}"
+        raw = store.path / "raw" / stage
+        workspace = raw / "workspace"
+        files, related = repair_files(case, pending["accepted"], seed)
+        native = protocol.version >= 10
+        inputs = (
+            {
+                "spec_path": spec_path(case),
+                "source_spec": case.task,
+                "accepted_findings": pending["accepted"],
+                "related_specs": case.related_specs,
+                "fixed_repository_head": case.commit,
+            }
+            if native
+            else {
+                "candidate_path": "spec.md",
+                "source_spec_path": "source-spec.md",
+                "accepted_findings_path": "accepted-findings.json",
+                "related_specs": related,
+                "fixed_repository_head": case.commit,
+            }
+        )
+        if feedback is not None:
+            inputs["retry_feedback"] = feedback
+        prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
+        if native:
+            checkout_path = store.path / "checkout"
+            checkout = {}
+
+            def setup_checkout(_raw):
+                checkout["value"] = SpecCheckout(repo, checkout_path, spec_path(case), seed)
+
+            invoke(
+                stage,
+                render_spec_checkout_prompt(protocol.prompts[prompt_stage], inputs),
+                workspace=checkout_path,
+                readonly=False,
+                workspace_setup=setup_checkout,
+            )
+            candidate = checkout["value"].candidate()
+            candidate_path = f"raw/{stage}/candidate.md"
+            with evidence.path(candidate_path).open("xb") as stream:
+                stream.write(candidate)
+            evidence.record(candidate_path)
+        else:
+            invoke(
+                stage,
+                render_simple_workspace_prompt(
+                    protocol.prompts[prompt_stage], inputs, writable=True
+                ),
+                workspace=workspace,
+                mcp_servers={
+                    **repository_mcp_servers(store, repo, case, stage),
+                    **candidate_mcp_servers(workspace, writable=True),
+                },
+                workspace_setup=lambda directory, prepared=files: prepare_workspace(
+                    directory, prepared
+                ),
+            )
+            candidate = verify_workspace(workspace, files, writable={"spec.md"})["spec.md"]
+            candidate_path = f"raw/{stage}/workspace/spec.md"
+        record = {
+            "audit_id": pending["audit_id"],
+            "accepted_finding_ids": [row["finding_id"] for row in pending["accepted"]],
+            "previous_sha256": digest(spec_bytes),
+            "candidate_sha256": digest(candidate),
+            "candidate_path": candidate_path,
+            "retry": retry,
+        }
+        try:
+            validate_candidate(spec_bytes, seed, candidate)
+        except BenchError as exc:
+            if exc.kind != "REPAIR_INVALID":
+                raise
+            save_evidence(
+                store,
+                evidence,
+                f"repairs/{stage}.json",
+                {**record, "status": "REPAIR_INVALID", "reason": str(exc)},
+            )
+            if retry:
+                raise
+            feedback = str(exc)
+            seed = spec_bytes
+            continue
+
+        diff = unified_spec_diff(spec_bytes, candidate)
+        diff_name = f"repairs/{stage}.diff"
+        save_text_evidence(store, evidence, diff_name, diff)
+        comparison = closure_files(case, pending["accepted"], spec_bytes, candidate, diff)
+        closure_feedback = None
+        for closure_retry in range(2):
+            closure_stage = f"closure-{number:02d}" + ("-retry" if closure_retry else "")
+            closure_raw = store.path / "raw" / closure_stage
+            closure_workspace = closure_raw / "workspace"
+            closure_inputs = {
+                "candidate_path": "spec.md",
+                "previous_spec_path": "previous-spec.md",
+                "source_spec_path": "source-spec.md",
+                "accepted_findings_path": "accepted-findings.json",
+                "diff_path": "diff.txt",
+            }
+            if closure_feedback is not None:
+                closure_inputs["retry_feedback"] = closure_feedback
+            closure_text = invoke(
+                closure_stage,
+                (
+                    render_spec_closure_prompt(protocol.prompts["closure"], closure_inputs)
+                    if native
+                    else render_simple_workspace_prompt(
+                        protocol.prompts["closure"], closure_inputs, writable=False
+                    )
+                ),
+                workspace=closure_workspace,
+                mcp_servers=(
+                    None if native else candidate_mcp_servers(closure_workspace, writable=False)
+                ),
+                workspace_setup=lambda directory, prepared=comparison: prepare_workspace(
+                    directory, prepared
+                ),
+            )
+            verify_workspace(closure_workspace, comparison)
+            closure_name = f"closures/{closure_stage}.json"
+            try:
+                if not native:
+                    verify_candidate_reads(
+                        closure_raw,
+                        {
+                            "spec.md",
+                            "previous-spec.md",
+                            "source-spec.md",
+                            "accepted-findings.json",
+                            "diff.txt",
+                        },
+                    )
+                closure = parse_closure_v6(
+                    closure_text, pending["accepted"], allow_fence=protocol.version >= 7
+                )
+            except BenchError as exc:
+                if exc.kind != "CLOSURE_INVALID":
+                    raise
+                save_evidence(
+                    store,
+                    evidence,
+                    closure_name,
+                    {
+                        "audit_id": pending["audit_id"],
+                        "status": "CLOSURE_INVALID",
+                        "reason": str(exc),
+                    },
+                )
+                if closure_retry:
+                    raise
+                closure_feedback = str(exc)
+                continue
+            save_evidence(
+                store, evidence, closure_name, {"audit_id": pending["audit_id"], **closure}
+            )
+            break
+        record.update(diff=diff_name, closure=closure_name)
+        if closure["unresolved"]:
+            feedback = "Unresolved accepted findings: " + "; ".join(
+                f"{item['finding_id']}: {item['reason']}" for item in closure["unresolved"]
+            )
+            save_evidence(
+                store,
+                evidence,
+                f"repairs/{stage}.json",
+                {**record, "status": "REPAIR_INVALID", "reason": feedback},
+            )
+            if retry:
+                raise BenchError("REPAIR_INVALID", feedback)
+            seed = candidate
+            continue
+
+        save_evidence(
+            store,
+            evidence,
+            f"repairs/{stage}.json",
+            {**record, "status": "accepted", "disposition": "continue"},
+        )
+        artifact = f"artifacts/spec.round-{number:02d}.md"
+        with evidence.path(artifact).open("xb") as stream:
+            stream.write(candidate)
+        evidence.record(artifact)
+        result["trajectory"][-1]["repair_artifact"] = artifact
+        result["final_artifact"] = artifact
+        result["flow"].update(
+            phase="spec-freeze-loop",
+            pending_fix=None,
+            clean=[],
+            artifact_sha256=evidence.known[artifact],
+        )
+        store.checkpoint(result, stage + ":saved")
+        return
+
+
 def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence):
     flow = result["flow"]
     while True:
@@ -271,22 +546,33 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             return
         pending = flow["pending_fix"]
         if pending:
+            if protocol.version >= 6:
+                run_file_repair(
+                    store, case, protocol, result, repo, invoke, evidence, spec_bytes, pending
+                )
+                continue
             number = result["repair_rounds"] + 1
             stage = f"repair-{number:02d}"
             inputs = baseline_inputs(case, repo, spec)
             inputs.update(audit_id=pending["audit_id"], accepted_findings=pending["accepted"])
             prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
-            repair = parse_repair(
-                invoke(
-                    stage,
-                    render_simple_prompt(protocol.prompts[prompt_stage], inputs),
-                    mcp_servers=repository_mcp_servers(store, repo, case, stage),
-                ),
-                pending["audit_id"],
-                pending["accepted"],
+            reply = invoke(
+                stage,
+                render_simple_prompt(protocol.prompts[prompt_stage], inputs),
+                mcp_servers=repository_mcp_servers(store, repo, case, stage),
+                output_schema=protocol.output_schemas.get("repair"),
+            )
+            repair = (
+                parse_repair_v5(reply, pending["audit_id"], pending["accepted"])
+                if protocol.version >= 5
+                else parse_repair(reply, pending["audit_id"], pending["accepted"])
             )
             save_evidence(store, evidence, f"repairs/{stage}.json", repair)
-            replacement = parse_spec(repair["spec"])
+            replacement = (
+                parse_simple_spec(repair["spec"])
+                if protocol.version >= 5
+                else parse_spec(repair["spec"])
+            )
             if replacement.encode("utf-8") == spec_bytes:
                 raise BenchError("PARSE_ERROR", "Accepted repair did not change Spec bytes")
             new_artifact = store.artifact(f"spec.round-{number:02d}.md", replacement)
@@ -332,7 +618,12 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             mcp_servers=(None if spec_only else repository_mcp_servers(store, repo, case, stage)),
         )
         try:
-            audit = parse_findings(text, audit_id)
+            audit = parse_findings(
+                text,
+                audit_id,
+                allow_fence=protocol.version >= 7,
+                allow_trailing_fence=protocol.version >= 8,
+            )
             save_evidence(store, evidence, f"audits/{stage}.json", audit)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
@@ -345,6 +636,8 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 ),
                 audit_id,
                 findings,
+                allow_fence=protocol.version >= 7,
+                allow_trailing_fence=protocol.version >= 8,
             )
             save_evidence(store, evidence, f"reviews/{stage}.json", review)
         except BenchError as exc:

@@ -1,5 +1,5 @@
 id: spec-flow-simple-v1
-version: 4
+version: 11
 artifact_type: spec
 workflow: spec-init-freeze
 stages:
@@ -13,6 +13,8 @@ stages:
     prompt: repair-init.md
   repair-freeze:
     prompt: repair-freeze.md
+  closure:
+    prompt: closure.md
 preflight:
   prompt: repository-read-check.md
 convergence:

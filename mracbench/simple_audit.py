@@ -1,6 +1,7 @@
 """Strict schemas and decision policy for the Spec-init/freeze workflow."""
 
 import json
+import re
 
 from .audit import _unique, parse_spec
 from .models import BenchError
@@ -18,17 +19,47 @@ def nonempty(value):
         raise ValueError("Expected a nonempty string")
 
 
-def decode(text):
+def unwrap_fence(text):
+    body = text.strip()
+    lines = body.splitlines()
+    if (
+        len(lines) >= 3
+        and lines[0].strip().casefold() in {"```", "```json"}
+        and lines[-1].strip() == "```"
+    ):
+        return "\n".join(lines[1:-1]).strip()
+    return text
+
+
+def trailing_json_fence(text):
+    body = text.strip()
+    blocks = list(
+        re.finditer(
+            r"```(?:json)?[ \t]*\r?\n(.*?)\r?\n```",
+            body,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+    )
+    if len(blocks) == 1 and blocks[0].end() == len(body):
+        return blocks[0].group(1).strip()
+    return unwrap_fence(text)
+
+
+def decode(text, *, allow_fence=False, allow_trailing_fence=False):
     return json.loads(
-        text,
+        trailing_json_fence(text)
+        if allow_trailing_fence
+        else unwrap_fence(text)
+        if allow_fence
+        else text,
         object_pairs_hook=_unique,
         parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite JSON")),
     )
 
 
-def parse_findings(text, audit_id):
+def parse_findings(text, audit_id, *, allow_fence=False, allow_trailing_fence=False):
     try:
-        data = decode(text)
+        data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"audit_id", "findings"})
         if data["audit_id"] != audit_id or not isinstance(data["findings"], list):
             raise ValueError("Audit ID or findings mismatch")
@@ -47,9 +78,9 @@ def assign_ids(audit):
     return [{"finding_id": f"F{i}", **row} for i, row in enumerate(audit["findings"], 1)]
 
 
-def parse_review(text, audit_id, findings):
+def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_fence=False):
     try:
-        data = decode(text)
+        data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"audit_id", "decisions"})
         if data["audit_id"] != audit_id or not isinstance(data["decisions"], list):
             raise ValueError("Audit ID or decisions mismatch")
@@ -114,3 +145,68 @@ def parse_repair(text, audit_id, accepted):
         return data
     except (ValueError, TypeError, AttributeError, RecursionError) as exc:
         raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
+
+
+def parse_simple_spec(text):
+    if not isinstance(text, str) or not text.strip():
+        raise BenchError("PARSE_ERROR", "Replacement Spec must be nonempty text")
+    return text.strip() + "\n"
+
+
+def parse_repair_v5(text, audit_id, accepted):
+    try:
+        data = decode(text)
+        obj(data, {"spec", "fixes"})
+        parse_simple_spec(data["spec"])
+        if not isinstance(data["fixes"], list):
+            raise TypeError("Expected fixes list")
+        seen = set()
+        for fix in data["fixes"]:
+            obj(fix, {"finding_id", "evidence"})
+            for value in fix.values():
+                nonempty(value)
+            if fix["finding_id"] in seen:
+                raise ValueError("Duplicate fix")
+            seen.add(fix["finding_id"])
+        if seen != {row["finding_id"] for row in accepted}:
+            raise ValueError("Every accepted finding needs a closure record")
+        return {"audit_id": audit_id, "disposition": "continue", **data}
+    except (ValueError, TypeError, AttributeError, RecursionError) as exc:
+        raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
+
+
+def parse_closure_v6(text, accepted, *, allow_fence=False):
+    try:
+        body = (unwrap_fence(text) if allow_fence else text).strip()
+        if not body:
+            raise ValueError("Closure result is empty")
+        if body.casefold() == "closed":
+            data = {"unresolved": []}
+        elif body.startswith("{"):
+            data = decode(body)
+            if isinstance(data, dict) and set(data) == {"unresolved_findings"}:
+                data = {"unresolved": data["unresolved_findings"]}
+        else:
+            lines = body.splitlines()
+            unresolved = []
+            for line in lines:
+                match = re.fullmatch(r"\s*(?:-\s*)?(F[0-9]+)\s*:\s*(\S.*)", line)
+                if not match:
+                    raise ValueError("Expected CLOSED or finding ID and reason lines")
+                unresolved.append({"finding_id": match[1], "reason": match[2]})
+            data = {"unresolved": unresolved}
+        obj(data, {"unresolved"})
+        if not isinstance(data["unresolved"], list):
+            raise TypeError("Expected unresolved list")
+        allowed = {row["finding_id"] for row in accepted}
+        seen = set()
+        for item in data["unresolved"]:
+            obj(item, {"finding_id", "reason"})
+            nonempty(item["finding_id"])
+            nonempty(item["reason"])
+            if item["finding_id"] not in allowed or item["finding_id"] in seen:
+                raise ValueError("Unknown or duplicate unresolved finding ID")
+            seen.add(item["finding_id"])
+        return data
+    except (ValueError, TypeError, AttributeError, RecursionError) as exc:
+        raise BenchError("CLOSURE_INVALID", f"Invalid closure result: {exc}") from exc

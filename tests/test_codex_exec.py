@@ -66,6 +66,24 @@ def test_spec_only_workspace_flags_and_explicit_effort(tmp_path):
     assert response.metadata["reasoning_effort"] == "high"
 
 
+def test_output_schema_is_passed_as_a_saved_file(tmp_path):
+    command = fake_command(tmp_path, "print('ok')\n")
+    schema = {
+        "type": "object",
+        "properties": {"spec": {"type": "string"}},
+        "required": ["spec"],
+        "additionalProperties": False,
+    }
+    response = CodexExecAdapter(command=command).run(
+        replace(request(tmp_path), output_schema=schema)
+    )
+    assert response.success
+    args = response.metadata["command"]
+    schema_path = tmp_path / "raw" / "output-schema.json"
+    assert args[args.index("--output-schema") + 1] == str(schema_path)
+    assert json.loads(schema_path.read_text(encoding="utf-8")) == schema
+
+
 def test_timeout_preserves_partial_output_and_terminates(tmp_path):
     command = fake_command(tmp_path, "print('partial', flush=True)\ntime.sleep(30)\n")
     result = CodexExecAdapter(command=command).run(request(tmp_path, 1))

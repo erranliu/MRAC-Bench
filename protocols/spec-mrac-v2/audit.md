@@ -7,7 +7,8 @@ source_spec and source_spec_sha256 provide the original intent. Use the supplied
 repository_path and fixed_repository_head. Every audit must inspect relevant
 repository content at that commit, including when it returns no findings.
 Read only; do not edit files, build, or run Unity. Read repository evidence using
-git show <fixed_repository_head>:<path>. If the Spec hash differs or the baseline
+the supplied mrac_repository MCP tools. Verify repository_head, locate relevant
+files and read their content at the fixed commit. If the Spec hash differs or the baseline
 cannot be inspected, report the boundary/access failure instead of a clean audit.
 Do not read prior findings, repair notes, other runs, or conversation history.
 

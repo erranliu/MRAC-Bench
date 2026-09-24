@@ -110,7 +110,11 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
                 "required_clean_audits": 2,
                 "model": config.model,
                 "reasoning_effort": config.reasoning_effort,
-                "readonly": protocol.workflow != "exec-mrac",
+                "readonly": not (
+                    protocol.workflow == "exec-mrac"
+                    or (protocol.workflow == "repository-spec-freeze" and protocol.version >= 3)
+                    or (protocol.workflow == "spec-init-freeze" and protocol.version >= 10)
+                ),
                 "ignore_user_config": True,
             },
         )

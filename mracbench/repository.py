@@ -8,7 +8,7 @@ from pathlib import Path
 from .models import BenchError, Case
 
 
-def git(path: Path, *args: str, log: Path | None = None) -> str:
+def git(path: Path, *args: str, log: Path | None = None, strip: bool = True) -> str:
     command = ["git", "-C", str(path), *args]
     try:
         result = subprocess.run(
@@ -27,7 +27,7 @@ def git(path: Path, *args: str, log: Path | None = None) -> str:
             stream.write(json.dumps(command) + "\n" + result.stdout + result.stderr + "\n")
     if result.returncode:
         raise BenchError("REPOSITORY_ERROR", f"Git {args[0]} failed: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return result.stdout.strip() if strip else result.stdout
 
 
 def tree_manifest(workspace: Path) -> dict[str, str]:
