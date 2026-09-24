@@ -16,7 +16,11 @@ Close all accepted findings, including accepted P3.
 Do not implement code or create another design. Preserve correct detail. The
 replacement Spec must not discuss audits, finding IDs, or repair history.
 
-Return the complete replacement Spec in `spec` and one short `fixes` evidence
-entry for each accepted finding ID. The output schema is supplied separately.
-Preserve meaningful source metadata in the Spec; it may precede the title.
-The replacement must change the current Spec bytes.
+The isolated workspace contains spec.md (a copy of the current Spec),
+source-spec.md (immutable source intent), and accepted-findings.json.
+Use mrac_candidate.candidate_read/search to inspect them and
+mrac_candidate.candidate_edit to change spec.md. Do not use shell or
+apply_patch tools. Preserve meaningful source metadata;
+it may precede the title. Change the Spec bytes and keep every correct detail.
+Do not edit or create any other workspace file. A brief final message is enough;
+only the saved spec.md is used as the replacement Spec.

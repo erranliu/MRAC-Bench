@@ -1,6 +1,7 @@
 """Strict schemas and decision policy for the Spec-init/freeze workflow."""
 
 import json
+import re
 
 from .audit import _unique, parse_spec
 from .models import BenchError
@@ -142,3 +143,40 @@ def parse_repair_v5(text, audit_id, accepted):
         return {"audit_id": audit_id, "disposition": "continue", **data}
     except (ValueError, TypeError, AttributeError, RecursionError) as exc:
         raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
+
+
+def parse_closure_v6(text, accepted):
+    try:
+        body = text.strip()
+        if not body:
+            raise ValueError("Closure result is empty")
+        if body.casefold() == "closed":
+            data = {"unresolved": []}
+        elif body.startswith("{"):
+            data = decode(body)
+            if isinstance(data, dict) and set(data) == {"unresolved_findings"}:
+                data = {"unresolved": data["unresolved_findings"]}
+        else:
+            lines = body.splitlines()
+            unresolved = []
+            for line in lines:
+                match = re.fullmatch(r"\s*(?:-\s*)?(F[0-9]+)\s*:\s*(\S.*)", line)
+                if not match:
+                    raise ValueError("Expected CLOSED or finding ID and reason lines")
+                unresolved.append({"finding_id": match[1], "reason": match[2]})
+            data = {"unresolved": unresolved}
+        obj(data, {"unresolved"})
+        if not isinstance(data["unresolved"], list):
+            raise TypeError("Expected unresolved list")
+        allowed = {row["finding_id"] for row in accepted}
+        seen = set()
+        for item in data["unresolved"]:
+            obj(item, {"finding_id", "reason"})
+            nonempty(item["finding_id"])
+            nonempty(item["reason"])
+            if item["finding_id"] not in allowed or item["finding_id"] in seen:
+                raise ValueError("Unknown or duplicate unresolved finding ID")
+            seen.add(item["finding_id"])
+        return data
+    except (ValueError, TypeError, AttributeError, RecursionError) as exc:
+        raise BenchError("CLOSURE_INVALID", f"Invalid closure result: {exc}") from exc

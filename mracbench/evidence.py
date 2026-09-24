@@ -56,6 +56,7 @@ class Evidence:
                 "audits",
                 "reviews",
                 "repairs",
+                "closures",
                 "pauses",
                 "resumptions",
             ):
