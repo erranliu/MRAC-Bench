@@ -13,7 +13,7 @@ from mracbench.machine import inspect
 from mracbench.models import AgentResult, BenchError
 from mracbench.repository import prepare_repository
 from mracbench.runner import run_case
-from mracbench.simple_audit import parse_closure_v6
+from mracbench.simple_audit import parse_closure_v6, parse_review
 from mracbench.simple_flow import resume_run, verify_repository_read_probe
 
 
@@ -221,7 +221,32 @@ def test_v7_accepts_fenced_audit_and_review_json(simple_config):
     )
     _, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 7
+    assert result["protocol_version"] == 8
+
+
+def test_v8_accepts_one_terminal_json_block_after_analysis(simple_config):
+    def narrated_review(request):
+        return "Checked every finding against the Spec.\n\n```json\n" + review()(request) + "\n```"
+
+    agent = StubAgent([audit(), narrated_review] + clean() + clean())
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 8
+
+    audit_id = "run-example-spec-freeze-loop-02"
+    findings = [{"finding_id": "F1", "severity": "P1", "title": "Issue", "evidence": "Spec text"}]
+    decision = json.dumps(
+        {"audit_id": audit_id, "decisions": [{"finding_id": "F1", "outcome": "accepted"}]}
+    )
+    ambiguous = f"```json\n{{}}\n```\n```json\n{decision}\n```"
+    with pytest.raises(BenchError, match="Invalid review JSON"):
+        parse_review(
+            ambiguous,
+            audit_id,
+            findings,
+            allow_fence=True,
+            allow_trailing_fence=True,
+        )
 
 
 def test_initial_repair_goes_directly_to_freeze(simple_config):
@@ -455,7 +480,7 @@ def test_ambiguity_is_repaired_then_independently_audited(project, simple_config
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 7
+    assert result["protocol_version"] == 8
     assert result["flow"]["schema_version"] == 3
     assert result["repair_rounds"] == 1
     assert (path / "input/task.md").read_bytes() == source
@@ -498,6 +523,7 @@ def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_
         (3, 5, ["continue"]),
         (3, 6, ["continue"]),
         (3, 7, ["continue"]),
+        (3, 8, ["continue"]),
     ],
 )
 def test_machine_only_offers_continue_for_current_simple_schema(

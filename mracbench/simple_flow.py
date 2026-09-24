@@ -585,7 +585,12 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             mcp_servers=(None if spec_only else repository_mcp_servers(store, repo, case, stage)),
         )
         try:
-            audit = parse_findings(text, audit_id, allow_fence=protocol.version >= 7)
+            audit = parse_findings(
+                text,
+                audit_id,
+                allow_fence=protocol.version >= 7,
+                allow_trailing_fence=protocol.version >= 8,
+            )
             save_evidence(store, evidence, f"audits/{stage}.json", audit)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
@@ -599,6 +604,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 audit_id,
                 findings,
                 allow_fence=protocol.version >= 7,
+                allow_trailing_fence=protocol.version >= 8,
             )
             save_evidence(store, evidence, f"reviews/{stage}.json", review)
         except BenchError as exc:

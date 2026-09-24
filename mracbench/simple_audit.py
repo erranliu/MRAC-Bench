@@ -31,17 +31,35 @@ def unwrap_fence(text):
     return text
 
 
-def decode(text, *, allow_fence=False):
+def trailing_json_fence(text):
+    body = text.strip()
+    blocks = list(
+        re.finditer(
+            r"```(?:json)?[ \t]*\r?\n(.*?)\r?\n```",
+            body,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+    )
+    if len(blocks) == 1 and blocks[0].end() == len(body):
+        return blocks[0].group(1).strip()
+    return unwrap_fence(text)
+
+
+def decode(text, *, allow_fence=False, allow_trailing_fence=False):
     return json.loads(
-        unwrap_fence(text) if allow_fence else text,
+        trailing_json_fence(text)
+        if allow_trailing_fence
+        else unwrap_fence(text)
+        if allow_fence
+        else text,
         object_pairs_hook=_unique,
         parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite JSON")),
     )
 
 
-def parse_findings(text, audit_id, *, allow_fence=False):
+def parse_findings(text, audit_id, *, allow_fence=False, allow_trailing_fence=False):
     try:
-        data = decode(text, allow_fence=allow_fence)
+        data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"audit_id", "findings"})
         if data["audit_id"] != audit_id or not isinstance(data["findings"], list):
             raise ValueError("Audit ID or findings mismatch")
@@ -60,9 +78,9 @@ def assign_ids(audit):
     return [{"finding_id": f"F{i}", **row} for i, row in enumerate(audit["findings"], 1)]
 
 
-def parse_review(text, audit_id, findings, *, allow_fence=False):
+def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_fence=False):
     try:
-        data = decode(text, allow_fence=allow_fence)
+        data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"audit_id", "decisions"})
         if data["audit_id"] != audit_id or not isinstance(data["decisions"], list):
             raise ValueError("Audit ID or decisions mismatch")
