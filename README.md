@@ -2,7 +2,7 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2@2` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@8` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@2` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@9` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
@@ -71,7 +71,7 @@ uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C
 uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
 ```
 
-v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；使用新语义须新开 run，不能继承旧 clean。spec-flow-simple-v1@4/@5/@6/@7/@8（state 3）只支持 PAUSED 恢复；@1/state 1、@2/state 2 与 @3/state 3 的历史运行只读，不迁移旧 clean。
+v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；使用新语义须新开 run，不能继承旧 clean。spec-flow-simple-v1@4/@5/@6/@7/@8/@9（state 3）只支持 PAUSED 恢复；@1/state 1、@2/state 2 与 @3/state 3 的历史运行只读，不迁移旧 clean。
 
 ## 按 Spec 执行代码
 
@@ -131,7 +131,7 @@ usage 的总 token/cost 当前记为 `null`；每次调用若有 Codex usage 则
 
 ## 独立性与仓库保护
 
-每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 起通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；@7 起预检只校验工具事件，不要求模型重复输出 JSON。@8 的 audit/review 还接受单个末尾 JSON 代码块前有文字说明，内部 schema 和 ID 校验不变。init/review/repair 可以调用仓库限定工具，冻结审计不获得仓库工具且只接收当前 Spec 和标识/hash，使用空工作目录。@6 起 repair 通过受限候选 MCP 修改独立 Spec 文件，闭环核验只读候选文件；模型不再把整份 Spec 放入 JSON 回复。v2 每轮必须读取固定基线仓库，显式提供固定提交中的仓库指令路径，由 prompt 要求读取相关规则；不会自动加载本机用户规则。
+每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 起通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；@7 起预检只校验工具事件，不要求模型重复输出 JSON；@9 允许用任意有效查询词搜索，只要求搜索所得源码行与后续读取吻合。@8 起 audit/review 接受单个末尾 JSON 代码块前有文字说明，内部 schema 和 ID 校验不变。init/review/repair 可以调用仓库限定工具，冻结审计不获得仓库工具且只接收当前 Spec 和标识/hash，使用空工作目录。@6 起 repair 通过受限候选 MCP 修改独立 Spec 文件，闭环核验只读候选文件；模型不再把整份 Spec 放入 JSON 回复。v2 每轮必须读取固定基线仓库，显式提供固定提交中的仓库指令路径，由 prompt 要求读取相关规则；不会自动加载本机用户规则。
 
 Spec 协议采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 状态与文件内容哈希；包括忽略文件在内的新增/删除/修改均视为违规。exec 的 IMPLEMENT/FIX 使用 workspace-write，允许专属 checkout 的产品修改；AUDIT 只读并检查包括 ignored 文件在内的写入变化，所有阶段保护固定基线和 Git 控制状态。历史结果放在 checkout 外。隔离边界不等同于容器或严格的文件读取白名单：禁止读取父目录、历史 run 和外部来源也通过 protocol prompt 约束。
 

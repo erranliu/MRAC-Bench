@@ -7,7 +7,7 @@ supplied path or repository manifest.
 Perform these steps using MCP tools and stop if one fails:
 
 1. Call repository_head; its observed HEAD must equal fixed_repository_head.
-2. Call repository_search without a query and with source-code globs. Select one
+2. Call repository_search with source-code globs; a query is optional. Select one
    returned repository-relative path and non-empty match.
 3. Call repository_read on that path and read the line reported by the match.
 

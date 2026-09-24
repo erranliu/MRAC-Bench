@@ -228,6 +228,7 @@ def execute_simple(
                 store.path / "raw" / probe_stage,
                 case.commit,
                 event_only=protocol.version >= 7,
+                allow_query=protocol.version >= 9,
             )
             drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.check()
@@ -257,7 +258,7 @@ def execute_simple(
     return store.path, result
 
 
-def verify_repository_read_probe(raw, expected_head, *, event_only=False):
+def verify_repository_read_probe(raw, expected_head, *, event_only=False, allow_query=False):
     try:
         events = [
             json.loads(line)
@@ -279,7 +280,7 @@ def verify_repository_read_probe(raw, expected_head, *, event_only=False):
             for event in events
             if event.get("tool") == "repository_search"
             and event.get("ok") is True
-            and event.get("result", {}).get("query") is None
+            and (event.get("result", {}).get("query") is None or (event_only and allow_query))
             for match in event.get("result", {}).get("matches", [])
             if isinstance(match, dict)
         ]

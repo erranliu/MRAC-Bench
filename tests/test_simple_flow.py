@@ -175,7 +175,8 @@ def test_copied_bytes_and_distinct_stage_inputs(project, simple_config):
     assert (project / "cases/sample/task.md").read_bytes() == original
 
 
-def test_v7_preflight_uses_verified_mcp_events_instead_of_model_echo(tmp_path):
+@pytest.mark.parametrize("query,allow_query", [(None, False), ("a", True)])
+def test_v9_preflight_uses_matching_mcp_events_with_optional_query(tmp_path, query, allow_query):
     raw = tmp_path / "probe"
     raw.mkdir()
     head = "a" * 40
@@ -186,8 +187,8 @@ def test_v7_preflight_uses_verified_mcp_events_instead_of_model_echo(tmp_path):
         {
             "tool": "repository_search",
             "ok": True,
-            "arguments": {"query": None},
-            "result": {"query": None, "matches": [{"path": path, "line": 1, "text": line}]},
+            "arguments": {"query": query},
+            "result": {"query": query, "matches": [{"path": path, "line": 1, "text": line}]},
         },
         {
             "tool": "repository_read",
@@ -200,7 +201,10 @@ def test_v7_preflight_uses_verified_mcp_events_instead_of_model_echo(tmp_path):
         "\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8"
     )
     (raw / "final.txt").write_text('```json\n{"head":"wrong"}\n```', encoding="utf-8")
-    verify_repository_read_probe(raw, head, event_only=True)
+    verify_repository_read_probe(raw, head, event_only=True, allow_query=allow_query)
+    if query is not None:
+        with pytest.raises(BenchError, match="Invalid repository read probe"):
+            verify_repository_read_probe(raw, head, event_only=True)
     with pytest.raises(BenchError, match="Invalid repository read probe"):
         verify_repository_read_probe(raw, head)
 
@@ -221,7 +225,7 @@ def test_v7_accepts_fenced_audit_and_review_json(simple_config):
     )
     _, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 8
+    assert result["protocol_version"] == 9
 
 
 def test_v8_accepts_one_terminal_json_block_after_analysis(simple_config):
@@ -231,7 +235,7 @@ def test_v8_accepts_one_terminal_json_block_after_analysis(simple_config):
     agent = StubAgent([audit(), narrated_review] + clean() + clean())
     _, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 8
+    assert result["protocol_version"] == 9
 
     audit_id = "run-example-spec-freeze-loop-02"
     findings = [{"finding_id": "F1", "severity": "P1", "title": "Issue", "evidence": "Spec text"}]
@@ -480,7 +484,7 @@ def test_ambiguity_is_repaired_then_independently_audited(project, simple_config
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 8
+    assert result["protocol_version"] == 9
     assert result["flow"]["schema_version"] == 3
     assert result["repair_rounds"] == 1
     assert (path / "input/task.md").read_bytes() == source
@@ -524,6 +528,7 @@ def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_
         (3, 6, ["continue"]),
         (3, 7, ["continue"]),
         (3, 8, ["continue"]),
+        (3, 9, ["continue"]),
     ],
 )
 def test_machine_only_offers_continue_for_current_simple_schema(
