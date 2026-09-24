@@ -155,7 +155,7 @@ def inspect(path):
                 ["continue"]
                 if result.get("protocol_id") == "spec-flow-simple-v1"
                 and result.get("flow", {}).get("schema_version") == 3
-                and result.get("protocol_version") in {4, 5, 6, 7, 8, 9, 10}
+                and result.get("protocol_version") in {4, 5, 6, 7, 8, 9, 10, 11}
                 and result["status"] == "PAUSED"
                 else []
             )
@@ -332,10 +332,10 @@ def main(argv=None):
                 "code_identity": code_identity(),
                 "agent_version": CodexExecAdapter(args.codex_executable).version(),
                 "protocols": {
-                    "spec-mrac-v2": 3,
+                    "spec-mrac-v2": 4,
                     "exec-mrac-v1": 1,
                     "spec-mrac-v1": 1,
-                    "spec-flow-simple-v1": 10,
+                    "spec-flow-simple-v1": 11,
                 },
             }
         elif args.command == "inspect":

@@ -10,10 +10,16 @@ from .cases import case_from_snapshots, load_yaml, positive_int
 from .evidence import Evidence, digest
 from .execution import Invoker
 from .models import BenchError, RunConfig
-from .protocol import protocol_from_snapshots, render_repository_prompt, render_spec_checkout_prompt
+from .protocol import (
+    protocol_from_snapshots,
+    render_repository_mcp_prompt,
+    render_repository_prompt,
+    render_spec_checkout_prompt,
+)
 from .providers import check_adapter
 from .repository import git, prepare_repository
 from .repository_audit import parse_audit, parse_repair
+from .repository_mcp import server_config
 from .runs import RunStore, atomic_text, utc_now, write_json
 from .simple_audit import assign_ids, decode
 from .simple_repair import unified_spec_diff
@@ -21,7 +27,7 @@ from .spec_checkout import SpecCheckout, spec_path
 
 WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
-PROTOCOL_VERSION = 3
+PROTOCOL_VERSION = 4
 RESUMABLE = {
     "PROVIDER_ERROR",
     "RUNNING",
@@ -35,6 +41,7 @@ RESUMABLE = {
     "AUDIT_STALE",
     "INTERNAL_ERROR",
     "REPOSITORY_ERROR",
+    "REPOSITORY_ACCESS_ERROR",
 }
 
 
@@ -166,6 +173,33 @@ def parse_needs_input(text, audit_id):
         raise BenchError("FIX_INVALID", str(exc)) from exc
 
 
+def verify_audit_repository_reads(raw, head):
+    try:
+        events = [
+            json.loads(line)
+            for line in (raw / "repository-read-events.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line
+        ]
+        if not any(
+            event.get("tool") == "repository_head"
+            and event.get("ok") is True
+            and event.get("result", {}).get("head") == head
+            for event in events
+        ):
+            raise ValueError("Audit did not verify the fixed repository HEAD")
+        if not any(
+            event.get("tool") == "repository_read"
+            and event.get("ok") is True
+            and event.get("result", {}).get("lines")
+            for event in events
+        ):
+            raise ValueError("Audit did not read repository content")
+    except (OSError, ValueError, TypeError) as exc:
+        raise BenchError("REPOSITORY_ACCESS_ERROR", str(exc)) from exc
+
+
 def save_artifact(store, name, raw):
     relative = f"artifacts/{name}.md"
     with store.evidence.path(relative).open("xb") as stream:
@@ -175,8 +209,8 @@ def save_artifact(store, name, raw):
 
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
-    if protocol.version not in {2, PROTOCOL_VERSION}:
-        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@3")
+    if protocol.version not in {2, 3, PROTOCOL_VERSION}:
+        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@4")
     with session_lock(base.path):
         base.snapshot(
             "execution-config.json",
@@ -438,7 +472,25 @@ class Engine:
         inputs = self.inputs()
         inputs["audit_id"] = audit_id
         try:
-            text = self.call(stage, "audit", inputs, item)
+            if self.protocol.version >= 4:
+                raw = self.store.path / "raw" / stage
+                servers = server_config(
+                    self.repo.path,
+                    self.repo.commit,
+                    self.store.path / "input" / "repository-manifest.json",
+                    raw / "repository-read-events.jsonl",
+                )
+                text = self.call(
+                    stage,
+                    "audit",
+                    inputs,
+                    item,
+                    prompt=render_repository_mcp_prompt(self.protocol.prompts["audit"], inputs),
+                    mcp_servers=servers,
+                )
+                verify_audit_repository_reads(raw, self.repo.commit)
+            else:
+                text = self.call(stage, "audit", inputs, item)
             execution = json.loads(
                 (self.store.path / "raw" / stage / "execution.json").read_bytes()
             )
@@ -671,7 +723,7 @@ def load_session(path, *, allow_historical=False):
             raise BenchError("RESUME_ERROR", "Pinned execution settings changed")
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
-        expected_protocol_version = {2} if version == 2 else {2, PROTOCOL_VERSION}
+        expected_protocol_version = {2} if version == 2 else {2, 3, PROTOCOL_VERSION}
         if (
             protocol.version not in expected_protocol_version
             or result["protocol_version"] != protocol.version

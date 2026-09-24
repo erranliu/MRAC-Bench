@@ -20,6 +20,7 @@ from .protocol import (
 )
 from .providers import check_adapter
 from .repository import prepare_repository
+from .repository_mcp import server_config
 from .runs import RunStore, utc_now
 from .simple_audit import (
     assign_ids,
@@ -71,25 +72,12 @@ def baseline_inputs(case, repo, spec):
 
 def repository_mcp_servers(store, repo, case, stage):
     evidence_log = store.path / "raw" / stage / "repository-read-events.jsonl"
-    return {
-        "mrac_repository": {
-            "command": sys.executable,
-            "args": [
-                "-m",
-                "mracbench.repository_mcp",
-                "--repository",
-                str(repo.path),
-                "--head",
-                case.commit,
-                "--manifest",
-                str(store.path / "input" / "repository-manifest.json"),
-                "--audit-log",
-                str(evidence_log),
-            ],
-            "startup_timeout_sec": 20,
-            "tool_timeout_sec": 45,
-        }
-    }
+    return server_config(
+        repo.path,
+        case.commit,
+        store.path / "input" / "repository-manifest.json",
+        evidence_log,
+    )
 
 
 def candidate_mcp_servers(workspace, *, writable):

@@ -53,10 +53,28 @@ class SpecCheckout:
             name.casefold() == spec_name.casefold() and name != spec_name for name in repo.baseline
         ):
             raise BenchError("CASE_ERROR", f"Spec path differs only by case: {spec_name}")
-        current = tree_manifest(path)
-        if {k: v for k, v in current.items() if k != spec_name} != {
-            k: v for k, v in repo.baseline.items() if k != spec_name
-        }:
+        # Separate clean checkouts at the same commit can have different working
+        # bytes when their Git checkout filters/configuration differ. Compare this
+        # checkout to its own HEAD, then snapshot its bytes for post-call checks.
+        status = git(
+            path,
+            "-c",
+            "core.quotePath=false",
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--untracked-files=all",
+            "--ignored",
+            strip=False,
+        )
+        if any(
+            len(item) < 4
+            or item[2] != " "
+            or item[3:] != spec_name
+            or any(mark in item[:2] for mark in "RCUD")
+            for item in status.split("\x00")
+            if item
+        ):
             raise BenchError("PROTOCOL_VIOLATION", "Repair checkout changed outside the Spec")
         if target.is_symlink() or (target.exists() and not target.is_file()):
             raise BenchError("CASE_ERROR", f"Spec path is not a regular file: {spec_name}")

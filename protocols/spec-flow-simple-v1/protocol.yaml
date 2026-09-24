@@ -1,5 +1,5 @@
 id: spec-flow-simple-v1
-version: 10
+version: 11
 artifact_type: spec
 workflow: spec-init-freeze
 stages:

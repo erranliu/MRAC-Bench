@@ -28,6 +28,28 @@ SOURCE_GLOBS = [
 ]
 
 
+def server_config(repository: Path, head: str, manifest: Path, audit_log: Path):
+    return {
+        "mrac_repository": {
+            "command": sys.executable,
+            "args": [
+                "-m",
+                "mracbench.repository_mcp",
+                "--repository",
+                str(repository),
+                "--head",
+                head,
+                "--manifest",
+                str(manifest),
+                "--audit-log",
+                str(audit_log),
+            ],
+            "startup_timeout_sec": 20,
+            "tool_timeout_sec": 45,
+        }
+    }
+
+
 class RepositoryReader:
     def __init__(self, root: Path, head: str, manifest: Path, audit_log: Path):
         self.root = root.resolve(strict=True)
