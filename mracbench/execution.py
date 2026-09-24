@@ -28,6 +28,7 @@ class Invoker:
         workspace=None,
         readonly=True,
         mcp_servers=None,
+        output_schema=None,
     ):
         self.stage = stage
         store, result, repo = self.store, self.result, self.repo
@@ -57,6 +58,7 @@ class Invoker:
                 reasoning_effort=self.effort,
                 skip_git_repo_check=workspace is not None,
                 mcp_servers=mcp_servers,
+                output_schema=output_schema,
             )
         )
         for filename, content in (

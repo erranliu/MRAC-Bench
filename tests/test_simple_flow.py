@@ -61,13 +61,10 @@ def repair(request):
     data = payload(request)
     return json.dumps(
         {
-            "audit_id": data["audit_id"],
-            "disposition": "continue",
             "spec": "# Revised Spec\n\n" + data["current_spec"] + "\nFailure returns null.\n",
             "fixes": [
                 {
                     "finding_id": finding["finding_id"],
-                    "summary": "Defined failure output.",
                     "evidence": "Source acceptance and fixed app.py entail the null result.",
                 }
                 for finding in data["accepted_findings"]
@@ -145,8 +142,63 @@ def test_initial_repair_goes_directly_to_freeze(simple_config):
         "review-03",
     ]
     assert result["repair_rounds"] == 1
-    assert (path / "repairs/repair-01.json").exists()
+    saved = json.loads((path / "repairs/repair-01.json").read_text(encoding="utf-8"))
+    assert saved["disposition"] == "continue"
+    assert saved["audit_id"] == result["trajectory"][0]["audit_id"]
+    assert agent.requests[3].output_schema["required"] == ["spec", "fixes"]
     assert result["flow"]["failure_streak"] == 0
+
+
+def test_v5_repair_accepts_and_preserves_metadata_before_title(project, simple_config):
+    original = b"source_task: pinned\n# Input Spec\nFailure is unclear.\n"
+    (project / "cases/sample/task.md").write_bytes(original)
+    change_case(project, lambda d: d["task"].update(sha256=hashlib.sha256(original).hexdigest()))
+
+    def repaired(request):
+        data = payload(request)
+        return json.dumps(
+            {
+                "spec": data["current_spec"] + "Failure returns null.\n",
+                "fixes": [
+                    {
+                        "finding_id": finding["finding_id"],
+                        "evidence": "The source task requires a defined failure result.",
+                    }
+                    for finding in data["accepted_findings"]
+                ],
+            }
+        )
+
+    path, result = run_case(
+        simple_config, StubAgent([audit("P1"), review(), repaired] + clean() + clean())
+    )
+    assert result["status"] == "CONVERGED", result["error"]
+    assert (
+        (path / "artifacts/spec.round-01.md")
+        .read_text()
+        .startswith("source_task: pinned\n# Input Spec")
+    )
+
+
+def test_v4_repair_keeps_original_format_contract(project, simple_config):
+    protocol_path = project / "protocols/spec-flow-simple-v1/protocol.yaml"
+    data = yaml.safe_load(protocol_path.read_text())
+    data["version"] = 4
+    del data["output_schemas"]
+    protocol_path.write_text(yaml.safe_dump(data))
+
+    def legacy_repair(request):
+        response = json.loads(repair(request))
+        response.update(audit_id=payload(request)["audit_id"], disposition="continue")
+        for fix in response["fixes"]:
+            fix["summary"] = "Defined the failure output."
+        return json.dumps(response)
+
+    agent = StubAgent([audit("P1"), review(), legacy_repair] + clean() + clean())
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 4
+    assert agent.requests[3].output_schema is None
 
 
 def test_repair_resets_freeze_streak(simple_config):
@@ -217,7 +269,7 @@ def test_ambiguity_is_repaired_then_independently_audited(project, simple_config
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 4
+    assert result["protocol_version"] == 5
     assert result["flow"]["schema_version"] == 3
     assert result["repair_rounds"] == 1
     assert (path / "input/task.md").read_bytes() == source
@@ -252,7 +304,10 @@ def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_
     assert not agent.requests
 
 
-@pytest.mark.parametrize("schema,protocol_version,actions", [(1, 1, []), (3, 4, ["continue"])])
+@pytest.mark.parametrize(
+    "schema,protocol_version,actions",
+    [(1, 1, []), (3, 4, ["continue"]), (3, 5, ["continue"])],
+)
 def test_machine_only_offers_continue_for_current_simple_schema(
     tmp_path, schema, protocol_version, actions
 ):

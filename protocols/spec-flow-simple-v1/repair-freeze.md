@@ -16,8 +16,7 @@ Close all accepted findings, including accepted P3.
 Do not implement code or create another design. Preserve correct detail. The
 replacement Spec must not discuss audits, finding IDs, or repair history.
 
-Return ONLY one JSON object, using the supplied audit_id.
-The only supported disposition is continue:
-{"audit_id":"...","disposition":"continue","spec":"# Complete replacement Spec\n...","fixes":[{"finding_id":"F1","summary":"Correction made","evidence":"Supporting source/baseline evidence and any explicit assumptions"}]}
-Include exactly one fix for every accepted finding. The spec must have a level-one
-Markdown title and substantive body and must change the current Spec bytes.
+Return the complete replacement Spec in `spec` and one short `fixes` evidence
+entry for each accepted finding ID. The output schema is supplied separately.
+Preserve meaningful source metadata in the Spec; it may precede the title.
+The replacement must change the current Spec bytes.

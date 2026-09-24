@@ -30,6 +30,7 @@ class ProtocolDefinition:
     prompts: dict[str, str]
     snapshots: dict[str, bytes]
     workflow: str = "generate-audit-repair"
+    output_schemas: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class AgentRequest:
     reasoning_effort: str | None = None
     skip_git_repo_check: bool = False
     mcp_servers: dict[str, dict] | None = None
+    output_schema: dict | None = None
 
 
 @dataclass

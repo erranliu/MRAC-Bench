@@ -186,6 +186,10 @@ class CodexExecAdapter:
                 "--output-last-message",
                 str(output_path),
             ]
+            if request.output_schema is not None:
+                schema_path = raw / "output-schema.json"
+                write_json(schema_path, request.output_schema)
+                command += ["--output-schema", str(schema_path)]
             command += self.provider_arguments(raw)
             command += self.mcp_arguments(request.mcp_servers)
             if request.model:

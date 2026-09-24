@@ -1,6 +1,6 @@
 # 并存协议管理
 
-受管批次通过独立编排服务调用公共 machine 接口，协议内审计、修复和收敛仍由 runner 控制。recover 仅处理可验证中断，不增加预算；exec 的 PAUSED 经显式 continue 批准另外六次 audit。answer 保存必要输入，不授予额外预算。旧协议的中断恢复能力不因编排而扩展，spec-flow-simple-v1@4 只支持 PAUSED 续跑，@1/@2/@3 历史运行只读。入口见[编排使用说明](./Parallel%20Orchestration%20Guide.md)。
+受管批次通过独立编排服务调用公共 machine 接口，协议内审计、修复和收敛仍由 runner 控制。recover 仅处理可验证中断，不增加预算；exec 的 PAUSED 经显式 continue 批准另外六次 audit。answer 保存必要输入，不授予额外预算。旧协议的中断恢复能力不因编排而扩展，spec-flow-simple-v1@4/@5 只支持 PAUSED 续跑，@1/@2/@3 历史运行只读。入口见[编排使用说明](./Parallel%20Orchestration%20Guide.md)。
 
 显式 Responses provider 属于执行条件，随输入快照固定，恢复必须匹配原 provider/模型目录；凭证值不纳入快照。PROVIDER_ERROR 表示本地配置或环境凭证缺失，CLI 未启动时不计 audit invocation。v2/exec 将该错误纳入可校验 checkpoint 的显式恢复范围，预算规则保持不变。详见 [Provider 接入](./Providers.md)。
 
@@ -15,7 +15,7 @@ Spec、Plan 和验收报告保留为历史设计记录。
 |---|---:|---|---|---|---|
 | `spec-mrac-v2` | 2 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
 | `spec-mrac-v1` | 1 | `generate-audit-repair` | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
-| `spec-flow-simple-v1` | 4 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
+| `spec-flow-simple-v1` | 5 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
 | `exec-mrac-v1` | 1 | `exec-mrac` | 显式选定的执行 Spec | 独立可写 checkout 中实施代码 | 同一 Spec、基线和完整产品候选快照连续两轮零问题 |
 
 - [spec-mrac-v2 配置](../protocols/spec-mrac-v2/protocol.yaml)
@@ -341,9 +341,9 @@ Bench 适配点：
 4. 总 audit 预算是额外的 benchmark 硬上限，与六轮软暂停分开计算。
 5. 源流程冻结后进入 PLAN；这里在冻结时返回 `CONVERGED`，记录 `flow.phase: FROZEN`。
 6. 审计采用同一 adapter 的新 `codex exec --ephemeral` 实现独立性，不创建用户侧任务。
-7. 修订 @2 删除所有结构性阻塞条件和 repair block；@3/@4 保持此语义，不支持 BLOCKED 或替代的缺输入状态。
+7. 修订 @2 删除所有结构性阻塞条件和 repair block；@3/@4/@5 保持此语义，不支持 BLOCKED 或替代的缺输入状态。
    接受项继续修复；必要假设须明确写出，不能伪装成已验证事实。
-8. @4 使用 flow state 3，并在每次启动/续跑时先验证只读仓库 MCP 能力；校验失败为执行错误。
+8. @4/@5 使用 flow state 3，并在每次启动/续跑时先验证只读仓库 MCP 能力；校验失败为执行错误。
    只恢复 PAUSED，不支持崩溃续跑或扩充总预算。@1/state 1、@2/state 2 与 @3/state 3 历史结果只读。
 
 这些差异属于实验定义，不能将这个协议描述为完整 MRAC-Flow Simple 产品工作流。
@@ -371,7 +371,7 @@ case 的 `task.file` 是唯一不可变原始 Spec；先校验 `task.sha256`，�
 依赖。原始意图优先于当前代码。遇到歧义须作最小一致修正并明确必要假设，
 保留正确细节，不以未经验证的推断冒充基线事实；后续审计继续检验这些修正。
 
-@4 启动时先执行只读仓库能力 preflight：通过固定仓库 MCP 工具查询 HEAD、搜索源码并读取搜索结果中的文件。
+@4 起启动时先执行只读仓库能力 preflight：通过固定仓库 MCP 工具查询 HEAD、搜索源码并读取搜索结果中的文件。
 工具只读取固定 Git manifest 中的普通文件，逐文件核对 hash，拒绝符号链接和越界路径；每次调用的输入和结果保存在 raw evidence。
 失败记为 `REPOSITORY_ACCESS_ERROR`（MCP 工具启动/调用失败或探针证据不足）；
 错误停止该 run，不记作 clean，也不转成 BLOCKED。preflight 是模型调用，但不计 audit budget；其 request/raw/execution 保存在 run evidence。
@@ -413,16 +413,18 @@ related_specs:
 的严重度和措辞不由主控重写。schema 校验能验证裁决完整性，但反证是否充分仍是模型
 判断，不构成机械证明。
 
-repair 只支持 `disposition=continue`：
+@5 repair 使用随 `protocol.yaml` 冻结的 CLI 输出 schema，模型只返回：
 
 ```json
-{"audit_id":"...","disposition":"continue","spec":"# 完整 Spec\n正文","fixes":[{"finding_id":"F1","summary":"修正说明","evidence":"原始意图与固定基线证明"}]}
+{"spec":"完整修订 Spec，可在标题前保留原有元数据","fixes":[{"finding_id":"F1","evidence":"原始意图与固定基线证明"}]}
 ```
 
-continue 必须覆盖全部接受项，返回有一级标题及正文的完整 Spec，并改变当前字节。
-只保存新的 artifact，不覆写已有版本。旧 block 输出或 exception 字段属于 PARSE_ERROR，
-不静默忽略，也不转换成 clean、PAUSED 或 NEEDS_INPUT。
-fixes 是主控的修复与证据声明；下一轮独立审计继续检验文档。
+runner 将本轮 `audit_id` 和唯一的 `disposition=continue` 写入修复证据。`fixes` 必须覆盖全部接受项，
+Spec 必须非空且改变当前字节；一级标题的位置与正文质量由下一轮独立审计判断。
+原有元数据无需迁移，保存新的 artifact 时不覆写已有版本。空文档、缺失接受项、旧 block
+输出或 exception 字段属于 PARSE_ERROR，不静默忽略，也不转换成 clean、PAUSED 或 NEEDS_INPUT。
+@4 仍按其冻结输入快照要求 `audit_id/disposition/spec/fixes`、每项 summary/evidence，且 Spec 以 `# ` 开头。
+@5 的 CLI 输出 schema 与原始回复保存在 raw 证据；不支持 schema 的执行环境明确失败，不回退到提示词示例。
 
 ## 状态、计数、暂停与恢复
 
@@ -440,7 +442,7 @@ audit ID 连续 clean，且无 pending fix，才能记录 frozen hash 和两个 
 满足冻结先 CONVERGED，否则预算耗尽为 NON_CONVERGED，不继续修复，
 也不再产生 PAUSED。相同轮同时满足硬预算和六轮软暂停时，硬预算优先。
 
-`resume` 只接受当前 @4 / state 3 的 PAUSED。它取得 run 锁，校验输入、产物、审计/裁决/修复、raw 和原结果
+`resume` 只接受 @4/@5 / state 3 的 PAUSED。它取得 run 锁，校验输入、产物、审计/裁决/修复、raw 和原结果
 的保存哈希；使用原 case/protocol 快照，保留原 model、reasoning effort、timeout、
 总预算和累计计数，并要求 adapter 类型与版本一致。先存档暂停终态，再清除软暂停计数
 和 clean，从 pending fix 继续，后续必须有新的冻结审计。
@@ -495,7 +497,7 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 - 原始字节复制、初始化无生成、初始化不计入冻结 clean、初始化修复直接进入冻结。
 - 分阶段输入隔离、固定附件及 hash；审计保持独立。
 - v2 仅 audit/repair 调用、紧凑 findings 输出、全部 P0–P3 直接 FIX、旧裁决运行只读。
-- spec-flow-simple-v1@4 验证实际仓库只读 MCP 能力；spec-init/review/repair 能读取固定仓库，freeze audit 仍仅接收 Spec；缺失仓库读取证据不能产生 clean。每项恰好裁决一次、接受项进入修复，且不支持 BLOCKED。@1/@2/@3 历史 state 不续跑。
+- spec-flow-simple-v1@4/@5 验证实际仓库只读 MCP 能力；spec-init/review/repair 能读取固定仓库，freeze audit 仍仅接收 Spec；缺失仓库读取证据不能产生 clean。每项恰好裁决一次、接受项进入修复，且不支持 BLOCKED。@5 另验证 repair schema、元数据前缀和 @4 旧输出规则。@1/@2/@3 历史 state 不续跑。
 - 相同内容双 clean、修复重置、六轮暂停及 clean 重置计数。
 - 预算边界、暂停恢复、输入/证据/配置篡改、锁和仓库违规。
 
@@ -518,3 +520,4 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 - 2026-09-23：`spec-flow-simple-v1@3` 对齐 Simple 技能的仓库读取边界：增加每次启动/续跑时的真实固定 HEAD、`rg` 文件及内容搜索、源码读取 preflight，并从 Codex 命令事件核对证据。初始化审计、review、修复可读取固定基线；freeze 审计仍只读 Spec。工具策略拒绝及 preflight 缺证据分别作为 `EXECUTION_POLICY_ERROR` / `REPOSITORY_ACCESS_ERROR`，不允许形成 clean。旧 @1/@2 运行只读。
 
 - 2026-09-23：`spec-flow-simple-v1@4` 改用 runner 提供的只读 MCP 仓库服务供初始化审计、review、repair 检索固定基线；仓库路径、HEAD 与 git manifest 固定，单文件逐次校验 SHA-256，限制读取大小/搜索结果，拒绝符号链接及路径越界。冻结审计不暴露仓库工具。preflight 直接验证 MCP 查询、搜索和文件读取事件；CLI shell policy 不再作为源码访问通道。
+- 2026-09-24：`spec-flow-simple-v1@5` 用 CLI 输出 schema 固定 repair 的 JSON 外形；模型仅返回完整 Spec 和每项接受发现的依据，runner 记录固定 audit ID 与 continue。Spec 文本只做非空校验，允许保留标题前的原始元数据，后续冻结审计判断文档质量。@4 的修复格式和既有结果保持原语义。

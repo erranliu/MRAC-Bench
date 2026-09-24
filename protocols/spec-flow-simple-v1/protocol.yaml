@@ -1,5 +1,5 @@
 id: spec-flow-simple-v1
-version: 4
+version: 5
 artifact_type: spec
 workflow: spec-init-freeze
 stages:
@@ -13,6 +13,25 @@ stages:
     prompt: repair-init.md
   repair-freeze:
     prompt: repair-freeze.md
+output_schemas:
+  repair:
+    type: object
+    properties:
+      spec:
+        type: string
+      fixes:
+        type: array
+        items:
+          type: object
+          properties:
+            finding_id:
+              type: string
+            evidence:
+              type: string
+          required: [finding_id, evidence]
+          additionalProperties: false
+    required: [spec, fixes]
+    additionalProperties: false
 preflight:
   prompt: repository-read-check.md
 convergence:

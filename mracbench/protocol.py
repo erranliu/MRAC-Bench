@@ -35,6 +35,7 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
         or convergence["required_clean_audits"] != 2
     ):
         raise BenchError("CASE_ERROR", "M1 requires two consecutive clean audits")
+    version = positive_int(data.get("version"), "protocol.version")
     workflow = data.get("workflow", "generate-audit-repair")
     if not isinstance(workflow, str) or workflow not in WORKFLOWS:
         raise BenchError("CASE_ERROR", "Unsupported protocol workflow")
@@ -66,13 +67,24 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
         maximum = positive_int(maximum, "max_audit_rounds")
     if workflow == "exec-mrac" and maximum != 6:
         raise BenchError("CASE_ERROR", "exec-mrac requires batches of exactly six audits")
+    output_schemas = data.get("output_schemas", {})
+    if not isinstance(output_schemas, dict):
+        raise BenchError("CASE_ERROR", "Output schemas must be a mapping")
+    if workflow == "spec-init-freeze" and version >= 5:
+        if set(output_schemas) != {"repair"}:
+            raise BenchError("CASE_ERROR", "Simple v5 requires a repair output schema")
+        if not isinstance(output_schemas["repair"], dict):
+            raise BenchError("CASE_ERROR", "Repair output schema must be a mapping")
+    elif output_schemas:
+        raise BenchError("CASE_ERROR", "Output schemas are unsupported by this protocol")
     return ProtocolDefinition(
         id=protocol_id,
-        version=positive_int(data.get("version"), "protocol.version"),
+        version=version,
         max_audit_rounds=maximum,
         prompts=prompts,
         snapshots=snapshots,
         workflow=workflow,
+        output_schemas=output_schemas,
     )
 
 

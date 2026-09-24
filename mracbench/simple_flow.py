@@ -15,7 +15,14 @@ from .protocol import protocol_from_snapshots, render_simple_prompt
 from .providers import check_adapter
 from .repository import prepare_repository
 from .runs import RunStore, utc_now
-from .simple_audit import assign_ids, parse_findings, parse_repair, parse_review
+from .simple_audit import (
+    assign_ids,
+    parse_findings,
+    parse_repair,
+    parse_repair_v5,
+    parse_review,
+    parse_simple_spec,
+)
 
 
 def save_evidence(store, evidence, name, data):
@@ -276,17 +283,23 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             inputs = baseline_inputs(case, repo, spec)
             inputs.update(audit_id=pending["audit_id"], accepted_findings=pending["accepted"])
             prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
-            repair = parse_repair(
-                invoke(
-                    stage,
-                    render_simple_prompt(protocol.prompts[prompt_stage], inputs),
-                    mcp_servers=repository_mcp_servers(store, repo, case, stage),
-                ),
-                pending["audit_id"],
-                pending["accepted"],
+            reply = invoke(
+                stage,
+                render_simple_prompt(protocol.prompts[prompt_stage], inputs),
+                mcp_servers=repository_mcp_servers(store, repo, case, stage),
+                output_schema=protocol.output_schemas.get("repair"),
+            )
+            repair = (
+                parse_repair_v5(reply, pending["audit_id"], pending["accepted"])
+                if protocol.version >= 5
+                else parse_repair(reply, pending["audit_id"], pending["accepted"])
             )
             save_evidence(store, evidence, f"repairs/{stage}.json", repair)
-            replacement = parse_spec(repair["spec"])
+            replacement = (
+                parse_simple_spec(repair["spec"])
+                if protocol.version >= 5
+                else parse_spec(repair["spec"])
+            )
             if replacement.encode("utf-8") == spec_bytes:
                 raise BenchError("PARSE_ERROR", "Accepted repair did not change Spec bytes")
             new_artifact = store.artifact(f"spec.round-{number:02d}.md", replacement)

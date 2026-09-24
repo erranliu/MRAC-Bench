@@ -114,3 +114,31 @@ def parse_repair(text, audit_id, accepted):
         return data
     except (ValueError, TypeError, AttributeError, RecursionError) as exc:
         raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
+
+
+def parse_simple_spec(text):
+    if not isinstance(text, str) or not text.strip():
+        raise BenchError("PARSE_ERROR", "Replacement Spec must be nonempty text")
+    return text.strip() + "\n"
+
+
+def parse_repair_v5(text, audit_id, accepted):
+    try:
+        data = decode(text)
+        obj(data, {"spec", "fixes"})
+        parse_simple_spec(data["spec"])
+        if not isinstance(data["fixes"], list):
+            raise TypeError("Expected fixes list")
+        seen = set()
+        for fix in data["fixes"]:
+            obj(fix, {"finding_id", "evidence"})
+            for value in fix.values():
+                nonempty(value)
+            if fix["finding_id"] in seen:
+                raise ValueError("Duplicate fix")
+            seen.add(fix["finding_id"])
+        if seen != {row["finding_id"] for row in accepted}:
+            raise ValueError("Every accepted finding needs a closure record")
+        return {"audit_id": audit_id, "disposition": "continue", **data}
+    except (ValueError, TypeError, AttributeError, RecursionError) as exc:
+        raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
