@@ -186,6 +186,11 @@ class CodexExecAdapter:
                 "--output-last-message",
                 str(output_path),
             ]
+            if os.name == "nt":
+                # --ignore-user-config also drops the native Windows sandbox
+                # implementation. Select it explicitly so workspace-write can
+                # execute file tools inside the isolated repair checkout.
+                command += ["-c", 'windows.sandbox="elevated"']
             if request.output_schema is not None:
                 schema_path = raw / "output-schema.json"
                 write_json(schema_path, request.output_schema)

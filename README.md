@@ -132,6 +132,7 @@ usage 的总 token/cost 当前记为 `null`；每次调用若有 Codex usage 则
 ## 独立性与仓库保护
 
 每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 起通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；@7 起预检只校验工具事件，不要求模型重复输出 JSON；@9 允许用任意有效查询词搜索，只要求搜索所得源码行与后续读取吻合。@8 起 audit/review 接受单个末尾 JSON 代码块前有文字说明，内部 schema 和 ID 校验不变。Simple 的 init/review 可以调用仓库限定工具，冻结审计只接收当前 Spec 和标识/hash，使用空工作目录。Simple @6–@9 的 repair 使用受限候选 MCP；@10 起与 v2 @3 起的 repair 改在本 run 复用的隔离项目 checkout 中直接编辑 Spec，runner 保存文件和 diff。v2 @4 的审计使用固定仓库只读 MCP 工具并核对实际 HEAD 和文件读取事件；不会自动加载本机用户规则。
+原生 Windows 上，runner 显式为每次嵌套 CLI 调用设置 `windows.sandbox="elevated"`。这是因为 `--ignore-user-config` 也会略过用户配置中的 Windows 沙盒实现设置；只传 `--sandbox workspace-write` 会使当前环境的普通文件工具被策略拒绝。该设置保持各阶段原有的 read-only / workspace-write 沙盒边界。
 
 Spec 协议采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 状态与文件内容哈希；包括忽略文件在内的新增/删除/修改均视为违规。exec 的 IMPLEMENT/FIX 使用 workspace-write，允许专属 checkout 的产品修改；AUDIT 只读并检查包括 ignored 文件在内的写入变化，所有阶段保护固定基线和 Git 控制状态。历史结果放在 checkout 外。隔离边界不等同于容器或严格的文件读取白名单：禁止读取父目录、历史 run 和外部来源也通过 protocol prompt 约束。
 

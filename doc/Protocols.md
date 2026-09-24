@@ -546,3 +546,4 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 - 2026-09-24：`spec-flow-simple-v1@9` 取消预检搜索必须省略 query 的附加条件；继续要求固定 HEAD、真实搜索匹配与同一路径同一源码行的读取证据。@8 及以前的结果不迁移。
 - 2026-09-24：`spec-mrac-v2@3` 与 `spec-flow-simple-v1@10` 的修复阶段改为在每次 run 专用的隔离项目 checkout 中使用普通文件工具编辑 Spec；每轮复用 checkout，runner 核验其他文件不变并保存候选快照、diff 和 hash。v2 保留未修改 Spec 时的 NEEDS_INPUT；Simple 保留独立只读 closure 与纯 Spec 冻结审计。历史 run 使用各自固定的协议快照。
 - 2026-09-24：`spec-mrac-v2@4` 审计改用固定仓库只读 MCP，并要求实际的固定 HEAD 与文件读取事件，避免本机 CLI shell 策略拒绝仓库读取；`spec-flow-simple-v1@11` 改为用隔离 checkout 自身的干净 Git 状态验证修复前边界，允许同一提交在不同 checkout 中出现检出转换差异。修复后仍逐文件核验只有 Spec 改动。
+- 2026-09-24：Windows CodexExecAdapter 在忽略用户配置的同时显式选择 `windows.sandbox="elevated"`。临时目录的同参数探针确认普通 shell 读取与工作区文件写入都能执行；原有的 read-only/workspace-write 阶段边界和协议版本不变。
