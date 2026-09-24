@@ -42,6 +42,7 @@ def seal(path):
             ".execution.lock",
             ".repository-run.lock",
             ".run.lock",
+            "checkout",
             "seal.json",
             "lifecycle.json",
         ),
@@ -91,7 +92,13 @@ def validate(bundle, settings):
         "max_rounds": maximum,
         "timeout_seconds": timeout,
         "protocol_version": protocol.version,
-        "repository_access": "writable" if protocol.workflow == "exec-mrac" else "read_only",
+        "repository_access": (
+            "writable"
+            if protocol.workflow == "exec-mrac"
+            or (protocol.workflow == "repository-spec-freeze" and protocol.version >= 3)
+            or (protocol.workflow == "spec-init-freeze" and protocol.version >= 10)
+            else "read_only"
+        ),
     }
 
 
@@ -148,7 +155,7 @@ def inspect(path):
                 ["continue"]
                 if result.get("protocol_id") == "spec-flow-simple-v1"
                 and result.get("flow", {}).get("schema_version") == 3
-                and result.get("protocol_version") in {4, 5, 6, 7, 8, 9}
+                and result.get("protocol_version") in {4, 5, 6, 7, 8, 9, 10}
                 and result["status"] == "PAUSED"
                 else []
             )
@@ -325,10 +332,10 @@ def main(argv=None):
                 "code_identity": code_identity(),
                 "agent_version": CodexExecAdapter(args.codex_executable).version(),
                 "protocols": {
-                    "spec-mrac-v2": 2,
+                    "spec-mrac-v2": 3,
                     "exec-mrac-v1": 1,
                     "spec-mrac-v1": 1,
-                    "spec-flow-simple-v1": 9,
+                    "spec-flow-simple-v1": 10,
                 },
             }
         elif args.command == "inspect":

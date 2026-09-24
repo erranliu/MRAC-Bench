@@ -15,6 +15,8 @@ from .protocol import (
     protocol_from_snapshots,
     render_simple_prompt,
     render_simple_workspace_prompt,
+    render_spec_checkout_prompt,
+    render_spec_closure_prompt,
 )
 from .providers import check_adapter
 from .repository import prepare_repository
@@ -37,6 +39,7 @@ from .simple_repair import (
     verify_candidate_reads,
     verify_workspace,
 )
+from .spec_checkout import SpecCheckout, spec_path
 
 
 def save_evidence(store, evidence, name, data):
@@ -348,35 +351,69 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
         raw = store.path / "raw" / stage
         workspace = raw / "workspace"
         files, related = repair_files(case, pending["accepted"], seed)
-        inputs = {
-            "candidate_path": "spec.md",
-            "source_spec_path": "source-spec.md",
-            "accepted_findings_path": "accepted-findings.json",
-            "related_specs": related,
-            "fixed_repository_head": case.commit,
-        }
+        native = protocol.version >= 10
+        inputs = (
+            {
+                "spec_path": spec_path(case),
+                "source_spec": case.task,
+                "accepted_findings": pending["accepted"],
+                "related_specs": case.related_specs,
+                "fixed_repository_head": case.commit,
+            }
+            if native
+            else {
+                "candidate_path": "spec.md",
+                "source_spec_path": "source-spec.md",
+                "accepted_findings_path": "accepted-findings.json",
+                "related_specs": related,
+                "fixed_repository_head": case.commit,
+            }
+        )
         if feedback is not None:
             inputs["retry_feedback"] = feedback
         prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
-        invoke(
-            stage,
-            render_simple_workspace_prompt(protocol.prompts[prompt_stage], inputs, writable=True),
-            workspace=workspace,
-            mcp_servers={
-                **repository_mcp_servers(store, repo, case, stage),
-                **candidate_mcp_servers(workspace, writable=True),
-            },
-            workspace_setup=lambda directory, prepared=files: prepare_workspace(
-                directory, prepared
-            ),
-        )
-        candidate = verify_workspace(workspace, files, writable={"spec.md"})["spec.md"]
+        if native:
+            checkout_path = store.path / "checkout"
+            checkout = {}
+
+            def setup_checkout(_raw):
+                checkout["value"] = SpecCheckout(repo, checkout_path, spec_path(case), seed)
+
+            invoke(
+                stage,
+                render_spec_checkout_prompt(protocol.prompts[prompt_stage], inputs),
+                workspace=checkout_path,
+                readonly=False,
+                workspace_setup=setup_checkout,
+            )
+            candidate = checkout["value"].candidate()
+            candidate_path = f"raw/{stage}/candidate.md"
+            with evidence.path(candidate_path).open("xb") as stream:
+                stream.write(candidate)
+            evidence.record(candidate_path)
+        else:
+            invoke(
+                stage,
+                render_simple_workspace_prompt(
+                    protocol.prompts[prompt_stage], inputs, writable=True
+                ),
+                workspace=workspace,
+                mcp_servers={
+                    **repository_mcp_servers(store, repo, case, stage),
+                    **candidate_mcp_servers(workspace, writable=True),
+                },
+                workspace_setup=lambda directory, prepared=files: prepare_workspace(
+                    directory, prepared
+                ),
+            )
+            candidate = verify_workspace(workspace, files, writable={"spec.md"})["spec.md"]
+            candidate_path = f"raw/{stage}/workspace/spec.md"
         record = {
             "audit_id": pending["audit_id"],
             "accepted_finding_ids": [row["finding_id"] for row in pending["accepted"]],
             "previous_sha256": digest(spec_bytes),
             "candidate_sha256": digest(candidate),
-            "candidate_path": f"raw/{stage}/workspace/spec.md",
+            "candidate_path": candidate_path,
             "retry": retry,
         }
         try:
@@ -416,11 +453,17 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
                 closure_inputs["retry_feedback"] = closure_feedback
             closure_text = invoke(
                 closure_stage,
-                render_simple_workspace_prompt(
-                    protocol.prompts["closure"], closure_inputs, writable=False
+                (
+                    render_spec_closure_prompt(protocol.prompts["closure"], closure_inputs)
+                    if native
+                    else render_simple_workspace_prompt(
+                        protocol.prompts["closure"], closure_inputs, writable=False
+                    )
                 ),
                 workspace=closure_workspace,
-                mcp_servers=candidate_mcp_servers(closure_workspace, writable=False),
+                mcp_servers=(
+                    None if native else candidate_mcp_servers(closure_workspace, writable=False)
+                ),
                 workspace_setup=lambda directory, prepared=comparison: prepare_workspace(
                     directory, prepared
                 ),
@@ -428,16 +471,17 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
             verify_workspace(closure_workspace, comparison)
             closure_name = f"closures/{closure_stage}.json"
             try:
-                verify_candidate_reads(
-                    closure_raw,
-                    {
-                        "spec.md",
-                        "previous-spec.md",
-                        "source-spec.md",
-                        "accepted-findings.json",
-                        "diff.txt",
-                    },
-                )
+                if not native:
+                    verify_candidate_reads(
+                        closure_raw,
+                        {
+                            "spec.md",
+                            "previous-spec.md",
+                            "source-spec.md",
+                            "accepted-findings.json",
+                            "diff.txt",
+                        },
+                    )
                 closure = parse_closure_v6(
                     closure_text, pending["accepted"], allow_fence=protocol.version >= 7
                 )

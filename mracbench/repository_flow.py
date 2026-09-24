@@ -10,16 +10,18 @@ from .cases import case_from_snapshots, load_yaml, positive_int
 from .evidence import Evidence, digest
 from .execution import Invoker
 from .models import BenchError, RunConfig
-from .protocol import protocol_from_snapshots, render_repository_prompt
+from .protocol import protocol_from_snapshots, render_repository_prompt, render_spec_checkout_prompt
 from .providers import check_adapter
 from .repository import git, prepare_repository
 from .repository_audit import parse_audit, parse_repair
 from .runs import RunStore, atomic_text, utc_now, write_json
-from .simple_audit import assign_ids
+from .simple_audit import assign_ids, decode
+from .simple_repair import unified_spec_diff
+from .spec_checkout import SpecCheckout, spec_path
 
 WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
 RESUMABLE = {
     "PROVIDER_ERROR",
     "RUNNING",
@@ -145,6 +147,25 @@ def read_spec(path):
         raise BenchError("RESUME_ERROR", f"Cannot read UTF-8 Spec/input: {path}: {exc}") from exc
 
 
+def parse_needs_input(text, audit_id):
+    try:
+        value = decode(text)
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"disposition", "reason", "questions"}
+            or value["disposition"] != "needs_input"
+            or not isinstance(value["reason"], str)
+            or not value["reason"].strip()
+            or not isinstance(value["questions"], list)
+            or not value["questions"]
+            or any(not isinstance(q, str) or not q.strip() for q in value["questions"])
+        ):
+            raise ValueError("Unchanged Spec requires a concrete needs_input response")
+        return {"audit_id": audit_id, **value}
+    except (ValueError, TypeError) as exc:
+        raise BenchError("FIX_INVALID", str(exc)) from exc
+
+
 def save_artifact(store, name, raw):
     relative = f"artifacts/{name}.md"
     with store.evidence.path(relative).open("xb") as stream:
@@ -154,8 +175,8 @@ def save_artifact(store, name, raw):
 
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
-    if protocol.version != PROTOCOL_VERSION:
-        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@2")
+    if protocol.version not in {2, PROTOCOL_VERSION}:
+        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@3")
     with session_lock(base.path):
         base.snapshot(
             "execution-config.json",
@@ -253,7 +274,7 @@ class Engine:
             ),
         }
 
-    def call(self, stage, role, inputs, item=None):
+    def call(self, stage, role, inputs, item=None, *, prompt=None, **invoke_options):
         self.flow["last_call"] = {
             "stage": stage,
             "role": role,
@@ -261,7 +282,12 @@ class Engine:
         }
         self.store.checkpoint(self.result, stage + ":prepared")
         text = self.invoke(
-            stage, render_repository_prompt(self.protocol.prompts[role], inputs), item
+            stage,
+            prompt
+            if prompt is not None
+            else render_repository_prompt(self.protocol.prompts[role], inputs),
+            item,
+            **invoke_options,
         )
         self.flow["last_call"] = None
         self.store.checkpoint(self.result, stage + ":returned")
@@ -284,15 +310,80 @@ class Engine:
         inputs.update(audit_id=pending["audit_id"], findings=pending["findings"])
         self.flow["repair_sequence"] += 1
         stage = f"repair-{self.flow['repair_sequence']:02d}"
-        repair = parse_repair(
-            self.call(stage, "repair", inputs), pending["audit_id"], pending["findings"]
-        )
+        if self.protocol.version >= 3:
+            checkout_path = self.store.path / "checkout"
+            checkout = {}
+            current = self.store.evidence.path("working/spec.md").read_bytes()
+            name = spec_path(self.case)
+
+            def setup_checkout(_raw):
+                checkout["value"] = SpecCheckout(self.repo, checkout_path, name, current)
+
+            checkout_inputs = {
+                **inputs,
+                "spec_path": name,
+                "repository_path": str(checkout_path),
+            }
+            checkout_inputs.pop("current_spec")
+            reply = self.call(
+                stage,
+                "repair",
+                checkout_inputs,
+                prompt=render_spec_checkout_prompt(
+                    self.protocol.prompts["repair"], checkout_inputs
+                ),
+                workspace=checkout_path,
+                readonly=False,
+                workspace_setup=setup_checkout,
+            )
+            candidate = checkout["value"].candidate()
+            if candidate == current:
+                repair = parse_needs_input(reply, pending["audit_id"])
+            else:
+                try:
+                    response = decode(reply)
+                except (ValueError, TypeError):
+                    response = None
+                if isinstance(response, dict) and response.get("disposition") == "needs_input":
+                    raise BenchError(
+                        "FIX_INVALID", "needs_input cannot include a partial Spec edit"
+                    )
+                if len(candidate) > 8 * 1024 * 1024:
+                    raise BenchError("FIX_INVALID", "Repaired Spec exceeds 8 MiB")
+                try:
+                    if not candidate.decode("utf-8-sig").strip():
+                        raise ValueError("Repaired Spec is empty")
+                except (UnicodeError, ValueError) as exc:
+                    raise BenchError("FIX_INVALID", str(exc)) from exc
+                diff_name = f"repairs/{stage}.diff"
+                candidate_name = f"raw/{stage}/candidate.md"
+                with self.store.evidence.path(candidate_name).open("xb") as stream:
+                    stream.write(candidate)
+                self.store.evidence.record(candidate_name)
+                diff_path = self.store.evidence.path(diff_name)
+                diff_path.parent.mkdir(exist_ok=True)
+                with diff_path.open("x", encoding="utf-8", newline="\n") as stream:
+                    stream.write(unified_spec_diff(current, candidate))
+                self.store.evidence.record(diff_name)
+                repair = {
+                    "audit_id": pending["audit_id"],
+                    "disposition": "continue",
+                    "finding_ids": [f["finding_id"] for f in pending["findings"]],
+                    "candidate_sha256": digest(candidate),
+                    "candidate_path": candidate_name,
+                    "diff": diff_name,
+                    "summary": reply.strip(),
+                }
+        else:
+            repair = parse_repair(
+                self.call(stage, "repair", inputs), pending["audit_id"], pending["findings"]
+            )
         save_record(self.store, "repairs", stage, repair)
         if repair["disposition"] == "needs_input":
             self.flow["questions"] = repair["questions"]
             self.result.update(status="NEEDS_INPUT", terminal_reason=repair["reason"])
             return
-        raw = repair["spec"].encode("utf-8")
+        raw = candidate if self.protocol.version >= 3 else repair["spec"].encode("utf-8")
         if digest(raw) == self.flow["artifact_sha256"]:
             raise BenchError("FIX_INVALID", "Repair did not change Spec bytes")
         artifact = save_artifact(self.store, f"spec.round-{self.flow['repair_sequence']:02d}", raw)
@@ -580,9 +671,9 @@ def load_session(path, *, allow_historical=False):
             raise BenchError("RESUME_ERROR", "Pinned execution settings changed")
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
-        expected_protocol_version = 1 if version == 2 else PROTOCOL_VERSION
+        expected_protocol_version = {2} if version == 2 else {2, PROTOCOL_VERSION}
         if (
-            protocol.version != expected_protocol_version
+            protocol.version not in expected_protocol_version
             or result["protocol_version"] != protocol.version
             or pinned["protocol_version"] != protocol.version
         ):

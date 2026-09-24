@@ -1,5 +1,5 @@
 id: spec-mrac-v2
-version: 2
+version: 3
 artifact_type: spec
 workflow: repository-spec-freeze
 stages:
