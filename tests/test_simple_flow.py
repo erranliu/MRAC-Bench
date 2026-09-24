@@ -14,7 +14,7 @@ from mracbench.models import AgentResult, BenchError
 from mracbench.repository import prepare_repository
 from mracbench.runner import run_case
 from mracbench.simple_audit import parse_closure_v6
-from mracbench.simple_flow import resume_run
+from mracbench.simple_flow import resume_run, verify_repository_read_probe
 
 
 class StubAgent(BaseStubAgent):
@@ -173,6 +173,55 @@ def test_copied_bytes_and_distinct_stage_inputs(project, simple_config):
         elif request.raw_dir.name.startswith("spec-init"):
             assert "source_spec" in data and "fixed_repository_head" in data
     assert (project / "cases/sample/task.md").read_bytes() == original
+
+
+def test_v7_preflight_uses_verified_mcp_events_instead_of_model_echo(tmp_path):
+    raw = tmp_path / "probe"
+    raw.mkdir()
+    head = "a" * 40
+    path = "app.py"
+    line = "value = 1"
+    events = [
+        {"tool": "repository_head", "ok": True, "result": {"head": head}},
+        {
+            "tool": "repository_search",
+            "ok": True,
+            "arguments": {"query": None},
+            "result": {"query": None, "matches": [{"path": path, "line": 1, "text": line}]},
+        },
+        {
+            "tool": "repository_read",
+            "ok": True,
+            "arguments": {"path": path},
+            "result": {"path": path, "lines": [{"line": 1, "text": line}]},
+        },
+    ]
+    (raw / "repository-read-events.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8"
+    )
+    (raw / "final.txt").write_text('```json\n{"head":"wrong"}\n```', encoding="utf-8")
+    verify_repository_read_probe(raw, head, event_only=True)
+    with pytest.raises(BenchError, match="Invalid repository read probe"):
+        verify_repository_read_probe(raw, head)
+
+
+def test_v7_accepts_fenced_audit_and_review_json(simple_config):
+    def fenced(reply):
+        return lambda request: "```json\n" + reply(request) + "\n```"
+
+    agent = StubAgent(
+        [
+            fenced(audit()),
+            fenced(review()),
+            fenced(audit()),
+            fenced(review()),
+            fenced(audit()),
+            fenced(review()),
+        ]
+    )
+    _, result = run_case(simple_config, agent)
+    assert result["status"] == "CONVERGED", result["error"]
+    assert result["protocol_version"] == 7
 
 
 def test_initial_repair_goes_directly_to_freeze(simple_config):
@@ -406,7 +455,7 @@ def test_ambiguity_is_repaired_then_independently_audited(project, simple_config
     agent = StubAgent([audit("P1"), review(), repair] + clean() + clean())
     path, result = run_case(simple_config, agent)
     assert result["status"] == "CONVERGED", result["error"]
-    assert result["protocol_version"] == 6
+    assert result["protocol_version"] == 7
     assert result["flow"]["schema_version"] == 3
     assert result["repair_rounds"] == 1
     assert (path / "input/task.md").read_bytes() == source
@@ -443,7 +492,13 @@ def test_old_simple_protocol_cannot_start_with_removed_contract(project, simple_
 
 @pytest.mark.parametrize(
     "schema,protocol_version,actions",
-    [(1, 1, []), (3, 4, ["continue"]), (3, 5, ["continue"]), (3, 6, ["continue"])],
+    [
+        (1, 1, []),
+        (3, 4, ["continue"]),
+        (3, 5, ["continue"]),
+        (3, 6, ["continue"]),
+        (3, 7, ["continue"]),
+    ],
 )
 def test_machine_only_offers_continue_for_current_simple_schema(
     tmp_path, schema, protocol_version, actions

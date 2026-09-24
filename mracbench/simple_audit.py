@@ -19,17 +19,29 @@ def nonempty(value):
         raise ValueError("Expected a nonempty string")
 
 
-def decode(text):
+def unwrap_fence(text):
+    body = text.strip()
+    lines = body.splitlines()
+    if (
+        len(lines) >= 3
+        and lines[0].strip().casefold() in {"```", "```json"}
+        and lines[-1].strip() == "```"
+    ):
+        return "\n".join(lines[1:-1]).strip()
+    return text
+
+
+def decode(text, *, allow_fence=False):
     return json.loads(
-        text,
+        unwrap_fence(text) if allow_fence else text,
         object_pairs_hook=_unique,
         parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite JSON")),
     )
 
 
-def parse_findings(text, audit_id):
+def parse_findings(text, audit_id, *, allow_fence=False):
     try:
-        data = decode(text)
+        data = decode(text, allow_fence=allow_fence)
         obj(data, {"audit_id", "findings"})
         if data["audit_id"] != audit_id or not isinstance(data["findings"], list):
             raise ValueError("Audit ID or findings mismatch")
@@ -48,9 +60,9 @@ def assign_ids(audit):
     return [{"finding_id": f"F{i}", **row} for i, row in enumerate(audit["findings"], 1)]
 
 
-def parse_review(text, audit_id, findings):
+def parse_review(text, audit_id, findings, *, allow_fence=False):
     try:
-        data = decode(text)
+        data = decode(text, allow_fence=allow_fence)
         obj(data, {"audit_id", "decisions"})
         if data["audit_id"] != audit_id or not isinstance(data["decisions"], list):
             raise ValueError("Audit ID or decisions mismatch")
@@ -145,9 +157,9 @@ def parse_repair_v5(text, audit_id, accepted):
         raise BenchError("PARSE_ERROR", f"Invalid repair JSON: {exc}") from exc
 
 
-def parse_closure_v6(text, accepted):
+def parse_closure_v6(text, accepted, *, allow_fence=False):
     try:
-        body = text.strip()
+        body = (unwrap_fence(text) if allow_fence else text).strip()
         if not body:
             raise ValueError("Closure result is empty")
         if body.casefold() == "closed":

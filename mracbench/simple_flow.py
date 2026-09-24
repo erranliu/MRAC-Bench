@@ -217,13 +217,18 @@ def execute_simple(
                     "repository_path": str(repo.path),
                     "fixed_repository_head": case.commit,
                 },
+                response_json=protocol.version < 7,
             )
             invoke(
                 probe_stage,
                 probe_prompt,
                 mcp_servers=repository_mcp_servers(store, repo, case, probe_stage),
             )
-            verify_repository_read_probe(store.path / "raw" / probe_stage, case.commit)
+            verify_repository_read_probe(
+                store.path / "raw" / probe_stage,
+                case.commit,
+                event_only=protocol.version >= 7,
+            )
             drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.check()
     except BenchError as exc:
@@ -252,7 +257,7 @@ def execute_simple(
     return store.path, result
 
 
-def verify_repository_read_probe(raw, expected_head):
+def verify_repository_read_probe(raw, expected_head, *, event_only=False):
     try:
         events = [
             json.loads(line)
@@ -261,16 +266,6 @@ def verify_repository_read_probe(raw, expected_head):
             .splitlines()
             if line
         ]
-        value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
-        if set(value) != {"head", "path", "match", "excerpt"}:
-            raise ValueError("Unexpected response fields")
-        if value["head"] != expected_head:
-            raise ValueError("Repository HEAD mismatch")
-        if not isinstance(value["path"], str) or not isinstance(value["match"], str):
-            raise TypeError("Probe path and match must be strings")
-        if not isinstance(value["excerpt"], str) or not value["excerpt"].strip():
-            raise ValueError("Source excerpt is empty")
-
         heads = [
             event.get("result", {}).get("head")
             for event in events
@@ -288,6 +283,37 @@ def verify_repository_read_probe(raw, expected_head):
             for match in event.get("result", {}).get("matches", [])
             if isinstance(match, dict)
         ]
+        if event_only:
+            for match in matches:
+                if (
+                    not isinstance(match.get("path"), str)
+                    or type(match.get("line")) is not int
+                    or not isinstance(match.get("text"), str)
+                    or not match["text"].strip()
+                ):
+                    continue
+                if any(
+                    event.get("tool") == "repository_read"
+                    and event.get("ok") is True
+                    and event.get("arguments", {}).get("path") == match["path"]
+                    and any(
+                        line.get("line") == match["line"] and line.get("text") == match["text"]
+                        for line in event.get("result", {}).get("lines", [])
+                    )
+                    for event in events
+                ):
+                    return
+            raise ValueError("No searched source line was verified by repository_read")
+
+        value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
+        if set(value) != {"head", "path", "match", "excerpt"}:
+            raise ValueError("Unexpected response fields")
+        if value["head"] != expected_head:
+            raise ValueError("Repository HEAD mismatch")
+        if not isinstance(value["path"], str) or not isinstance(value["match"], str):
+            raise TypeError("Probe path and match must be strings")
+        if not isinstance(value["excerpt"], str) or not value["excerpt"].strip():
+            raise ValueError("Source excerpt is empty")
         if not any(
             match.get("path") == value["path"] and match.get("text") == value["match"]
             for match in matches
@@ -411,7 +437,9 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
                         "diff.txt",
                     },
                 )
-                closure = parse_closure_v6(closure_text, pending["accepted"])
+                closure = parse_closure_v6(
+                    closure_text, pending["accepted"], allow_fence=protocol.version >= 7
+                )
             except BenchError as exc:
                 if exc.kind != "CLOSURE_INVALID":
                     raise
@@ -557,7 +585,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             mcp_servers=(None if spec_only else repository_mcp_servers(store, repo, case, stage)),
         )
         try:
-            audit = parse_findings(text, audit_id)
+            audit = parse_findings(text, audit_id, allow_fence=protocol.version >= 7)
             save_evidence(store, evidence, f"audits/{stage}.json", audit)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
@@ -570,6 +598,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 ),
                 audit_id,
                 findings,
+                allow_fence=protocol.version >= 7,
             )
             save_evidence(store, evidence, f"reviews/{stage}.json", review)
         except BenchError as exc:
