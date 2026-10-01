@@ -116,6 +116,7 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
                     or (protocol.workflow == "spec-init-freeze" and protocol.version >= 10)
                 ),
                 "ignore_user_config": True,
+                "windows_sandbox": getattr(adapter, "windows_sandbox", "elevated"),
             },
         )
         store.save_metadata()

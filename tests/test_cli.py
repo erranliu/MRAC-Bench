@@ -30,7 +30,7 @@ def test_unwritable_output_root_reports_cli_failure(tmp_path, capsys):
 
 def test_cli_protocol_override_and_reasoning_are_recorded(project, monkeypatch, capsys):
     agent = StubAgent(clean() + clean() + clean())
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     case_path = project / "cases/sample/case.yaml"
     case_before = case_path.read_bytes()
     assert (
@@ -60,7 +60,7 @@ def test_cli_uses_run_default_for_case_without_protocol(project, monkeypatch, ca
     from test_repository_flow import clean as repository_clean
 
     agent = StubAgent(repository_clean() + repository_clean())
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     assert main(["run", "--case", "sample", "--project-root", str(project)]) == 0
     assert "CONVERGED" in capsys.readouterr().out
     results = list((project / "runs").glob("*/result.json"))
@@ -69,7 +69,7 @@ def test_cli_uses_run_default_for_case_without_protocol(project, monkeypatch, ca
 
 def test_cli_rejects_removed_simple_exception(project, monkeypatch, capsys):
     agent = StubAgent([audit("P1"), review(exception="product-decision")])
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     assert (
         main(
             [
@@ -102,7 +102,7 @@ def test_cli_v2_reports_questions_resumes_fix_and_verifies_frozen_report(
     from test_repository_flow import needs_input, repair
 
     agent = StubAgent([repo_audit("P1"), needs_input])
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     assert (
         main(["run", "--case", "sample", "--project-root", str(project), "--model", "test-model"])
         == 5
@@ -112,7 +112,7 @@ def test_cli_v2_reports_questions_resumes_fix_and_verifies_frozen_report(
     answer = tmp_path / "answer.md"
     answer.write_text("Null is the selected behavior.")
     agent = StubAgent([repair] + repo_clean() + repo_clean())
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     assert main(["resume", "--run-dir", str(path), "--input-file", str(answer)]) == 0
     assert main(["report", "--run-dir", str(path)]) == 0
     assert "Baseline:" in capsys.readouterr().out
@@ -126,7 +126,7 @@ def test_cli_exec_requires_spec_and_uses_explicit_execution_protocol(
     spec = tmp_path / "approved.md"
     spec.write_text("# Approved Spec\nSet value to 2.\n")
     agent = StubAgent([implement, audit(), audit()])
-    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable: agent)
+    monkeypatch.setattr("mracbench.cli.CodexExecAdapter", lambda executable, **options: agent)
     assert (
         main(
             [

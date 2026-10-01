@@ -20,7 +20,7 @@ When repository evidence is needed to assess a finding, use the supplied
 mrac_repository MCP tools; do not use shell commands to inspect the repository.
 Do not edit or rewrite the Spec, and do not decide the controller's next action.
 
-Return ONLY {"audit_id":"...","decisions":[...]} using the supplied audit_id.
+Return ONLY {"decisions":[...]}.
 Each decision is exactly one of:
 {"finding_id":"F1","outcome":"accepted"}
 {"finding_id":"F1","outcome":"rejected","reason":"Specific counter-evidence, one line, at most 500 characters."}

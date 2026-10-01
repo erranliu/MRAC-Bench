@@ -92,6 +92,26 @@ def batch_file(project, tmp_path, protocol="spec-mrac-v1", repeat=2):
     return path
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows Codex executable")
+def test_batch_freezes_explicit_windows_sandbox(project, tmp_path, fake_codex):
+    root = tmp_path / "home"
+    registry = Registry(root)
+    registry.register(project / "cases/sample", "register")
+    registry.close()
+    source = batch_file(project, tmp_path)
+    data = yaml.safe_load(source.read_bytes())
+    data["groups"][0]["model_configs"][0]["windows_sandbox"] = "unelevated"
+    source.write_text(yaml.safe_dump(data), encoding="utf-8")
+    store = Store(root)
+    try:
+        batch = submit(store, MRACBackend(root), source, project, "submit", fake_codex)
+        assert all(
+            t["execution"]["settings"]["windows_sandbox"] == "unelevated" for t in batch["tasks"]
+        )
+    finally:
+        store.close()
+
+
 @pytest.mark.skipif(os.name != "nt", reason="Windows process supervision")
 @pytest.mark.parametrize("protocol", ["spec-mrac-v1", "spec-mrac-v2", "exec-mrac-v1"])
 def test_real_process_batch_and_restart(project, tmp_path, fake_codex, protocol):

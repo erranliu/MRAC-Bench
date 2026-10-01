@@ -18,7 +18,7 @@ Evidence must cite current_spec; cite code/in-repository Specs against the fixed
 base, and cite each external related Spec by its supplied file and SHA-256.
 Do not consult prior audits, repairs, or sessions. Do not invent findings.
 
-Return JSON only, with exactly this shape and the supplied audit_id:
-{"audit_id":"...","findings":[{"severity":"P1","title":"...","evidence":"..."}]}
+Return JSON only, with exactly this shape:
+{"findings":[{"severity":"P1","title":"...","evidence":"..."}]}
 severity must be P0, P1, P2, or P3. All fields are nonempty strings. Use an empty
 findings array when there are no findings. Do not assign finding IDs or return fixes.

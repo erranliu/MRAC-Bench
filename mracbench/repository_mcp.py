@@ -6,6 +6,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 MAX_FILE_BYTES = 4 * 1024 * 1024
@@ -13,6 +14,7 @@ MAX_SEARCH_FILES = 2000
 MAX_SEARCH_BYTES = 32 * 1024 * 1024
 MAX_SEARCH_RESULTS = 50
 MAX_RESULT_LINE = 2000
+MAX_SEARCH_SECONDS = 15
 SOURCE_GLOBS = [
     "*.cs",
     "*.py",
@@ -70,6 +72,7 @@ class RepositoryReader:
         ):
             raise ValueError("Repository manifest does not contain a valid fixed-file snapshot")
         self.files = snapshot
+        self.paths = sorted(snapshot)
 
     def actual_head(self):
         proc = subprocess.run(
@@ -136,20 +139,26 @@ class RepositoryReader:
             or len(globs) > 12
             or any(not isinstance(item, str) or len(item) > 256 or ".." in item for item in globs)
         ):
-            raise ValueError("globs must be a short list of repository-relative patterns")
+            raise ValueError("globs must contain 1-12 repository-relative patterns")
         max_results = args.get("max_results", 10)
-        if type(max_results) is not int or not 1 <= max_results <= MAX_SEARCH_RESULTS:
-            raise ValueError(f"max_results must be between 1 and {MAX_SEARCH_RESULTS}")
+        if type(max_results) is not int or max_results < 1:
+            raise ValueError("max_results must be a positive integer")
+        max_results = min(max_results, MAX_SEARCH_RESULTS)
         candidates = [
             path
-            for path in sorted(self.files)
+            for path in self.paths
             if not self.files[path].startswith("symlink:")
             and any(fnmatch.fnmatchcase(path, glob) for glob in globs)
         ]
         matches = []
         scanned = 0
         scanned_bytes = 0
+        deadline = time.monotonic() + MAX_SEARCH_SECONDS
+        time_limited = False
         for relative in candidates[:MAX_SEARCH_FILES]:
+            if time.monotonic() >= deadline:
+                time_limited = True
+                break
             scanned += 1
             try:
                 _, data = self.read_bytes(relative)
@@ -161,6 +170,8 @@ class RepositoryReader:
             except (OSError, UnicodeError, ValueError):
                 continue
             for number, line in enumerate(text.splitlines(), 1):
+                if not line.strip():
+                    continue
                 if query is None or query.casefold() in line.casefold():
                     matches.append(
                         {
@@ -177,7 +188,11 @@ class RepositoryReader:
             "query": query,
             "matches": matches,
             "scanned_files": scanned,
-            "truncated": len(candidates) > scanned or scanned_bytes >= MAX_SEARCH_BYTES,
+            "truncated": time_limited
+            or len(matches) >= max_results
+            or len(candidates) > scanned
+            or scanned_bytes >= MAX_SEARCH_BYTES,
+            "time_limited": time_limited,
         }
 
     def read(self, args):
@@ -186,8 +201,9 @@ class RepositoryReader:
         limit = args.get("max_lines", 80)
         if type(start) is not int or start < 1:
             raise ValueError("start_line must be a positive integer")
-        if type(limit) is not int or not 1 <= limit <= 200:
-            raise ValueError("max_lines must be between 1 and 200")
+        if type(limit) is not int or limit < 1:
+            raise ValueError("max_lines must be a positive integer")
+        limit = min(limit, 200)
         lines = data.decode("utf-8-sig").splitlines()
         selected = [
             {"line": index, "text": line[:MAX_RESULT_LINE]}
@@ -221,14 +237,23 @@ TOOLS = [
     },
     {
         "name": "repository_search",
-        "description": "Search text files in the fixed Git snapshot; paths cannot leave the repository.",
+        "description": "Search verified fixed-snapshot text files. Omit query and globs to sample source lines using default source globs. Blank lines are skipped. Searches are bounded; when truncated, narrow the globs/query before interpreting absence of matches.",
         "annotations": {"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False},
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "minLength": 1, "maxLength": 512},
-                "globs": {"type": "array", "items": {"type": "string"}, "maxItems": 12},
-                "max_results": {"type": "integer", "minimum": 1, "maximum": MAX_SEARCH_RESULTS},
+                "globs": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 12,
+                },
+                "max_results": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Desired match count; returns at most 50. Check truncated before inferring absence.",
+                },
             },
             "required": [],
             "additionalProperties": False,
@@ -243,7 +268,11 @@ TOOLS = [
             "properties": {
                 "path": {"type": "string"},
                 "start_line": {"type": "integer", "minimum": 1},
-                "max_lines": {"type": "integer", "minimum": 1, "maximum": 200},
+                "max_lines": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Desired line count; returns at most 200. Continue from the returned range when truncated.",
+                },
             },
             "required": ["path"],
             "additionalProperties": False,
@@ -253,11 +282,15 @@ TOOLS = [
 
 
 def send(value):
-    sys.stdout.write(json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n")
+    # MCP JSON-RPC is UTF-8. ASCII escapes keep its wire encoding independent
+    # of Windows' inherited stdout code page without changing text content.
+    sys.stdout.write(json.dumps(value, ensure_ascii=True, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
 
 def serve(reader, *, tools=TOOLS, server_name="mracbench-readonly-repository"):
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8")
     for line in sys.stdin:
         try:
             request = json.loads(line)

@@ -2,7 +2,7 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2@4` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@11` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@4` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@14` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
@@ -71,7 +71,7 @@ uv run python -m mracbench resume --run-dir C:\mrac-runs\<run-id> --input-file C
 uv run python -m mracbench report --run-dir C:\mrac-runs\<run-id>
 ```
 
-v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；@2/@3 的 state 3 运行继续按保存的协议快照恢复。spec-flow-simple-v1@4–@11（state 3）只支持 PAUSED 恢复；@1/state 1、@2/state 2 与 @3/state 3 的历史运行只读，不迁移旧 clean。
+v2 当前状态版本为 3。`resume` 使用保存的输入与协议快照，保持模型、基线和预算不变：暂停后继续新审计；未完成审计会被废弃并重新发起；FIX 保留所有待修复项。无新回答的 NEEDS_INPUT 只报告当前问题。历史 `spec-mrac-v2@1`（state 2）仅能 status/report，只读保留旧结果；@2/@3 的 state 3 运行继续按保存的协议快照恢复。spec-flow-simple-v1@4–@14（state 3）只支持 PAUSED 恢复；@1/state 1、@2/state 2 与 @3/state 3 的历史运行只读，不迁移旧 clean。
 
 ## 按 Spec 执行代码
 
@@ -131,7 +131,7 @@ usage 的总 token/cost 当前记为 `null`；每次调用若有 Codex usage 则
 
 ## 独立性与仓库保护
 
-每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 起通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；@7 起预检只校验工具事件，不要求模型重复输出 JSON；@9 允许用任意有效查询词搜索，只要求搜索所得源码行与后续读取吻合。@8 起 audit/review 接受单个末尾 JSON 代码块前有文字说明，内部 schema 和 ID 校验不变。Simple 的 init/review 可以调用仓库限定工具，冻结审计只接收当前 Spec 和标识/hash，使用空工作目录。Simple @6–@9 的 repair 使用受限候选 MCP；@10 起与 v2 @3 起的 repair 改在本 run 复用的隔离项目 checkout 中直接编辑 Spec，runner 保存文件和 diff。v2 @4 的审计使用固定仓库只读 MCP 工具并核对实际 HEAD 和文件读取事件；不会自动加载本机用户规则。
+每个阶段使用新的 `codex exec`，不 resume 模型会话，不保留 session；Bench 的 PAUSED 恢复也会创建全新模型调用。调用忽略用户执行配置和规则文件，禁用 Web 搜索、多 agent 和 repository/user instruction 文档加载。各阶段输入通过明确的 JSON 字段或标记的文档数据块提供；metadata 和旧 audit 不进入 auditor prompt。spec-flow-simple-v1@4 起通过固定仓库只读 MCP 工具核验 HEAD、搜索源码并读取搜索结果；@7 起预检只校验工具事件，不要求模型重复输出 JSON；@9 允许用任意有效查询词搜索，只要求搜索所得源码行与后续读取吻合。@8 起 audit/review 接受单个末尾 JSON 代码块前有文字说明，内部 schema 和 ID 校验不变。Simple 的 init/review 可以调用仓库限定工具，冻结审计使用空工作目录；@12 起模型只接收当前 Spec，标识/hash 由 runner 保存。Simple @6–@9 的 repair 使用受限候选 MCP；@10 起与 v2 @3 起的 repair 改在本 run 复用的隔离项目 checkout 中直接编辑 Spec，runner 保存文件和 diff。v2 @4 的审计使用固定仓库只读 MCP 工具并核对实际 HEAD 和文件读取事件；不会自动加载本机用户规则。
 原生 Windows 上，runner 显式为每次嵌套 CLI 调用设置 `windows.sandbox="elevated"`。这是因为 `--ignore-user-config` 也会略过用户配置中的 Windows 沙盒实现设置；只传 `--sandbox workspace-write` 会使当前环境的普通文件工具被策略拒绝。该设置保持各阶段原有的 read-only / workspace-write 沙盒边界。
 
 Spec 协议采用 Codex read-only sandbox，并在调用前后检查 HEAD、Git 状态与文件内容哈希；包括忽略文件在内的新增/删除/修改均视为违规。exec 的 IMPLEMENT/FIX 使用 workspace-write，允许专属 checkout 的产品修改；AUDIT 只读并检查包括 ignored 文件在内的写入变化，所有阶段保护固定基线和 Git 控制状态。历史结果放在 checkout 外。隔离边界不等同于容器或严格的文件读取白名单：禁止读取父目录、历史 run 和外部来源也通过 protocol prompt 约束。
@@ -153,6 +153,11 @@ uv run mracbench orchestrator serve --total 4 --group codex-main=2 --bench-home 
 先按账户可用模型调整示例 YAML。提交可离线排队；恢复不扩预算，exec 暂停后显式 continue 才增加六次 audit。操作和清理规则见[使用说明](doc/Parallel%20Orchestration%20Guide.md)，设计依据见 [Spec](doc/Parallel%20Orchestration%20Spec.md) 和 [Plan](doc/Parallel%20Orchestration%20Plan.md)，验证与真实环境限制见[实施记录](doc/Parallel%20Orchestration%20Implementation%20Report.md)。
 
 批次可在顶层声明 providers，由各 model_configs 选择。可以在同一批次比较 OpenAI 与 GLM-5.3-Flash；provider 和模型目录在提交时固定，恢复不会重读原配置文件。完整示例：[混合 provider 批次](examples/batch-providers.yaml)、[Z.AI 配置](examples/providers/zai.yaml)、[接入说明](doc/Providers.md)。
+
+Windows sandbox 可通过单次运行的 `--windows-sandbox elevated|unelevated`，或 batch
+中 `model_configs` 的 `windows_sandbox` 字段选择；默认仍为 `elevated`。
+选项会固定在 batch settings 和运行记录中，恢复沿用该配置。Windows sandbox
+启动失败会报告 `EXECUTION_ENVIRONMENT_ERROR`，不再作为未修改 Spec 的修复失败处理。
 
 ## 历史测试结果
 
@@ -184,3 +189,7 @@ uv run ruff format --check mracbench mrac_contracts mrac_resources mrac_orchestr
 Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由各自 audit 协议测量。批次已支持矩阵和 repeat；任意损坏状态的自动恢复和其他 agent 实现尚未加入，恢复仍要求可校验的检查点。受管进程监督当前只验收 Windows 10/11。
 
 设计依据：[Milestone 1 Spec](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Spec.md) · [Milestone 1 Plan](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Plan.md)。验收证据见 [实施与验收记录](doc/Milestone%201%20Implementation%20Report.md)。Codex 集成参考：[官方非交互模式文档](https://learn.chatgpt.com/docs/non-interactive-mode)。
+
+## 测试调查记录
+
+[case1 Luna high：错误、暂停与减负实验](doc/benchmarks/luna-error-burden-investigation.md)记录 20 次测试预算的分析、改动、结果和耗时。

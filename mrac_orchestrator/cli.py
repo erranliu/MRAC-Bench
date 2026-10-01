@@ -102,6 +102,7 @@ def parser():
     child.add_argument("--protocol", default="spec-mrac-v2")
     child.add_argument("--model", required=True)
     child.add_argument("--reasoning-effort")
+    child.add_argument("--windows-sandbox", choices=("elevated", "unelevated"), default="elevated")
     child.add_argument("--max-rounds", type=int)
     child.add_argument("--timeout", type=int)
     child.add_argument("--spec-file", type=Path)
@@ -243,6 +244,7 @@ def managed_run(root, args):
         {
             "model": args.model,
             "reasoning_effort": args.reasoning_effort,
+            "windows_sandbox": args.windows_sandbox,
             "max_rounds": args.max_rounds,
             "timeout_seconds": args.timeout,
             **({"provider": provider} if provider else {}),

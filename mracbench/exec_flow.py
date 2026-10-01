@@ -19,6 +19,7 @@ from .simple_audit import assign_ids
 WORKFLOW = "exec-mrac"
 BATCH_SIZE = 6
 RESUMABLE = {
+    "EXECUTION_ENVIRONMENT_ERROR",
     "PROVIDER_ERROR",
     "PAUSED",
     "NEEDS_INPUT",
