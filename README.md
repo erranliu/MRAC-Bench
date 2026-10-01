@@ -154,6 +154,10 @@ uv run mracbench orchestrator serve --total 4 --group codex-main=2 --bench-home 
 
 批次可在顶层声明 providers，由各 model_configs 选择。可以在同一批次比较 OpenAI 与 GLM-5.3-Flash；provider 和模型目录在提交时固定，恢复不会重读原配置文件。完整示例：[混合 provider 批次](examples/batch-providers.yaml)、[Z.AI 配置](examples/providers/zai.yaml)、[接入说明](doc/Providers.md)。
 
+## 历史测试结果
+
+- [Simple v11：case 1 测试统计](doc/benchmarks/simple-v11-case1-results.md)：按模型和 thinking effort 汇总结果、耗时及平均修复轮次，附可复算的逐次运行数据。
+
 ## 验证与开发
 
 ```bash
