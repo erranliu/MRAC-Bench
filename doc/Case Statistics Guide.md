@@ -55,6 +55,21 @@ batch 提交、报告导出、显式操作和受管单次运行/续跑也刷新�
 
 ## Token 与费用
 
+### OpenRouter 实际费用
+
+OpenRouter 使用 API 返回的 `usage.cost`（账户收费），不按本地单价计算。
+适配器在仅绑定 127.0.0.1 的 HTTP 转发层原样传递 Responses 请求/响应，
+保留每个 API 请求的 ID、usage 和费用到阶段 `raw/*/provider-usage.json`。
+不记录请求正文或认证头，凭证仍来自环境变量。
+中断响应未返回费用时，仅用已记录 ID 查询 `/generation` 的 `total_cost`；
+查不到则记未知，不重发模型请求。API 元数据不会传入审计提示词或影响流程决策。
+统计优先读取这些单次 API 记录，不再次累加 Codex 的重复累计 usage。
+JSON 中 `cost.total_usd` 是完整费用，`reported_subtotal_usd` 和
+`estimated_subtotal_usd` 分别表示实际返回和本地估算的已知小计。
+单次实际费用标记 `kind: reported`、`source: openrouter`，无需单价即可统计。
+费用均值可包含完整的实际费用样本；缺失费用仍有覆盖率与未知标识。
+参考 [OpenRouter Usage Accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting)。
+
 每个 run 和分组必含 tokens、cost，每次执行保留 raw_usage、所用单价和费用分项。
 字段存在不代表源数据可取得：缺失值用 null、缺失计数与完整度标识；报告展示已知小计。
 token 包括输入、普通输入、缓存读取、缓存写入、输出、reasoning 和总量。

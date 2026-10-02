@@ -71,17 +71,19 @@ def normalize_usage(raw):
     issues = []
     if not isinstance(raw, dict):
         return values, ["usage_missing"]
-    input_details = raw.get("input_tokens_details") or {}
-    output_details = raw.get("output_tokens_details") or {}
+    input_details = raw.get("input_tokens_details") or raw.get("prompt_tokens_details") or {}
+    output_details = raw.get("output_tokens_details") or raw.get("completion_tokens_details") or {}
     if not isinstance(input_details, dict):
         input_details = {}
     if not isinstance(output_details, dict):
         output_details = {}
     fields = {
-        "input_tokens": raw.get("input_tokens"),
+        "input_tokens": raw.get("input_tokens", raw.get("prompt_tokens")),
         "cached_input_tokens": raw.get("cached_input_tokens", input_details.get("cached_tokens")),
-        "cache_write_input_tokens": raw.get("cache_write_input_tokens"),
-        "output_tokens": raw.get("output_tokens"),
+        "cache_write_input_tokens": raw.get(
+            "cache_write_input_tokens", input_details.get("cache_write_tokens")
+        ),
+        "output_tokens": raw.get("output_tokens", raw.get("completion_tokens")),
         "reasoning_output_tokens": raw.get(
             "reasoning_output_tokens", output_details.get("reasoning_tokens")
         ),
@@ -111,7 +113,13 @@ def normalize_usage(raw):
 
 def estimate(tokens, price):
     if price is None:
-        return {"estimated_usd": None, "components_usd": None, "issue": "price_missing"}
+        return {
+            "total_usd": None,
+            "estimated_usd": None,
+            "kind": "estimated",
+            "components_usd": None,
+            "issue": "price_missing",
+        }
     buckets = {
         "input": tokens["uncached_input_tokens"],
         "cached_input": tokens["cached_input_tokens"],
@@ -119,13 +127,39 @@ def estimate(tokens, price):
         "output": tokens["output_tokens"],
     }
     if any(value is None for value in buckets.values()):
-        return {"estimated_usd": None, "components_usd": None, "issue": "billing_tokens_missing"}
+        return {
+            "total_usd": None,
+            "estimated_usd": None,
+            "kind": "estimated",
+            "components_usd": None,
+            "issue": "billing_tokens_missing",
+        }
     components = {
         key: Decimal(value) * decimal(price["rates"][key]) / price["unit_tokens"]
         for key, value in buckets.items()
     }
     return {
+        "total_usd": str(sum(components.values())),
         "estimated_usd": str(sum(components.values())),
+        "kind": "estimated",
         "components_usd": {key: str(value) for key, value in components.items()},
         "issue": None,
+    }
+
+
+def reported_cost(raw):
+    """Account charge returned by OpenRouter; no token-price calculation or fallback."""
+    value = raw.get("cost") if isinstance(raw, dict) else None
+    try:
+        amount = str(decimal(value)) if value is not None and not isinstance(value, bool) else None
+    except ContractError:
+        amount = None
+    return {
+        "total_usd": amount,
+        "reported_usd": amount,
+        "estimated_usd": None,
+        "kind": "reported",
+        "source": "openrouter",
+        "components_usd": None,
+        "issue": None if amount is not None else "provider_cost_missing_or_invalid",
     }

@@ -15,7 +15,14 @@ from mrac_resources.cases import Registry
 from mrac_resources.home import checked
 from mrac_resources.locks import file_lock
 
-from .pricing import TOKEN_FIELDS, estimate, load_pricing, normalize_usage, select_price
+from .pricing import (
+    TOKEN_FIELDS,
+    estimate,
+    load_pricing,
+    normalize_usage,
+    reported_cost,
+    select_price,
+)
 
 
 def read_object(path):
@@ -84,8 +91,26 @@ def invocations(path):
         metadata = read_object(stage / "invocation.json")
         if not execution.get("started", metadata.get("started", False)):
             if not execution and not metadata and (stage / "request.txt").exists():
-                yield stage.name, None
+                yield stage.name, None, None
             continue
+        ledger = read_object(stage / "provider-usage.json")
+        if ledger.get("provider") == "openrouter":
+            entries = ledger.get("requests", [])
+            if not entries:
+                yield stage.name, None, reported_cost(None)
+            for entry in entries:
+                usage = entry.get("usage")
+                yield (
+                    f"{stage.name}/api-{entry['request_index']}",
+                    usage,
+                    {
+                        **reported_cost(usage),
+                        "response_id": entry.get("response_id"),
+                        "http_status": entry.get("http_status"),
+                        "billing_issue": entry.get("billing_issue"),
+                    },
+                )
+            continue  # Do not count Codex's duplicate turn totals again.
         usage = execution.get("usage")
         if usage is None:
             # Single Codex exec turn totals are cumulative; retain the last total,
@@ -101,7 +126,7 @@ def invocations(path):
                             continue
             except OSError:
                 pass
-        yield stage.name, usage
+        yield stage.name, usage, None
 
 
 def consumption(calls):
@@ -111,9 +136,14 @@ def consumption(calls):
         known = [value for value in values if value is not None]
         totals[field] = sum(known) if known or not calls else None
         missing[field] = len(values) - len(known)
-    costs = [call["cost"]["estimated_usd"] for call in calls]
+    costs = [call["cost"].get("total_usd", call["cost"]["estimated_usd"]) for call in calls]
     known_costs = [Decimal(value) for value in costs if value is not None]
     subtotal = str(sum(known_costs, Decimal(0)))
+    reported = [
+        Decimal(call["cost"]["total_usd"])
+        for call in calls
+        if call["cost"].get("kind") == "reported" and call["cost"].get("total_usd") is not None
+    ]
     return {
         "tokens": {
             "known_totals": totals,
@@ -127,7 +157,11 @@ def consumption(calls):
         "cost": {
             "currency": "USD",
             "known_subtotal_usd": subtotal,
-            "estimated_usd": subtotal if len(known_costs) == len(calls) else None,
+            "total_usd": subtotal if len(known_costs) == len(calls) else None,
+            "estimated_usd": subtotal if len(known_costs) == len(calls) and not reported else None,
+            "reported_subtotal_usd": str(sum(reported, Decimal(0))),
+            "estimated_subtotal_usd": str(sum(known_costs, Decimal(0)) - sum(reported, Decimal(0))),
+            "reported_invocations": len(reported),
             "priced_invocations": len(known_costs),
             "invocations": len(calls),
             "complete": len(known_costs) == len(calls),
@@ -167,7 +201,7 @@ def normalized_run(row, directory, pricing, tier=None, context=None):
     model = settings.get("model")
     price = select_price(pricing, provider["id"], model, tier, context)
     calls = []
-    for stage, raw_usage in invocations(path):
+    for stage, raw_usage, actual_cost in invocations(path):
         tokens, issues = normalize_usage(raw_usage)
         calls.append(
             {
@@ -175,7 +209,7 @@ def normalized_run(row, directory, pricing, tier=None, context=None):
                 "raw_usage": raw_usage,
                 "tokens": tokens,
                 "usage_issues": issues,
-                "cost": estimate(tokens, price),
+                "cost": actual_cost if actual_cost is not None else estimate(tokens, price),
             }
         )
     if not calls and (
@@ -232,7 +266,7 @@ def normalized_run(row, directory, pricing, tier=None, context=None):
         "audit_rounds": result.get("audit_rounds"),
         "repair_rounds": result.get("repair_rounds"),
         "price": price,
-        "pricing_issue": None if price else "price_missing",
+        "pricing_issue": None if price or provider["id"] == "openrouter" else "price_missing",
         "invocations": calls,
         **consumption(calls),
         "evidence_path": Path(os.path.relpath(path, directory)).as_posix(),
@@ -260,7 +294,11 @@ def aggregate(rows):
     errors = [row for row in selected if row["status"] == "ERROR"]
     counts = Counter(row["status"] for row in selected)
     calls = [call for row in rows for call in row["invocations"]]
-    costs = [Decimal(row["cost"]["estimated_usd"]) for row in selected if row["cost"]["complete"]]
+    costs = [
+        Decimal(row["cost"].get("total_usd", row["cost"]["estimated_usd"]))
+        for row in selected
+        if row["cost"]["complete"]
+    ]
     return {
         "counts": {
             "runs": len(rows),
@@ -395,14 +433,15 @@ def render_report(data):
         "",
         "PAUSED 统一计未收敛。正常耗时和修复均值包含收敛与未收敛；错误耗时另列。",
         "",
-        "## Token 与 API 等价费用",
+        "## Token 与 API 费用",
         "",
         f"价格日期：{data['pricing']['checked_on']}；{data['pricing']['tier']} / {data['pricing']['context']} context；USD。",
         f"已知 token 小计：{cell(total['tokens']['known_totals']['total_tokens'])}；usage 覆盖：{total['tokens']['usage_recorded_invocations']}/{total['tokens']['invocations']} 调用。",
-        f"已知 API 预估费用小计：${number(total['cost']['known_subtotal_usd'], 6)}；费用覆盖：{total['cost']['priced_invocations']}/{total['cost']['invocations']} 调用。",
+        f"已知 API 费用小计：${number(total['cost']['known_subtotal_usd'], 6)}；费用覆盖：{total['cost']['priced_invocations']}/{total['cost']['invocations']} 调用。",
+        f"其中 OpenRouter 实际返回费用：${number(total['cost'].get('reported_subtotal_usd', '0'), 6)}；其他 API 预估费用：${number(total['cost'].get('estimated_subtotal_usd', total['cost']['known_subtotal_usd']), 6)}。",
         f"其中排除/待完成记录的已知费用：${number(total['excluded_known_cost_usd'], 6)}。",
         "",
-        "缺失 usage 或单价明确标记未知；小计包含错误、取消和进行中记录的已知消耗。",
+        "OpenRouter 直接汇总 usage.cost（账户收费），缺失费用记未知，不用本地单价推算。其他 provider 按本地单价估算。小计包含错误、取消和进行中记录的已知消耗。",
         "CLI usage 是多个 API 请求的累计值；上下文档位为估算选择，不按累计输入量触发长上下文加价。",
         "",
         "## 模型汇总",

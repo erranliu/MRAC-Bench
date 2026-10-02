@@ -2,6 +2,10 @@
 
 单次 runner 和受管批次均支持为 `codex exec` 显式选择 Responses provider。Codex 仍负责工具调用与执行环境，MRAC runner 仍负责协议和预算，调度核心不包含 GLM 或其他模型的特殊分支。
 
+OpenRouter 配置见 [openrouter.yaml](../examples/providers/openrouter.yaml)，使用环境变量
+`OPENROUTER_API_KEY`。官方 OpenRouter endpoint 的每次 API 调用自动采集返回的实际费用，
+详情见[统计费用说明](Case%20Statistics%20Guide.md#openrouter-实际费用)。
+
 ## 配置
 
 一个 provider YAML/JSON 文件描述公开的连接参数：
