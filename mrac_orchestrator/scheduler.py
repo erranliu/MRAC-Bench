@@ -12,12 +12,15 @@ from mrac_contracts.execution import (
 from mrac_resources.locks import file_lock
 from mrac_resources.repositories import RepoPool
 
+from .statistics import case_key, refresh_reports
+
 
 class Scheduler:
     def __init__(self, store, backend, *, total=4, groups=None):
         self.store, self.backend = store, backend
         self.total, self.groups = total, groups or {}
         self.rotation = 0
+        self.statistics_dirty = set()
 
     def _finish(self, task, attempt, observed):
         state = observed["state"]
@@ -64,6 +67,8 @@ class Scheduler:
             self.store.db.execute("UPDATE attempts SET state=? WHERE id=?", (state, attempt["id"]))
         if state == "CANCELLED" and hasattr(self.backend, "cancelled"):
             self.backend.cancelled(current)
+        if key := case_key(current):
+            self.statistics_dirty.add(key)
 
     def reconcile(self):
         attempts = {a["id"]: a for a in self.store.attempts()}
@@ -137,10 +142,15 @@ class Scheduler:
                         evidence_validity="INVALID",
                         error="Shared repository contamination",
                     )
+                if key := case_key(task):
+                    self.statistics_dirty.add(key)
 
     def tick(self):
         self.reconcile()
         self.invalidate()
+        if self.statistics_dirty:
+            refresh_reports(self.store, self.statistics_dirty)
+            self.statistics_dirty.clear()
         batches = self.store.batches()
         if not batches:
             return
@@ -175,6 +185,8 @@ class Scheduler:
                     )
                     if impossible:
                         self.store.update(task, "SKIPPED", error="Dependency outcome not satisfied")
+                        if key := case_key(task):
+                            self.statistics_dirty.add(key)
                         continue
                     if any(p["state"] != "COMPLETED" for p, _ in parents):
                         continue

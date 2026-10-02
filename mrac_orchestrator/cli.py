@@ -15,6 +15,7 @@ from .evidence import export_batch, summary
 from .operations import operate
 from .plan import positive, submit
 from .scheduler import Scheduler
+from .statistics import all_runs, case_key, refresh_reports, render_report, write_case_reports
 from .store import Store
 
 
@@ -34,6 +35,18 @@ def parser():
     root = argparse.ArgumentParser(prog="mracbench")
     root.add_argument("--bench-home", type=Path)
     commands = root.add_subparsers(dest="command", required=True)
+    stats = commands.add_parser("stats").add_subparsers(dest="action", required=True)
+    report = stats.add_parser("report")
+    report.add_argument("--case", dest="selector")
+    report.add_argument("--case-version", type=int)
+    report.add_argument("--pricing-file", type=Path)
+    report.add_argument(
+        "--pricing-tier", choices=("standard", "batch", "flex", "fast", "ultrafast")
+    )
+    report.add_argument("--pricing-context", choices=("short", "long"))
+    render = stats.add_parser("render")
+    render.add_argument("--input", type=Path, required=True)
+    render.add_argument("--output", type=Path)
     case = commands.add_parser("case").add_subparsers(dest="action", required=True)
     register = case.add_parser("register")
     register.add_argument("source", type=Path)
@@ -140,6 +153,38 @@ def main(argv=None):
                     name=args.name if args.action == "rename" else None,
                     archived=None if args.action == "rename" else args.action == "archive",
                 )
+        elif args.command == "stats":
+            if args.action == "render":
+                data = read_json(args.input)
+                if data.get("schema_version") != 1:
+                    raise ContractError("Unsupported statistics schema")
+                output = args.output or args.input.parent / "report.md"
+                atomic(output, render_report(data).encode("utf-8"), raw=True)
+                result = {"report": str(output)}
+            else:
+                if args.case_version is not None and not args.selector:
+                    raise ContractError("--case-version requires --case")
+                store = Store(root)
+                keys = None
+                if args.selector:
+                    registry = Registry(root)
+                    case = registry.resolve(args.selector, args.case_version, archived=True)
+                    keys = {
+                        key
+                        for row in all_runs(store)
+                        if (key := case_key(row))
+                        and key[0] == case["case_key"]
+                        and (args.case_version is None or key[1] == args.case_version)
+                    }
+                result = {
+                    "reports": write_case_reports(
+                        store,
+                        keys=keys,
+                        pricing_file=args.pricing_file,
+                        tier=args.pricing_tier,
+                        context=args.pricing_context,
+                    )
+                }
         elif args.command == "repo":
             pool = RepoPool(root)
             if args.action == "list":
@@ -184,6 +229,9 @@ def main(argv=None):
                     "scheduler_online": online(root),
                 }
                 export_batch(store, batch["id"])
+                refresh_reports(
+                    store, {key for row in store.tasks(batch["id"]) if (key := case_key(row))}
+                )
             elif args.action in {"status", "report", "export"}:
                 store.batch(args.batch_id)
                 result = (
@@ -192,6 +240,10 @@ def main(argv=None):
                     else export_batch(store, args.batch_id)
                 )
                 result["scheduler_online"] = online(root)
+                if args.action != "status":
+                    refresh_reports(
+                        store, {key for row in store.tasks(args.batch_id) if (key := case_key(row))}
+                    )
                 if args.action == "report" and not args.json:
                     print(
                         (root / "batches" / args.batch_id / "orchestration/report.md").read_text(
@@ -214,6 +266,9 @@ def main(argv=None):
                     )
                     for task in tasks
                 ]
+                refresh_reports(
+                    store, {key for row in store.tasks(args.batch_id) if (key := case_key(row))}
+                )
         dump(result)
         return 0
     except (Exception, KeyboardInterrupt) as exc:  # noqa: BLE001 -- CLI error boundary
@@ -270,6 +325,12 @@ def managed_run(root, args):
         atomic(target.parent / "cancel.json", {"cancel": True})
         process.wait(timeout=30)
     result = backend.observe(task, attempt)
+    with_store = Store(root)
+    try:
+        if key := case_key(task):
+            refresh_reports(with_store, {key})
+    finally:
+        with_store.close()
     dump({"run_dir": task["run_dir"], **result})
     return 0 if result["state"] == "COMPLETED" else 2
 
@@ -315,6 +376,12 @@ def managed_resume(path, input_file=None, spec_file=None):
         atomic(target.parent / "cancel.json", {"cancel": True})
         process.wait(timeout=30)
     result = backend.observe(task, attempt)
+    with_store = Store(root)
+    try:
+        if key := case_key(task):
+            refresh_reports(with_store, {key})
+    finally:
+        with_store.close()
     dump(result)
     return 0 if result["state"] == "COMPLETED" else 2
 

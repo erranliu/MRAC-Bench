@@ -18,6 +18,9 @@ mracbench = "mracbench.cli:main"
 [tool.setuptools.packages.find]
 include = ["mracbench*", "mrac_contracts*", "mrac_resources*", "mrac_orchestrator*"]
 
+[tool.setuptools.package-data]
+mrac_orchestrator = ["api-pricing.yaml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
