@@ -7,7 +7,7 @@ OpenRouter 配置见 [openrouter.yaml](../examples/providers/openrouter.yaml)，
 详情见[统计费用说明](Case%20Statistics%20Guide.md#openrouter-实际费用)。
 
 随附 [OpenRouter 模型目录](../examples/providers/openrouter-models.json) 配置
-`deepseek/deepseek-v4.1-flash`，支持 low/high/max。`apply_patch_tool_type` 显式设置为
+`deepseek/deepseek-v4.1-flash` 与 `z-ai/glm-5.3-flash`，均支持 low/high/max。`apply_patch_tool_type` 显式设置为
 `null`，避免 Codex 发送部分 OpenRouter 上游不支持的 `custom` freeform 工具声明。
 文件操作使用现有 shell 和 MCP；审计提示词、流程及预算保持原配置。
 Codex 0.159.2 的该枚举只有 freeform，不能把它改成字符串 function。
