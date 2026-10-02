@@ -15,7 +15,7 @@ from .evidence import export_batch, summary
 from .operations import operate
 from .plan import positive, submit
 from .scheduler import Scheduler
-from .statistics import all_runs, case_key, refresh_reports, render_report, write_case_reports
+from .statistics import case_key, refresh_reports, render_report, write_case_reports
 from .store import Store
 
 
@@ -169,13 +169,7 @@ def main(argv=None):
                 if args.selector:
                     registry = Registry(root)
                     case = registry.resolve(args.selector, args.case_version, archived=True)
-                    keys = {
-                        key
-                        for row in all_runs(store)
-                        if (key := case_key(row))
-                        and key[0] == case["case_key"]
-                        and (args.case_version is None or key[1] == args.case_version)
-                    }
+                    keys = {(case["case_key"], case["version"])}
                 result = {
                     "reports": write_case_reports(
                         store,

@@ -11,6 +11,7 @@ from pathlib import Path
 from statistics import mean
 
 from mrac_contracts.execution import OCCUPIED, ContractError, atomic, digest, now
+from mrac_resources.cases import Registry
 from mrac_resources.home import checked
 from mrac_resources.locks import file_lock
 
@@ -33,6 +34,18 @@ def case_key(row):
     if type(version) is not int or version < 1:
         return None
     return key, version
+
+
+def latest_case_keys(store):
+    registry = Registry(store.home)
+    try:
+        return {
+            (case["case_key"], case["default_version"])
+            for case in registry.list()
+            if not case["archived"]
+        }
+    finally:
+        registry.close()
 
 
 def all_runs(store):
@@ -487,11 +500,15 @@ def render_report(data):
 
 
 def write_case_reports(store, *, keys=None, pricing_file=None, tier=None, context=None):
+    if keys is None:
+        keys = latest_case_keys(store)
+    if not keys:
+        return []
     pricing = load_pricing(pricing_file)
     grouped = defaultdict(list)
     for row in all_runs(store):
         key = case_key(row)
-        if key is not None and (keys is None or key in keys):
+        if key is not None and key in keys:
             grouped[key].append(row)
     written = []
     for key, rows in sorted(grouped.items()):
@@ -519,6 +536,6 @@ def refresh_reports(store, keys):
     if not keys:
         return
     try:
-        write_case_reports(store, keys=keys)
+        write_case_reports(store, keys=keys & latest_case_keys(store))
     except Exception as exc:  # noqa: BLE001 -- reporting must not fail an execution
         warnings.warn(f"Case statistics update failed: {exc}", RuntimeWarning, stacklevel=2)

@@ -109,4 +109,5 @@ uv run python scripts/orchestration_smoke.py --bench-home C:\mrac-smoke --model 
 跨批次归集同一 case 版本，先写 statistics.json，再生成 report.md。
 JSON 必含 token 消耗、静态 API 单价、预估费用及数据覆盖率；PAUSED 统一计未收敛。
 不同 case 版本分别存储，协议与运行条件在报告内分组。
-停止时自动更新；详情见[按 case 版本统计](Case%20Statistics%20Guide.md)。
+最新注册版本的 run 停止时自动更新对应版本的独立报告文件，旧版本文件保留；
+详情见[按 case 版本统计](Case%20Statistics%20Guide.md)。

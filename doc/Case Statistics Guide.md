@@ -2,26 +2,39 @@
 
 编排运行记录由脚本整理为 `statistics.json`，再从该 JSON 生成 `report.md`。
 同一注册 case ID、同一 case 版本跨批次汇总；不同版本写入不同目录。
-case 名称或别名不参与归集身份。报告可覆盖更新，不要求不可变报告快照。
+case 名称或别名不参与归集身份。日常更新仅针对最新注册版本；旧版本报告保留。
+显式指定旧版本时可重建该版本报告，不要求不可变报告快照。
 
 ## 使用
 
 ```powershell
 # 指定 case 的一个版本
 uv run mracbench stats report --case case1 --case-version 1 --bench-home C:\mrac-data
-# 指定 case 的所有有运行记录的版本
+# 指定 case 的最新注册版本
 uv run mracbench stats report --case case1 --bench-home C:\mrac-data
-# 所有 case 和版本
+# 所有未归档 case 的最新注册版本
 uv run mracbench stats report --bench-home C:\mrac-data
 # 从已有 JSON 生成 Markdown，不读取运行数据库
 uv run mracbench stats render --input C:\mrac-data\reports\C000001\v1\statistics.json
 ```
 
 输出为 `<bench-home>/reports/<case-key>/v<case-version>/statistics.json` 和 `report.md`。
-调度器在 run 停止时更新该 case 版本，同一个 tick 内多个停止事件合并更新。
+每个版本都是独立的 JSON 和 Markdown 文件，例如：
+
+```text
+reports/C000001/v1/statistics.json
+reports/C000001/v1/report.md
+reports/C000001/v2/statistics.json
+reports/C000001/v2/report.md
+```
+
+调度器在属于最新注册版本的 run 停止时更新该版本报告，同一个 tick 内多个停止事件合并更新。
+只更新本次事件关联的 case 版本；新版本运行不会重新生成旧版本报告。
+旧版本的 run 即使晚到完成也不会自动刷新旧报告，可用 `--case-version` 显式补更新。
 batch 提交、报告导出、显式操作和受管单次运行/续跑也刷新关联报告。
 统计更新失败只报告警告，不改变 runner 结果或触发新模型调用。
-修改价格后手动重新生成报告即可；原始运行记录保持不变。
+修改价格后手动重新生成报告即可；默认仍只更新最新版本。
+需要重算旧版本费用时显式指定 `--case-version`；原始运行记录保持不变。
 
 ## 结果与计数
 

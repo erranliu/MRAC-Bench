@@ -195,6 +195,7 @@ Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层
 编排统计支持按 case 版本跨批次归集，包含 token 消耗与本地 API 单价预估费用：
 `uv run mracbench stats report --case case1 --case-version 1`。
 输出 JSON 后生成 Markdown，详见[按 case 版本统计](doc/Case%20Statistics%20Guide.md)。
+每个 case 版本有独立报告文件；默认只更新最新注册版本，旧版本报告保留。
 
 [Simple v13/v14：case1 统计](doc/benchmarks/simple-v13-v14-case1-results.md)汇总修复后的 10 次完整测试，并与 v11 同模型结果对照。
 
