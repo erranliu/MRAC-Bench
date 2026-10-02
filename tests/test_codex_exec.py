@@ -49,6 +49,8 @@ print('diagnostic', file=sys.stderr)
     args = response.metadata["command"]
     assert "resume" not in args
     assert "--ephemeral" in args
+    assert "features.apps=false" in args
+    assert response.metadata["apps_enabled"] is False
     assert args[args.index("--sandbox") + 1] == "read-only"
     assert args[-1] == "-"
 

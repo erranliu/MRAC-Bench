@@ -169,6 +169,7 @@ class CodexExecAdapter:
             "reasoning_effort": request.reasoning_effort,
             "timeout_seconds": request.timeout_seconds,
             "readonly": request.readonly,
+            "apps_enabled": False,
         }
         # Logs exist even if resolution or process creation fails.
         (raw / "stdout.txt").touch()
@@ -206,6 +207,8 @@ class CodexExecAdapter:
                 "project_doc_max_bytes=0",
                 "-c",
                 "features.multi_agent=false",
+                "-c",
+                "features.apps=false",
                 "--cd",
                 str(request.workspace),
                 "--output-last-message",
