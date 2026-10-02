@@ -190,6 +190,10 @@ Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层
 
 设计依据：[Milestone 1 Spec](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Spec.md) · [Milestone 1 Plan](doc/MRAC%20Bench%20Spec%20Track%20v0.1%20Milestone%201%20Plan.md)。验收证据见 [实施与验收记录](doc/Milestone%201%20Implementation%20Report.md)。Codex 集成参考：[官方非交互模式文档](https://learn.chatgpt.com/docs/non-interactive-mode)。
 
+## 修复后的测试统计
+
+[Simple v13/v14：case1 统计](doc/benchmarks/simple-v13-v14-case1-results.md)汇总修复后的 10 次完整测试，并与 v11 同模型结果对照。
+
 ## 测试调查记录
 
 [case1 Luna high：错误、未收敛与减负实验](doc/benchmarks/luna-error-burden-investigation.md)记录 20 次测试预算的分析、改动、结果和耗时。
