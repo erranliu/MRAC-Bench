@@ -102,3 +102,12 @@ uv run python scripts/orchestration_smoke.py --bench-home C:\mrac-smoke --model 
 受管单次共用 registry/repo/Supervisor，不需要调度服务。旧 run --case 仍按项目目录加载；批次拥有的 run 必须经 batch 命令修改。烟测默认两个只读、两个可写 run，可用 protocol/repeat/timeout 参数调整，失败和等待不会自动续批。
 
 自动测试使用本地 Git、stub CLI 与真实 OS 子进程，不调用模型。真实模型的当前限额及实际权限属于环境条件。runner 为写阶段传入 workspace-write，但外部权限策略仍可能拒绝写入；这种情况保留 NEEDS_INPUT 和原始诊断，不放宽沙盒以通过测试。[官方非交互模式说明](https://learn.chatgpt.com/docs/non-interactive-mode)
+
+## 按 case 版本统计与 API 费用
+
+`uv run mracbench stats report --case case1 --case-version 1 --bench-home C:\mrac-data`
+跨批次归集同一 case 版本，先写 statistics.json，再生成 report.md。
+JSON 必含 token 消耗、静态 API 单价、预估费用及数据覆盖率；PAUSED 统一计未收敛。
+不同 case 版本分别存储，协议与运行条件在报告内分组。
+最新注册版本的 run 停止时自动更新对应版本的独立报告文件，旧版本文件保留；
+详情见[按 case 版本统计](Case%20Statistics%20Guide.md)。

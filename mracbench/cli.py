@@ -22,7 +22,10 @@ def main(argv=None) -> int:
 
         return machine_main(argv[1:])
     if (
-        any(word in {"case", "batch", "orchestrator", "repo", "workspace"} for word in argv[:1])
+        any(
+            word in {"case", "batch", "orchestrator", "repo", "workspace", "stats"}
+            for word in argv[:1]
+        )
         or "--managed" in argv
         or "--bench-home" in argv
     ):

@@ -17,6 +17,7 @@ from mrac_contracts.providers import (
 )
 
 from .models import AgentRequest, AgentResult
+from .openrouter_accounting import OpenRouterAccounting, uses_openrouter
 from .redaction import RedactedPipe
 from .runs import utc_now, write_json
 
@@ -177,6 +178,7 @@ class CodexExecAdapter:
         final_directory = None
         output_path = final_path
         secret = None
+        accounting = None
         try:
             validate_selection(self.provider, request.model, request.reasoning_effort)
             secret = credential(self.provider)
@@ -220,6 +222,18 @@ class CodexExecAdapter:
                 write_json(schema_path, request.output_schema)
                 command += ["--output-schema", str(schema_path)]
             command += self.provider_arguments(raw)
+            if uses_openrouter(self.provider):
+                if not secret:
+                    raise ProviderError("OpenRouter accounting requires an env_key credential")
+                collector = OpenRouterAccounting(
+                    self.provider, secret, raw, request.timeout_seconds
+                )
+                endpoint = collector.__enter__()
+                accounting = collector
+                command += [
+                    "-c",
+                    f"model_providers.{self.provider['id']}.base_url={json.dumps(endpoint)}",
+                ]
             command += self.mcp_arguments(request.mcp_servers)
             if request.model:
                 command += ["--model", request.model]
@@ -288,6 +302,11 @@ class CodexExecAdapter:
             )
             result.error_message = str(exc).replace(secret, "[REDACTED]") if secret else str(exc)
         finally:
+            if accounting is not None:
+                try:
+                    accounting.__exit__()
+                except OSError:
+                    invocation["accounting_issue"] = "provider_usage_persistence_failed"
             if final_directory:
                 final_directory.cleanup()
             result.duration_seconds = time.monotonic() - start
@@ -329,12 +348,11 @@ class CodexExecAdapter:
                         and item.get("type") == "mcp_tool_call"
                         and item.get("status") == "failed"
                         and result.error_type in {None, "AGENT_ERROR"}
-                        and "timed out awaiting tools/call" in str((item.get("error") or {}).get("message", ""))
+                        and "timed out awaiting tools/call"
+                        in str((item.get("error") or {}).get("message", ""))
                     ):
                         result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
-                        result.error_message = (
-                            f"MCP tool timed out: {item.get('server')}/{item.get('tool')}; see raw stdout"
-                        )
+                        result.error_message = f"MCP tool timed out: {item.get('server')}/{item.get('tool')}; see raw stdout"
                     if (
                         isinstance(item, dict)
                         and event.get("type") == "item.completed"

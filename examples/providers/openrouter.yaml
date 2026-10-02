@@ -1,0 +1,7 @@
+schema_version: 1
+id: openrouter
+name: OpenRouter
+base_url: https://openrouter.ai/api/v1
+wire_api: responses
+env_key: OPENROUTER_API_KEY
+model_catalog_file: openrouter-models.json
