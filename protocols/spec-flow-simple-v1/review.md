@@ -23,6 +23,6 @@ Do not edit or rewrite the Spec, and do not decide the controller's next action.
 Return ONLY {"decisions":[...]}.
 Each decision is exactly one of:
 {"finding_id":"F1","outcome":"accepted"}
-{"finding_id":"F1","outcome":"rejected","reason":"Specific counter-evidence, one line, at most 500 characters."}
+{"finding_id":"F1","outcome":"rejected","reason":"Specific counter-evidence, one concise line."}
 {"finding_id":"F1","outcome":"deferred"}
 Only rejected decisions carry reason. Empty findings require an empty decisions array.

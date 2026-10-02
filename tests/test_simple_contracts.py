@@ -8,6 +8,29 @@ from mracbench.simple_audit import assign_ids, parse_findings, parse_repair, par
 FINDINGS = [{"finding_id": "F1", "severity": "P1", "title": "Gap", "evidence": "Spec §2"}]
 
 
+def test_review_reason_length_limit_is_optional_for_v15():
+    reason = "Counter-evidence: " + "x" * 600
+    text = json.dumps(
+        {"decisions": [{"finding_id": "F1", "outcome": "rejected", "reason": reason}]}
+    )
+    with pytest.raises(BenchError, match="concise"):
+        parse_review(text, "A", FINDINGS, bind_invocation=True)
+    review, accepted, deferred = parse_review(
+        text, "A", FINDINGS, bind_invocation=True, max_reason_chars=None
+    )
+    assert review["decisions"][0]["reason"] == reason
+    assert accepted == deferred == []
+
+
+@pytest.mark.parametrize("reason", ["", " ", "first\nsecond", "extra  spaces"])
+def test_v15_keeps_nonempty_and_single_line_reason_rules(reason):
+    text = json.dumps(
+        {"decisions": [{"finding_id": "F1", "outcome": "rejected", "reason": reason}]}
+    )
+    with pytest.raises(BenchError):
+        parse_review(text, "A", FINDINGS, bind_invocation=True, max_reason_chars=None)
+
+
 def test_invocation_binding_removes_model_audit_id_echo():
     audit = parse_findings('{"findings":[]}', "controller-owned-id", bind_invocation=True)
     assert audit == {"audit_id": "controller-owned-id", "findings": []}
