@@ -1,9 +1,12 @@
 import json
+import os
 import sys
 import time
 from dataclasses import replace
 
-from mracbench.codex_exec import CodexExecAdapter
+import pytest
+
+from mracbench.codex_exec import CodexExecAdapter, saved_windows_sandbox
 from mracbench.models import AgentRequest
 
 
@@ -106,6 +109,56 @@ def test_nonzero_exit_is_not_a_success(tmp_path):
     result = CodexExecAdapter(command=command).run(request(tmp_path))
     assert result.error_type == "AGENT_ERROR"
     assert result.exit_code == 7
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows sandbox selection")
+@pytest.mark.parametrize("mode", ["elevated", "unelevated"])
+def test_windows_sandbox_selection_is_explicit_and_recorded(tmp_path, mode):
+    command = fake_command(tmp_path, "print('ok')\n")
+    result = CodexExecAdapter(command=command, windows_sandbox=mode).run(request(tmp_path))
+    assert result.success
+    assert f'windows.sandbox="{mode}"' in result.metadata["command"]
+    assert result.metadata["windows_sandbox"] == mode
+
+
+def test_sandbox_provisioning_failure_is_detected_despite_zero_exit(tmp_path):
+    event = {
+        "type": "item.completed",
+        "item": {
+            "type": "command_execution",
+            "status": "failed",
+            "exit_code": -1,
+            "command": "git rev-parse HEAD",
+            "aggregated_output": "Failed to create unified exec process: sandbox provisioning failed",
+        },
+    }
+    command = fake_command(tmp_path, f"print(json.dumps({event!r}))\n")
+    result = CodexExecAdapter(command=command).run(request(tmp_path))
+    assert result.exit_code == 0
+    assert not result.success
+    assert result.error_type == "EXECUTION_ENVIRONMENT_ERROR"
+    persisted = json.loads((tmp_path / "raw/invocation.json").read_text())
+    assert persisted["error_type"] == result.error_type
+
+
+def test_agent_quoting_sandbox_failure_does_not_trigger_environment_error(tmp_path):
+    event = {
+        "type": "item.completed",
+        "item": {
+            "type": "agent_message",
+            "text": "Failed to create unified exec process: sandbox provisioning failed",
+        },
+    }
+    command = fake_command(tmp_path, f"print(json.dumps({event!r}))\n")
+    assert CodexExecAdapter(command=command).run(request(tmp_path)).success
+
+
+def test_resume_restores_saved_windows_sandbox(tmp_path):
+    assert saved_windows_sandbox(tmp_path) == "elevated"
+    (tmp_path / "run.yaml").write_text(
+        "effective_config:\n  windows_sandbox: unelevated\n", encoding="utf-8"
+    )
+    assert saved_windows_sandbox(tmp_path) == "unelevated"
 
 
 def test_timeout_stops_descendant_process(tmp_path):

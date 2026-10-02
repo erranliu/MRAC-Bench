@@ -1,10 +1,28 @@
 """Disposable repository checkouts for file-based Spec repairs."""
 
+import re
 from pathlib import Path, PurePosixPath
 
 from .cases import load_yaml
 from .models import BenchError
 from .repository import git, tree_manifest
+
+
+def named_project_files(baseline, text):
+    """Resolve Spec-named files without asking the model to scan the project.
+
+    This is a navigation hint, not a complete dependency inventory or a summary
+    of code behavior. Include only exact symbol/assembly names in the input.
+    """
+    names = {name.rstrip(".") for name in re.findall(r"[A-Za-z_][A-Za-z0-9_.]*", text)}
+    names.update(name.rsplit(".", 1)[0] for name in list(names) if name.endswith(".cs"))
+    return [
+        path
+        for path in sorted(baseline)
+        if Path(path).suffix in {".cs", ".asmdef"}
+        and Path(path).stem in names
+        and not baseline[path].startswith("symlink:")
+    ]
 
 
 def spec_path(case):

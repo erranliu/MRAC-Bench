@@ -59,6 +59,11 @@ def seal(path):
 
 def validate(bundle, settings):
     bundle = Path(bundle)
+    if "windows_sandbox" in settings and settings["windows_sandbox"] not in (
+        "elevated",
+        "unelevated",
+    ):
+        raise ContractError("windows_sandbox must be elevated or unelevated")
     provider = normalize_provider(settings.get("provider"))
     validate_selection(provider, settings.get("model"), settings.get("reasoning_effort"))
     if provider is not None:
@@ -190,7 +195,9 @@ def execute(request, adapter=None):
     if provider is not None and read_json(bundle / "provider.json") != provider:
         raise ContractError("Provider settings differ from the frozen bundle")
     adapter = adapter or CodexExecAdapter(
-        request.get("codex_executable", "codex"), provider=provider
+        request.get("codex_executable", "codex"),
+        provider=provider,
+        windows_sandbox=request["settings"].get("windows_sandbox", "elevated"),
     )
     if adapter.version() != request["agent_version"]:
         raise ContractError("Agent executable version changed")

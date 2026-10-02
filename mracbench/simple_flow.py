@@ -40,7 +40,7 @@ from .simple_repair import (
     verify_candidate_reads,
     verify_workspace,
 )
-from .spec_checkout import SpecCheckout, spec_path
+from .spec_checkout import SpecCheckout, named_project_files, spec_path
 
 
 def save_evidence(store, evidence, name, data):
@@ -295,7 +295,13 @@ def verify_repository_read_probe(raw, expected_head, *, event_only=False, allow_
                     for event in events
                 ):
                     return
-            raise ValueError("No searched source line was verified by repository_read")
+            failures = [event for event in events if event.get("ok") is False]
+            detail = (
+                f"; {failures[-1].get('tool')} failed: {failures[-1].get('error')}"
+                if failures
+                else ""
+            )
+            raise ValueError("No searched source line was verified by repository_read" + detail)
 
         value = json.loads((raw / "final.txt").read_text(encoding="utf-8"))
         if set(value) != {"head", "path", "match", "excerpt"}:
@@ -359,17 +365,26 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
         )
         if feedback is not None:
             inputs["retry_feedback"] = feedback
+        if native and protocol.version >= 12:
+            inputs["named_project_files"] = named_project_files(
+                repo.baseline, case.task + "\n" + seed.decode("utf-8-sig")
+            )
         prompt_stage = "repair-init" if pending["kind"] == "spec-init" else "repair-freeze"
         if native:
             checkout_path = store.path / "checkout"
             checkout = {}
 
-            def setup_checkout(_raw):
+            def setup_checkout(_raw, checkout=checkout, checkout_path=checkout_path, seed=seed):
                 checkout["value"] = SpecCheckout(repo, checkout_path, spec_path(case), seed)
 
             invoke(
                 stage,
-                render_spec_checkout_prompt(protocol.prompts[prompt_stage], inputs),
+                render_spec_checkout_prompt(
+                    protocol.prompts[prompt_stage],
+                    inputs,
+                    compact=protocol.version >= 12,
+                    literal_source=protocol.version >= 14,
+                ),
                 workspace=checkout_path,
                 readonly=False,
                 workspace_setup=setup_checkout,
@@ -595,6 +610,9 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
         spec_only = kind == "spec-freeze-loop"
         inputs = {"current_spec": spec} if spec_only else baseline_inputs(case, repo, spec)
         inputs.update(audit_id=audit_id, spec_sha256=flow["artifact_sha256"])
+        if protocol.version >= 12:
+            inputs.pop("audit_id")
+            inputs.pop("spec_sha256")
         workspace = None
         if spec_only:
             workspace = store.path / "audit-workspaces" / stage
@@ -623,11 +641,14 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 audit_id,
                 allow_fence=protocol.version >= 7,
                 allow_trailing_fence=protocol.version >= 8,
+                bind_invocation=protocol.version >= 12,
             )
             save_evidence(store, evidence, f"audits/{stage}.json", audit)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
             review_inputs.update(audit_id=audit_id, audit_kind=kind, findings=findings)
+            if protocol.version >= 12:
+                review_inputs.pop("audit_id")
             review, accepted, deferred = parse_review(
                 invoke(
                     f"review-{number:02d}",
@@ -638,6 +659,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 findings,
                 allow_fence=protocol.version >= 7,
                 allow_trailing_fence=protocol.version >= 8,
+                bind_invocation=protocol.version >= 12,
             )
             save_evidence(store, evidence, f"reviews/{stage}.json", review)
         except BenchError as exc:

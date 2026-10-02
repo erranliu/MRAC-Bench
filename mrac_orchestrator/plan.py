@@ -114,7 +114,16 @@ def submit(store, backend, source, project, request_id, codex="codex"):
                         seen.add(key)
                         resolved.append(case)
                     for model in group["model_configs"]:
-                        keys(model, {"model", "reasoning_effort", "resource_group", "provider"})
+                        keys(
+                            model,
+                            {
+                                "model",
+                                "reasoning_effort",
+                                "resource_group",
+                                "provider",
+                                "windows_sandbox",
+                            },
+                        )
                         selection = model.get("provider", "openai")
                         if (
                             not isinstance(selection, str)
@@ -139,6 +148,8 @@ def submit(store, backend, source, project, request_id, codex="codex"):
                             "max_rounds": group.get("max_audit_rounds"),
                             "timeout_seconds": group.get("timeout_seconds"),
                         }
+                        if "windows_sandbox" in model:
+                            settings["windows_sandbox"] = model["windows_sandbox"]
                         provider = providers.get(model.get("provider", "openai"))
                         if provider is not None:
                             settings["provider"] = provider

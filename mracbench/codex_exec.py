@@ -20,6 +20,21 @@ from .models import AgentRequest, AgentResult
 from .redaction import RedactedPipe
 from .runs import utc_now, write_json
 
+WINDOWS_SANDBOX_MODES = ("elevated", "unelevated")
+
+
+def saved_windows_sandbox(path):
+    from .cases import load_yaml
+
+    metadata = path / "run.yaml"
+    if not metadata.exists():
+        return "elevated"
+    return (
+        load_yaml(metadata.read_bytes(), "run.yaml")
+        .get("effective_config", {})
+        .get("windows_sandbox", "elevated")
+    )
+
 
 def resolve_command(executable: str) -> list[str]:
     found = shutil.which(executable)
@@ -60,11 +75,19 @@ class CodexExecAdapter:
     agent_type = "codex_exec"
 
     def __init__(
-        self, executable: str = "codex", command: Sequence[str] | None = None, *, provider=None
+        self,
+        executable: str = "codex",
+        command: Sequence[str] | None = None,
+        *,
+        provider=None,
+        windows_sandbox="elevated",
     ):
         self.executable = executable
         self._command = list(command) if command else None
         self.provider = normalize_provider(provider)
+        if windows_sandbox not in WINDOWS_SANDBOX_MODES:
+            raise ValueError("windows_sandbox must be elevated or unelevated")
+        self.windows_sandbox = windows_sandbox
 
     def provider_arguments(self, raw):
         if self.provider is None:
@@ -190,7 +213,8 @@ class CodexExecAdapter:
                 # --ignore-user-config also drops the native Windows sandbox
                 # implementation. Select it explicitly so workspace-write can
                 # execute file tools inside the isolated repair checkout.
-                command += ["-c", 'windows.sandbox="elevated"']
+                command += ["-c", f'windows.sandbox="{self.windows_sandbox}"']
+                invocation["windows_sandbox"] = self.windows_sandbox
             if request.output_schema is not None:
                 schema_path = raw / "output-schema.json"
                 write_json(schema_path, request.output_schema)
@@ -302,6 +326,18 @@ class CodexExecAdapter:
                     if (
                         isinstance(item, dict)
                         and event.get("type") == "item.completed"
+                        and item.get("type") == "mcp_tool_call"
+                        and item.get("status") == "failed"
+                        and result.error_type in {None, "AGENT_ERROR"}
+                        and "timed out awaiting tools/call" in str((item.get("error") or {}).get("message", ""))
+                    ):
+                        result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
+                        result.error_message = (
+                            f"MCP tool timed out: {item.get('server')}/{item.get('tool')}; see raw stdout"
+                        )
+                    if (
+                        isinstance(item, dict)
+                        and event.get("type") == "item.completed"
                         and item.get("type") in {"command_execution", "shell"}
                     ):
                         invocation.setdefault("command_executions", []).append(
@@ -310,7 +346,19 @@ class CodexExecAdapter:
                                 "exit_code": item.get("exit_code"),
                             }
                         )
+                        if (
+                            result.error_type in {None, "AGENT_ERROR"}
+                            and item.get("status") == "failed"
+                            and "Failed to create unified exec process: sandbox provisioning failed"
+                            in str(item.get("aggregated_output", ""))
+                        ):
+                            result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
+                            result.error_message = (
+                                "Codex could not provision the sandbox for a repository command; "
+                                "see raw stdout and the Windows sandbox setup logs"
+                            )
                 except ValueError:
                     pass
+            invocation.update(error_type=result.error_type, error_message=result.error_message)
             write_json(raw / "invocation.json", invocation)
         return result

@@ -141,6 +141,34 @@ def test_os_shared_locks_across_processes(tmp_path):
         pass
 
 
+@pytest.mark.parametrize("mode", ["elevated", "unelevated"])
+def test_machine_preserves_windows_sandbox_selection(project, mode):
+    settings = validate(
+        project,
+        {
+            "case_id": "sample",
+            "protocol_id": "spec-mrac-v1",
+            "model": "test",
+            "windows_sandbox": mode,
+        },
+    )
+    assert settings["windows_sandbox"] == mode
+
+
+@pytest.mark.parametrize("mode", [None, "disabled", {}, False])
+def test_machine_rejects_invalid_windows_sandbox(project, mode):
+    with pytest.raises(ContractError, match="windows_sandbox"):
+        validate(
+            project,
+            {
+                "case_id": "sample",
+                "protocol_id": "spec-mrac-v1",
+                "model": "test",
+                "windows_sandbox": mode,
+            },
+        )
+
+
 def test_machine_public_contract_and_start_dedup(project, tmp_path):
     settings = validate(
         project, {"case_id": "sample", "protocol_id": "spec-mrac-v1", "model": "test"}

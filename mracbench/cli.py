@@ -5,7 +5,7 @@ from pathlib import Path
 from mrac_contracts.execution import ContractError
 from mrac_contracts.providers import load_provider
 
-from .codex_exec import CodexExecAdapter
+from .codex_exec import CodexExecAdapter, saved_windows_sandbox
 from .exec_flow import inspect_exec, resume_exec
 from .models import BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID
@@ -59,6 +59,7 @@ def main(argv=None) -> int:
         help="Explicit model reasoning effort, saved for every stage and resume",
     )
     run.add_argument("--codex-executable", default="codex")
+    run.add_argument("--windows-sandbox", choices=("elevated", "unelevated"), default="elevated")
     run.add_argument("--provider-file", type=Path, help="Explicit Responses provider YAML/JSON")
     resume = sub.add_parser(
         "resume", help="Resume a supported saved run without changing its protocol"
@@ -105,10 +106,10 @@ def main(argv=None) -> int:
                     print((path / "run-report.md").read_text(encoding="utf-8"))
         elif args.command == "resume":
             provider = saved_provider(args.run_dir)
-            adapter = (
-                CodexExecAdapter(args.codex_executable, provider=provider)
-                if provider
-                else CodexExecAdapter(args.codex_executable)
+            adapter = CodexExecAdapter(
+                args.codex_executable,
+                provider=provider,
+                windows_sandbox=saved_windows_sandbox(args.run_dir),
             )
             if (args.run_dir / "exec-state.json").is_file():
                 if args.spec_file:
@@ -127,10 +128,8 @@ def main(argv=None) -> int:
                 path, result = resume_run(args.run_dir, adapter)
         else:
             provider = load_provider(args.provider_file) if args.provider_file else None
-            adapter = (
-                CodexExecAdapter(args.codex_executable, provider=provider)
-                if provider
-                else CodexExecAdapter(args.codex_executable)
+            adapter = CodexExecAdapter(
+                args.codex_executable, provider=provider, windows_sandbox=args.windows_sandbox
             )
             project = args.project_root.resolve()
             config = RunConfig(

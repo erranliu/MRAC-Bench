@@ -57,10 +57,12 @@ def decode(text, *, allow_fence=False, allow_trailing_fence=False):
     )
 
 
-def parse_findings(text, audit_id, *, allow_fence=False, allow_trailing_fence=False):
+def parse_findings(text, audit_id, *, allow_fence=False, allow_trailing_fence=False, bind_invocation=False):
     try:
         data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
-        obj(data, {"audit_id", "findings"})
+        obj(data, {"findings"} if bind_invocation else {"audit_id", "findings"})
+        if bind_invocation:
+            data["audit_id"] = audit_id
         if data["audit_id"] != audit_id or not isinstance(data["findings"], list):
             raise ValueError("Audit ID or findings mismatch")
         for finding in data["findings"]:
@@ -78,10 +80,12 @@ def assign_ids(audit):
     return [{"finding_id": f"F{i}", **row} for i, row in enumerate(audit["findings"], 1)]
 
 
-def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_fence=False):
+def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_fence=False, bind_invocation=False):
     try:
         data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
-        obj(data, {"audit_id", "decisions"})
+        obj(data, {"decisions"} if bind_invocation else {"audit_id", "decisions"})
+        if bind_invocation:
+            data["audit_id"] = audit_id
         if data["audit_id"] != audit_id or not isinstance(data["decisions"], list):
             raise ValueError("Audit ID or decisions mismatch")
         by_id = {f["finding_id"]: f for f in findings}

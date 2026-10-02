@@ -759,3 +759,18 @@ def test_unchanged_repair_is_rejected(project, simple_config):
     assert result["status"] == "REPAIR_INVALID"
     assert result["repair_rounds"] == 2
     assert "did not change" in result["error"]["message"]
+
+
+def test_repair_environment_failure_is_not_retried_as_unchanged(simple_config):
+    failure = AgentResult(
+        started=True,
+        exit_code=0,
+        error_type="EXECUTION_ENVIRONMENT_ERROR",
+        error_message="Codex could not provision the sandbox",
+    )
+    agent = StubAgent([audit("P1"), review(), failure])
+    path, result = run_case(simple_config, agent)
+    assert result["status"] == "EXECUTION_ENVIRONMENT_ERROR"
+    assert result["repair_rounds"] == 1
+    assert result["error"]["stage"] == "repair-01"
+    assert not (path / "raw/repair-02").exists()
