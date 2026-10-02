@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "case": "case1",
   "case_version": 1,
   "protocol": "spec-flow-simple-v1",
@@ -33,7 +33,9 @@
       "mcp_calls": 109,
       "mcp_failed_calls": 27,
       "mcp_transport_timeouts": 15,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-605cdb8eaa392991d4c8075a",
@@ -58,7 +60,9 @@
       "mcp_calls": 80,
       "mcp_failed_calls": 31,
       "mcp_transport_timeouts": 15,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-605cdb8eaa392991d4c8075a",
@@ -83,7 +87,9 @@
       "mcp_calls": 28,
       "mcp_failed_calls": 8,
       "mcp_transport_timeouts": 1,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "stop_reason": "execution_error"
     },
     {
       "batch_id": "B-605cdb8eaa392991d4c8075a",
@@ -108,7 +114,9 @@
       "mcp_calls": 30,
       "mcp_failed_calls": 10,
       "mcp_transport_timeouts": 6,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "stop_reason": "execution_error"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -133,7 +141,9 @@
       "mcp_calls": 79,
       "mcp_failed_calls": 25,
       "mcp_transport_timeouts": 13,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -158,7 +168,9 @@
       "mcp_calls": 59,
       "mcp_failed_calls": 20,
       "mcp_transport_timeouts": 11,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -183,7 +195,9 @@
       "mcp_calls": 53,
       "mcp_failed_calls": 20,
       "mcp_transport_timeouts": 10,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -208,7 +222,9 @@
       "mcp_calls": 88,
       "mcp_failed_calls": 34,
       "mcp_transport_timeouts": 14,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -233,7 +249,9 @@
       "mcp_calls": 29,
       "mcp_failed_calls": 4,
       "mcp_transport_timeouts": 3,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "stop_reason": "execution_error"
     },
     {
       "batch_id": "B-d9aff8d72a3fef033c71b921",
@@ -258,7 +276,9 @@
       "mcp_calls": 25,
       "mcp_failed_calls": 11,
       "mcp_transport_timeouts": 6,
-      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d"
+      "code_sha256": "db96ad205ac53ae012a42fa2e89ab9c1bc2e6054bf318052ab594d35b7df9c5d",
+      "raw_status": null,
+      "stop_reason": "diagnostic_cancelled"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -267,7 +287,7 @@
       "effort": "high",
       "protocol_version": 13,
       "lifecycle": "PAUSED",
-      "status": "PAUSED",
+      "status": "NON_CONVERGED",
       "category": "full_flow",
       "seconds": 3376.312,
       "audits": 7,
@@ -284,7 +304,9 @@
       "shell_failed_calls": 8,
       "mcp_calls": 134,
       "mcp_failed_calls": 8,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "PAUSED",
+      "stop_reason": "early_pause"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -293,7 +315,7 @@
       "effort": "high",
       "protocol_version": 13,
       "lifecycle": "PAUSED",
-      "status": "PAUSED",
+      "status": "NON_CONVERGED",
       "category": "full_flow",
       "seconds": 4369.125,
       "audits": 7,
@@ -310,7 +332,9 @@
       "shell_failed_calls": 9,
       "mcp_calls": 202,
       "mcp_failed_calls": 15,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "PAUSED",
+      "stop_reason": "early_pause"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -319,7 +343,7 @@
       "effort": "high",
       "protocol_version": 13,
       "lifecycle": "PAUSED",
-      "status": "PAUSED",
+      "status": "NON_CONVERGED",
       "category": "full_flow",
       "seconds": 3119.844,
       "audits": 7,
@@ -336,7 +360,9 @@
       "shell_failed_calls": 6,
       "mcp_calls": 141,
       "mcp_failed_calls": 5,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "PAUSED",
+      "stop_reason": "early_pause"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -345,7 +371,7 @@
       "effort": "high",
       "protocol_version": 13,
       "lifecycle": "PAUSED",
-      "status": "PAUSED",
+      "status": "NON_CONVERGED",
       "category": "full_flow",
       "seconds": 3389.859,
       "audits": 7,
@@ -362,7 +388,9 @@
       "shell_failed_calls": 8,
       "mcp_calls": 144,
       "mcp_failed_calls": 11,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "PAUSED",
+      "stop_reason": "early_pause"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -385,7 +413,9 @@
       "initial_spec_bytes": 6174,
       "final_spec_bytes": 6174,
       "mcp_calls": 41,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "CONVERGED",
+      "stop_reason": "converged"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -411,7 +441,9 @@
       "shell_failed_calls": 1,
       "mcp_calls": 50,
       "mcp_failed_calls": 2,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "CONVERGED",
+      "stop_reason": "converged"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -436,7 +468,9 @@
       "shell_calls": 10,
       "mcp_calls": 35,
       "mcp_failed_calls": 2,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "CONVERGED",
+      "stop_reason": "converged"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -462,7 +496,9 @@
       "shell_failed_calls": 2,
       "mcp_calls": 62,
       "mcp_failed_calls": 5,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "CONVERGED",
+      "stop_reason": "converged"
     },
     {
       "batch_id": "B-79d9b10cb6d660bc74975fd8",
@@ -488,7 +524,9 @@
       "shell_failed_calls": 2,
       "mcp_calls": 43,
       "mcp_failed_calls": 3,
-      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5"
+      "code_sha256": "785a5611857fc5ee1a0a420330bc3afb277963c8f7f171afaf73d5554759bae5",
+      "raw_status": "CONVERGED",
+      "stop_reason": "converged"
     },
     {
       "batch_id": "B-a65b377d7c40784c150732ae",
@@ -514,7 +552,17 @@
       "shell_failed_calls": 2,
       "mcp_calls": 162,
       "mcp_failed_calls": 9,
-      "code_sha256": "6fda73e393ee8428912cbc3d33e62b22549d34e800f3e23123f93b38b58267bb"
+      "code_sha256": "6fda73e393ee8428912cbc3d33e62b22549d34e800f3e23123f93b38b58267bb",
+      "raw_status": "NON_CONVERGED",
+      "stop_reason": "audit_budget_exhausted"
     }
-  ]
+  ],
+  "reporting_policy": {
+    "non_converged_raw_statuses": [
+      "NON_CONVERGED",
+      "PAUSED"
+    ],
+    "status_field": "reported outcome",
+    "raw_status_field": "original runner status"
+  }
 }

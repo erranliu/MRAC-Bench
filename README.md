@@ -192,4 +192,4 @@ Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层
 
 ## 测试调查记录
 
-[case1 Luna high：错误、暂停与减负实验](doc/benchmarks/luna-error-burden-investigation.md)记录 20 次测试预算的分析、改动、结果和耗时。
+[case1 Luna high：错误、未收敛与减负实验](doc/benchmarks/luna-error-burden-investigation.md)记录 20 次测试预算的分析、改动、结果和耗时。
