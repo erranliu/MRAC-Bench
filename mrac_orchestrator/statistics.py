@@ -270,6 +270,7 @@ def aggregate(rows):
             "non_converged": counts["NON_CONVERGED"],
             "errors": counts["ERROR"],
         },
+        "convergence_rate": counts["CONVERGED"] / len(selected) if selected else None,
         "stop_reasons": dict(Counter(row["stop_reason"] for row in rows)),
         "error_types": dict(
             Counter(row["error_type"] or row["raw_status"] or "unknown" for row in errors)
@@ -367,6 +368,21 @@ def number(value, places=1, divisor=1):
     return f"{Decimal(str(value)) / divisor:.{places}f}" if value is not None else "未知"
 
 
+def convergence_rate(counts):
+    return counts["converged"] / counts["included"] if counts["included"] else None
+
+
+def ranking_key(group):
+    rate = convergence_rate(group["counts"])
+    return (
+        -(rate if rate is not None else -1),
+        group["provider"],
+        group["model"],
+        group["reasoning_effort"] or "",
+        group["conditions_id"],
+    )
+
+
 def render_report(data):
     case, total = data["case"], data["summary"]
     counts = total["counts"]
@@ -389,28 +405,31 @@ def render_report(data):
         "缺失 usage 或单价明确标记未知；小计包含错误、取消和进行中记录的已知消耗。",
         "CLI usage 是多个 API 请求的累计值；上下文档位为估算选择，不按累计输入量触发长上下文加价。",
         "",
-        "## 模型汇总（协议、版本及运行条件分组）",
+        "## 模型汇总",
         "",
-        "| 协议 / 版本 | 条件 | Provider / 模型 / effort | 样本 | 收敛 | 未收敛 | 错误 | 正常均时 min | 错误均时 min | 平均修复 | 已知 token | 已知费用 USD | 费用覆盖 |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "收敛率 = 收敛次数 / 已完成样本数（含错误，排除取消、待输入和进行中记录）。按收敛率降序排列，无已完成样本的行放在最后。",
+        "",
+        "| 排名 | Provider / 模型 / effort | 样本 | 收敛 | 未收敛 | 错误 | 收敛率 | 正常均时 min | 错误均时 min | 平均修复 | 已知 token | 已知费用 USD | 费用覆盖 |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     if scope := data.get("report_scope"):
         lines[0] += f" · {cell(scope['protocol_id'])}@{cell(scope['protocol_version'])}"
-    for group in data["groups"]:
+    for rank, group in enumerate(sorted(data["groups"], key=ranking_key), 1):
         count = group["counts"]
+        rate = convergence_rate(count)
         lines.append(
             "| "
             + " | ".join(
                 map(
                     cell,
                     [
-                        f"{group['protocol_id']}@{group['protocol_version']}",
-                        group["conditions_id"][:8],
+                        rank,
                         f"{group['provider']} / {group['model']} / {group['reasoning_effort'] or 'default/未记录'}",
                         count["included"],
                         count["converged"],
                         count["non_converged"],
                         count["errors"],
+                        number(rate * 100, 1) + "%" if rate is not None else "未知",
                         number(group["normal_wall_time_seconds"]["mean"], divisor=60),
                         number(group["error_wall_time_seconds"]["mean"], divisor=60),
                         number(group["normal_repair_rounds"]["mean"], 2),
