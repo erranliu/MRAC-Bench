@@ -6,6 +6,13 @@ OpenRouter 配置见 [openrouter.yaml](../examples/providers/openrouter.yaml)，
 `OPENROUTER_API_KEY`。官方 OpenRouter endpoint 的每次 API 调用自动采集返回的实际费用，
 详情见[统计费用说明](Case%20Statistics%20Guide.md#openrouter-实际费用)。
 
+随附 [OpenRouter 模型目录](../examples/providers/openrouter-models.json) 配置
+`deepseek/deepseek-v4.1-flash`，支持 low/high/max。`apply_patch_tool_type` 显式设置为
+`null`，避免 Codex 发送部分 OpenRouter 上游不支持的 `custom` freeform 工具声明。
+文件操作使用现有 shell 和 MCP；审计提示词、流程及预算保持原配置。
+Codex 0.159.2 的该枚举只有 freeform，不能把它改成字符串 function。
+旧批次的 provider 快照不修改，修复配置需要提交新批次。
+
 ## 配置
 
 一个 provider YAML/JSON 文件描述公开的连接参数：
