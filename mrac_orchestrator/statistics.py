@@ -394,6 +394,8 @@ def render_report(data):
         "| 协议 / 版本 | 条件 | Provider / 模型 / effort | 样本 | 收敛 | 未收敛 | 错误 | 正常均时 min | 错误均时 min | 平均修复 | 已知 token | 已知费用 USD | 费用覆盖 |",
         "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
+    if scope := data.get("report_scope"):
+        lines[0] += f" · {cell(scope['protocol_id'])}@{cell(scope['protocol_version'])}"
     for group in data["groups"]:
         count = group["counts"]
         lines.append(
