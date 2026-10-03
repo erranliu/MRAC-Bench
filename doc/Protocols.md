@@ -421,7 +421,8 @@ related_specs:
 @12 起主控返回 `decisions`，由 runner 绑定调用的 audit ID；@4–@11 保留 `audit_id/decisions`。每项必须恰好裁决一次：
 
 - `accepted`：任何级别都需要修复，包括 P3。
-- `rejected`：必须有包含具体反证的单行 reason，最多 500 字符。
+- `rejected`：必须有包含具体反证的非空单行 reason。@14 及以前最多 500 字符；
+  @15 解除字符数上限，完整保留理由，其余排版与裁决结构检查仍按原规则执行。
 - `deferred`：只允许 P3；保留在结果的 `deferred_p3` 中，不妨碍 clean。
 - 不接受 `exception` 字段；产品决策、范围、外部或后续依赖不再是终止分支。
 
@@ -533,6 +534,11 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 产物和审计范围不同，不能把两个协议的“收敛轮数”当作同一标尺直接排名。
 
 ## 变更记录
+
+- 2026-10-02：`spec-flow-simple-v1@15` 解除 rejected reason 的 500 字符上限，
+  保留非空、单行、finding ID、完整裁决及反证要求。仅修改 review 的格式说明；
+  审计、修复、闭环、双 clean、暂停及总审计预算沿用 @14。@14 及以前的快照
+  继续按原长度限制解析。执行器继续显式关闭 Apps 工具加载。
 
 - 2026-09-16：保留 `spec-mrac-v1@1`；新增 `spec-flow-simple-v1@1`、显式协议选择、
   固定附件、分阶段输入、裁决/修复记录和 PAUSED 恢复。

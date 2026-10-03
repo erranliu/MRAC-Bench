@@ -2,12 +2,17 @@
 
 单次 runner 和受管批次均支持为 `codex exec` 显式选择 Responses provider。Codex 仍负责工具调用与执行环境，MRAC runner 仍负责协议和预算，调度核心不包含 GLM 或其他模型的特殊分支。
 
+Benchmark 子进程显式设置 `features.apps=false`，关闭默认的 Apps/连接器工具加载，
+适用于原生 OpenAI 和自定义 provider；runner 指定的仓库及候选 Spec MCP 仍可加载。
+每次调用的 `invocation.json` 保存 `apps_enabled: false`。此执行条件不修改审计提示词、
+协议版本、评审理由的格式规则或审计预算。
+
 OpenRouter 配置见 [openrouter.yaml](../examples/providers/openrouter.yaml)，使用环境变量
 `OPENROUTER_API_KEY`。官方 OpenRouter endpoint 的每次 API 调用自动采集返回的实际费用，
 详情见[统计费用说明](Case%20Statistics%20Guide.md#openrouter-实际费用)。
 
 随附 [OpenRouter 模型目录](../examples/providers/openrouter-models.json) 配置
-`deepseek/deepseek-v4.1-flash`，支持 low/high/max。`apply_patch_tool_type` 显式设置为
+`deepseek/deepseek-v4.1-flash` 与 `z-ai/glm-5.3-flash`，均支持 low/high/max。`apply_patch_tool_type` 显式设置为
 `null`，避免 Codex 发送部分 OpenRouter 上游不支持的 `custom` freeform 工具声明。
 文件操作使用现有 shell 和 MCP；审计提示词、流程及预算保持原配置。
 Codex 0.159.2 的该枚举只有 freeform，不能把它改成字符串 function。

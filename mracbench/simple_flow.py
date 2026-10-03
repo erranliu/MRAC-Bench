@@ -660,6 +660,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 allow_fence=protocol.version >= 7,
                 allow_trailing_fence=protocol.version >= 8,
                 bind_invocation=protocol.version >= 12,
+                max_reason_chars=None if protocol.version >= 15 else 500,
             )
             save_evidence(store, evidence, f"reviews/{stage}.json", review)
         except BenchError as exc:

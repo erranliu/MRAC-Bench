@@ -57,7 +57,9 @@ def decode(text, *, allow_fence=False, allow_trailing_fence=False):
     )
 
 
-def parse_findings(text, audit_id, *, allow_fence=False, allow_trailing_fence=False, bind_invocation=False):
+def parse_findings(
+    text, audit_id, *, allow_fence=False, allow_trailing_fence=False, bind_invocation=False
+):
     try:
         data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"findings"} if bind_invocation else {"audit_id", "findings"})
@@ -80,7 +82,16 @@ def assign_ids(audit):
     return [{"finding_id": f"F{i}", **row} for i, row in enumerate(audit["findings"], 1)]
 
 
-def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_fence=False, bind_invocation=False):
+def parse_review(
+    text,
+    audit_id,
+    findings,
+    *,
+    allow_fence=False,
+    allow_trailing_fence=False,
+    bind_invocation=False,
+    max_reason_chars=500,
+):
     try:
         data = decode(text, allow_fence=allow_fence, allow_trailing_fence=allow_trailing_fence)
         obj(data, {"decisions"} if bind_invocation else {"audit_id", "decisions"})
@@ -109,7 +120,9 @@ def parse_review(text, audit_id, findings, *, allow_fence=False, allow_trailing_
                 if outcome == "rejected":
                     reason = decision.get("reason")
                     nonempty(reason)
-                    if len(reason) > 500 or reason != " ".join(reason.split()):
+                    if (
+                        max_reason_chars is not None and len(reason) > max_reason_chars
+                    ) or reason != " ".join(reason.split()):
                         raise ValueError("Rejection needs one concise evidence-based reason")
                 else:
                     if by_id[fid]["severity"] != "P3" or "reason" in decision:
