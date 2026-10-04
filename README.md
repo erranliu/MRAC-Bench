@@ -189,6 +189,7 @@ Windows sandbox 可通过单次运行的 `--windows-sandbox elevated|unelevated`
 ## 历史测试结果
 
 - [Simple v11：case 1 测试统计](doc/benchmarks/simple-v11-case1-results.md)：按模型和 thinking effort 汇总结果、耗时及平均修复轮次，附可复算的逐次运行数据。
+- [Spec v4：case3 模型测试结果](doc/benchmarks/spec-v4-case3-results.md)：7 个模型各 2 次，按统一口径汇总收敛、未收敛、耗时和修复轮次；附完整逐次 JSON 快照。实际测试协议为历史 `spec-mrac-v2@4`。
 
 ## 验证与开发
 
