@@ -1,4 +1,3 @@
-import json
 import time
 from pathlib import Path
 
@@ -63,8 +62,7 @@ class Scheduler:
                 return
             if current["state"] == "CANCEL_REQUESTED":
                 state = "CANCELLED"
-            self.store.update(current, state, **changes)
-            self.store.db.execute("UPDATE attempts SET state=? WHERE id=?", (state, attempt["id"]))
+            self.store.finish_attempt(current, attempt["id"], state, **changes)
         if state == "CANCELLED" and hasattr(self.backend, "cancelled"):
             self.backend.cancelled(current)
         if key := case_key(current):
@@ -218,11 +216,7 @@ class Scheduler:
                         "directory": str(directory),
                         "created_at": now(),
                     }
-                    self.store.db.execute(
-                        "INSERT INTO attempts VALUES(?,?,?,?,?)",
-                        (attempt_id, batch["id"], task["id"], "STARTING", json.dumps(attempt)),
-                    )
-                    task = self.store.update(task, "STARTING", attempt_id=attempt_id)
+                    task = self.store.claim(task, attempt)
                 try:
                     request = self.backend.request(task, attempt)
                     atomic(directory / "request.json", request)

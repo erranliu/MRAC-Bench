@@ -1,7 +1,7 @@
 import json
 from contextlib import contextmanager
 
-from mrac_contracts.execution import ContractError, database, now
+from mrac_contracts.execution import ContractError, database, digest, now
 from mrac_resources.home import home
 
 
@@ -53,18 +53,108 @@ class Store:
             json.loads(row[0]) for row in self.db.execute("SELECT data FROM batches ORDER BY rowid")
         ]
 
+    def batch_request(self, request_id):
+        row = self.db.execute(
+            "SELECT id,request_hash FROM batches WHERE request_id=?", (request_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    def publish_batch(self, plan):
+        """Publish the frozen batch, tasks and submit event in one transaction."""
+        with self.transaction():
+            self.db.execute(
+                "INSERT INTO batches VALUES(?,?,?,?)",
+                (plan["id"], plan["request_id"], plan["request_hash"], json.dumps(plan)),
+            )
+            for task in plan["tasks"]:
+                self.db.execute(
+                    "INSERT INTO tasks VALUES(?,?,?,?,?)",
+                    (task["id"], plan["id"], "QUEUED", 0, json.dumps(task)),
+                )
+            self.event(
+                plan["id"],
+                "submitted",
+                {
+                    "request_id": plan["request_id"],
+                    "task_count": len(plan["tasks"]),
+                },
+            )
+
+    @staticmethod
+    def _task(row):
+        return json.loads(row["data"]) | {"state": row["state"], "revision": row["revision"]}
+
     def tasks(self, batch_id=None):
         query, parameters = "SELECT * FROM tasks", ()
         if batch_id:
             query += " WHERE batch_id=?"
             parameters = (batch_id,)
-        return [
-            json.loads(row["data"]) | {"state": row["state"], "revision": row["revision"]}
-            for row in self.db.execute(query + " ORDER BY rowid", parameters)
-        ]
+        return [self._task(row) for row in self.db.execute(query + " ORDER BY rowid", parameters)]
 
     def task(self, batch_id, task_id):
-        return next((t for t in self.tasks(batch_id) if t["id"] == task_id), None)
+        row = self.db.execute(
+            "SELECT * FROM tasks WHERE batch_id=? AND id=?", (batch_id, task_id)
+        ).fetchone()
+        return self._task(row) if row else None
+
+    def _require_transaction(self):
+        if not self.db.in_transaction:
+            raise ContractError("This write requires a Store transaction")
+
+    def claim(self, task, attempt):
+        """Claim inside the scheduler's capacity/dependency transaction."""
+        self._require_transaction()
+        self.db.execute(
+            "INSERT INTO attempts VALUES(?,?,?,?,?)",
+            (attempt["id"], task["batch_id"], task["id"], "STARTING", json.dumps(attempt)),
+        )
+        return self.update(task, "STARTING", attempt_id=attempt["id"])
+
+    def finish_attempt(self, task, attempt_id, state, **changes):
+        self._require_transaction()
+        updated = self.update(task, state, **changes)
+        self.db.execute("UPDATE attempts SET state=? WHERE id=?", (state, attempt_id))
+        return updated
+
+    def operation_result(self, operation_id, request_hash):
+        row = self.db.execute(
+            "SELECT request_hash,result FROM operations WHERE id=?", (operation_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        if row["request_hash"] != request_hash:
+            raise ContractError("Operation ID reused with different request")
+        return json.loads(row["result"])
+
+    def record_operation(self, operation_id, request_hash, result):
+        self._require_transaction()
+        self.db.execute(
+            "INSERT INTO operations VALUES(?,?,?)",
+            (operation_id, request_hash, json.dumps(result)),
+        )
+
+    def import_resource_event(self, batch_id, event):
+        """Deduplicate resource events in the caller's export transaction."""
+        self._require_transaction()
+        operation_id = f"{event['id']}-{batch_id}"
+        if self.db.execute("SELECT 1 FROM operations WHERE id=?", (operation_id,)).fetchone():
+            return False
+        self.event(batch_id, event["kind"], event)
+        self.record_operation(operation_id, digest(event), {"imported": True})
+        return True
+
+    def events(self, batch_id):
+        return [
+            {
+                "event_id": f"{batch_id}:{row['seq']}",
+                "seq": row["seq"],
+                "at": row["at"],
+                **json.loads(row["data"]),
+            }
+            for row in self.db.execute(
+                "SELECT * FROM events WHERE batch_id=? ORDER BY seq", (batch_id,)
+            )
+        ]
 
     def update(self, task, state, **changes):
         updated = {**task, **changes, "state": state, "revision": task["revision"] + 1}

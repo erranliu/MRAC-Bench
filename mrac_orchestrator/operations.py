@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 from mrac_contracts.execution import OCCUPIED, ContractError, atomic, digest, identifier, new_id
@@ -25,11 +24,9 @@ def operate(
             "input": digest(Path(input_file).read_bytes()) if input_file else None,
         }
     )
-    old = store.db.execute("SELECT * FROM operations WHERE id=?", (operation_id,)).fetchone()
-    if old:
-        if old["request_hash"] != request_hash:
-            raise ContractError("Operation ID reused with different request")
-        return json.loads(old["result"])
+    old = store.operation_result(operation_id, request_hash)
+    if old is not None:
+        return old
     snapshot = store.task(batch_id, task_id)
     if not snapshot:
         raise ContractError("Unknown task")
@@ -39,11 +36,9 @@ def operate(
         # Checkout/evidence inspection may be expensive. Never hold the scheduler writer lock.
         public = backend.inspect(snapshot["run_dir"])
     with store.transaction():
-        old = store.db.execute("SELECT * FROM operations WHERE id=?", (operation_id,)).fetchone()
-        if old:
-            if old["request_hash"] != request_hash:
-                raise ContractError("Operation ID reused with different request")
-            return json.loads(old["result"])
+        old = store.operation_result(operation_id, request_hash)
+        if old is not None:
+            return old
         task = store.task(batch_id, task_id)
         if not task:
             raise ContractError("Unknown task")
@@ -112,9 +107,7 @@ def operate(
             result = store.update(task, "QUEUED", **changes)
         else:
             raise ContractError("Unknown operation")
-        store.db.execute(
-            "INSERT INTO operations VALUES(?,?,?)", (operation_id, request_hash, json.dumps(result))
-        )
+        store.record_operation(operation_id, request_hash, result)
         store.event(
             batch_id,
             "operation",

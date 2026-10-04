@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import signal
@@ -16,6 +15,8 @@ from mrac_contracts.providers import (
     validate_selection,
 )
 
+from .codex_command import build_command, command_files, mcp_arguments, provider_arguments
+from .codex_events import summarize_events
 from .models import AgentRequest, AgentResult
 from .openrouter_accounting import OpenRouterAccounting, uses_openrouter
 from .redaction import RedactedPipe
@@ -91,51 +92,11 @@ class CodexExecAdapter:
         self.windows_sandbox = windows_sandbox
 
     def provider_arguments(self, raw):
-        if self.provider is None:
-            return []
-        provider = self.provider
-        values = {"model_provider": provider["id"]}
-        for key in ("name", "base_url", "wire_api", "env_key"):
-            if provider.get(key) is not None:
-                values[f"model_providers.{provider['id']}.{key}"] = provider[key]
-        values[f"model_providers.{provider['id']}.requires_openai_auth"] = False
-        if "model_catalog" in provider:
-            path = raw / "model-catalog.json"
-            write_json(path, provider["model_catalog"])
-            values["model_catalog_json"] = str(path.resolve())
-        return [
-            part
-            for key, value in values.items()
-            for part in ("-c", f"{key}={json.dumps(value, ensure_ascii=False)}")
-        ]
+        if self.provider and "model_catalog" in self.provider:
+            write_json(raw / "model-catalog.json", self.provider["model_catalog"])
+        return provider_arguments(self.provider, raw)
 
-    @staticmethod
-    def mcp_arguments(servers):
-        values = {}
-        for name, config in (servers or {}).items():
-            if not name.replace("_", "").isalnum() or not isinstance(config, dict):
-                raise ValueError("Invalid MCP server configuration")
-            if not isinstance(config.get("command"), str) or not config["command"]:
-                raise ValueError(f"MCP server {name} requires an executable command")
-            if not isinstance(config.get("args", []), list) or any(
-                not isinstance(value, str) for value in config.get("args", [])
-            ):
-                raise ValueError(f"MCP server {name} args must be strings")
-            for key, value in config.items():
-                if key not in {
-                    "command",
-                    "args",
-                    "enabled",
-                    "startup_timeout_sec",
-                    "tool_timeout_sec",
-                }:
-                    raise ValueError(f"Unsupported MCP server option: {key}")
-                values[f"mcp_servers.{name}.{key}"] = value
-        return [
-            part
-            for key, value in values.items()
-            for part in ("-c", f"{key}={json.dumps(value, ensure_ascii=False)}")
-        ]
+    mcp_arguments = staticmethod(mcp_arguments)
 
     def command(self) -> list[str]:
         return self._command or resolve_command(self.executable)
@@ -188,43 +149,12 @@ class CodexExecAdapter:
                 output_path = Path(final_directory.name) / "final.txt"
             if self.provider:
                 invocation["provider"] = provider_identity(self.provider)
-            command = [
-                *self.command(),
-                "exec",
-                "--ignore-user-config",
-                "--ignore-rules",
-                "--ephemeral",
-                "--sandbox",
-                "read-only" if request.readonly else "workspace-write",
-                "--json",
-                "--color",
-                "never",
-                "-c",
-                'approval_policy="never"',
-                "-c",
-                'web_search="disabled"',
-                "-c",
-                "project_doc_max_bytes=0",
-                "-c",
-                "features.multi_agent=false",
-                "-c",
-                "features.apps=false",
-                "--cd",
-                str(request.workspace),
-                "--output-last-message",
-                str(output_path),
-            ]
+            base_command = self.command()
             if os.name == "nt":
-                # --ignore-user-config also drops the native Windows sandbox
-                # implementation. Select it explicitly so workspace-write can
-                # execute file tools inside the isolated repair checkout.
-                command += ["-c", f'windows.sandbox="{self.windows_sandbox}"']
                 invocation["windows_sandbox"] = self.windows_sandbox
-            if request.output_schema is not None:
-                schema_path = raw / "output-schema.json"
-                write_json(schema_path, request.output_schema)
-                command += ["--output-schema", str(schema_path)]
-            command += self.provider_arguments(raw)
+            for path, content in command_files(request, self.provider).items():
+                write_json(path, content)
+            endpoint = None
             if uses_openrouter(self.provider):
                 if not secret:
                     raise ProviderError("OpenRouter accounting requires an env_key credential")
@@ -233,18 +163,15 @@ class CodexExecAdapter:
                 )
                 endpoint = collector.__enter__()
                 accounting = collector
-                command += [
-                    "-c",
-                    f"model_providers.{self.provider['id']}.base_url={json.dumps(endpoint)}",
-                ]
-            command += self.mcp_arguments(request.mcp_servers)
-            if request.model:
-                command += ["--model", request.model]
-            if request.reasoning_effort:
-                command += ["-c", f'model_reasoning_effort="{request.reasoning_effort}"']
-            if request.skip_git_repo_check:
-                command.append("--skip-git-repo-check")
-            command.append("-")
+            command = build_command(
+                base_command,
+                request,
+                output_path,
+                provider=self.provider,
+                windows=os.name == "nt",
+                windows_sandbox=self.windows_sandbox,
+                accounting_endpoint=endpoint,
+            )
             invocation["command"] = command
             write_json(raw / "invocation.json", invocation)
             with (
@@ -315,15 +242,18 @@ class CodexExecAdapter:
             result.duration_seconds = time.monotonic() - start
             result.stdout = (raw / "stdout.txt").read_text(encoding="utf-8", errors="replace")
             result.stderr = (raw / "stderr.txt").read_text(encoding="utf-8", errors="replace")
-            if (
-                result.error_type is None
-                and "blocked by policy" in (result.stdout + "\n" + result.stderr).casefold()
-            ):
-                result.error_type = "EXECUTION_POLICY_ERROR"
-                result.error_message = (
-                    "Codex could not execute a requested repository command because the "
-                    "execution policy rejected it; see raw stderr/stdout"
-                )
+            events = summarize_events(
+                result.stdout,
+                result.stderr,
+                error_type=result.error_type,
+                error_message=result.error_message,
+            )
+            result.usage = events.usage
+            result.error_type, result.error_message = events.error_type, events.error_message
+            if events.thread_id is not None:
+                invocation["thread_id"] = events.thread_id
+            if events.command_executions:
+                invocation["command_executions"] = events.command_executions
             invocation.update(
                 ended_at=utc_now(),
                 exit_code=result.exit_code,
@@ -332,54 +262,5 @@ class CodexExecAdapter:
                 error_message=result.error_message,
             )
             result.metadata = invocation
-            # Usage is optional executor metadata, never an MRAC decision input.
-            for line in result.stdout.splitlines():
-                try:
-                    event = json.loads(line)
-                    if isinstance(event, dict) and event.get("type") == "turn.completed":
-                        result.usage = event.get("usage")
-                    if (
-                        isinstance(event, dict)
-                        and event.get("type") == "thread.started"
-                        and isinstance(event.get("thread_id"), str)
-                    ):
-                        invocation["thread_id"] = event["thread_id"]
-                    item = event.get("item") if isinstance(event, dict) else None
-                    if (
-                        isinstance(item, dict)
-                        and event.get("type") == "item.completed"
-                        and item.get("type") == "mcp_tool_call"
-                        and item.get("status") == "failed"
-                        and result.error_type in {None, "AGENT_ERROR"}
-                        and "timed out awaiting tools/call"
-                        in str((item.get("error") or {}).get("message", ""))
-                    ):
-                        result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
-                        result.error_message = f"MCP tool timed out: {item.get('server')}/{item.get('tool')}; see raw stdout"
-                    if (
-                        isinstance(item, dict)
-                        and event.get("type") == "item.completed"
-                        and item.get("type") in {"command_execution", "shell"}
-                    ):
-                        invocation.setdefault("command_executions", []).append(
-                            {
-                                "command": str(item.get("command", ""))[:4096],
-                                "exit_code": item.get("exit_code"),
-                            }
-                        )
-                        if (
-                            result.error_type in {None, "AGENT_ERROR"}
-                            and item.get("status") == "failed"
-                            and "Failed to create unified exec process: sandbox provisioning failed"
-                            in str(item.get("aggregated_output", ""))
-                        ):
-                            result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
-                            result.error_message = (
-                                "Codex could not provision the sandbox for a repository command; "
-                                "see raw stdout and the Windows sandbox setup logs"
-                            )
-                except ValueError:
-                    pass
-            invocation.update(error_type=result.error_type, error_message=result.error_message)
             write_json(raw / "invocation.json", invocation)
         return result

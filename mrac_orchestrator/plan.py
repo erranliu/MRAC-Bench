@@ -1,5 +1,4 @@
 import itertools
-import json
 from pathlib import Path
 
 from mrac_contracts.execution import (
@@ -35,9 +34,7 @@ def submit(store, backend, source, project, request_id, codex="codex"):
     raw = source.read_bytes()
     request_hash = digest({"bytes": raw.hex(), "project": str(project), "codex": codex})
     with file_lock(store.home / "control/submit.lock"):
-        existing = store.db.execute(
-            "SELECT id,request_hash FROM batches WHERE request_id=?", (request_id,)
-        ).fetchone()
+        existing = store.batch_request(request_id)
         if existing:
             if existing["request_hash"] != request_hash:
                 raise ContractError("Batch request ID reused with different configuration")
@@ -201,17 +198,5 @@ def submit(store, backend, source, project, request_id, codex="codex"):
             }
             atomic(orchestration / "request.yaml", raw, raw=True)
             atomic(plan_path, plan)
-        with store.transaction():
-            store.db.execute(
-                "INSERT INTO batches VALUES(?,?,?,?)",
-                (batch_id, request_id, request_hash, json.dumps(plan)),
-            )
-            for task in plan["tasks"]:
-                store.db.execute(
-                    "INSERT INTO tasks VALUES(?,?,?,?,?)",
-                    (task["id"], batch_id, "QUEUED", 0, json.dumps(task)),
-                )
-            store.event(
-                batch_id, "submitted", {"request_id": request_id, "task_count": len(plan["tasks"])}
-            )
+        store.publish_batch(plan)
         return plan

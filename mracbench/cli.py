@@ -6,13 +6,11 @@ from mrac_contracts.execution import ContractError
 from mrac_contracts.providers import load_provider
 
 from .codex_exec import CodexExecAdapter, saved_windows_sandbox
-from .exec_flow import inspect_exec, resume_exec
 from .models import BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID
 from .providers import saved_provider
-from .repository_flow import inspect_repository_run, render_report, resume_repository_run
 from .runner import run_case
-from .simple_flow import resume_run
+from .workflows import saved_workflow
 
 
 def main(argv=None) -> int:
@@ -93,20 +91,14 @@ def main(argv=None) -> int:
 
                 return managed_resume(args.run_dir, args.input_file, args.spec_file)
         if args.command in {"status", "report", "abort"}:
-            inspect = (
-                inspect_exec
-                if (args.run_dir / "exec-state.json").is_file()
-                else inspect_repository_run
-            )
-            path, result = inspect(
+            workflow = saved_workflow(args.run_dir)
+            path, result = workflow.inspect(
                 args.run_dir, abort_reason=args.reason if args.command == "abort" else None
             )
             if args.command == "report":
-                if inspect is inspect_repository_run:
-                    # Historical runs are rendered in memory, never rewritten or migrated.
-                    print(render_report(result))
-                elif (path / "run-report.md").exists():
-                    print((path / "run-report.md").read_text(encoding="utf-8"))
+                report = workflow.report(path, result)
+                if report:
+                    print(report)
         elif args.command == "resume":
             provider = saved_provider(args.run_dir)
             adapter = CodexExecAdapter(
@@ -114,21 +106,9 @@ def main(argv=None) -> int:
                 provider=provider,
                 windows_sandbox=saved_windows_sandbox(args.run_dir),
             )
-            if (args.run_dir / "exec-state.json").is_file():
-                if args.spec_file:
-                    raise BenchError(
-                        "RESUME_ERROR",
-                        "Execution Spec is immutable; select a new Spec in a new run",
-                    )
-                path, result = resume_exec(args.run_dir, adapter, args.input_file)
-            elif (args.run_dir / "repository-state.json").is_file():
-                path, result = resume_repository_run(
-                    args.run_dir, adapter, args.input_file, args.spec_file
-                )
-            else:
-                if args.input_file or args.spec_file:
-                    raise BenchError("RESUME_ERROR", "Input/Spec import is supported only by v2")
-                path, result = resume_run(args.run_dir, adapter)
+            path, result = saved_workflow(args.run_dir).resume(
+                args.run_dir, adapter, args.input_file, args.spec_file
+            )
         else:
             provider = load_provider(args.provider_file) if args.provider_file else None
             adapter = CodexExecAdapter(

@@ -20,11 +20,12 @@ from mrac_resources.home import inventory
 from mrac_resources.locks import BusyError, file_lock
 from mrac_resources.repositories import RepoPool
 
-from .cases import load_case, positive_int
+from .cases import load_case
 from .codex_exec import CodexExecAdapter
+from .configuration import resolve_limits
 from .models import BenchError, RunConfig
 from .protocol import load_protocol
-from .revisions import revision_policy
+from .workflows import saved_workflow
 
 
 def code_identity():
@@ -71,34 +72,25 @@ def validate(bundle, settings):
         settings = {**settings, "provider": provider}
     case = load_case(bundle, settings["case_id"])
     protocol = load_protocol(bundle, settings["protocol_id"])
-    maximum = settings.get("max_rounds")
-    if protocol.workflow == "exec-mrac":
-        if maximum is not None and maximum != 6:
-            raise ContractError("exec-mrac requires six-audit batches")
-        maximum = 6
-        spec = bundle / "execution-spec.md"
-        if not spec.read_text(encoding="utf-8-sig").strip():
-            raise ContractError("Execution Spec is required")
-    elif (bundle / "execution-spec.md").exists():
-        raise ContractError("Execution Spec supplied for a non-exec protocol")
-    elif maximum is None:
-        maximum = (
-            protocol.max_audit_rounds
-            if protocol.workflow == "repository-spec-freeze"
-            else case.max_audit_rounds or protocol.max_audit_rounds
+    spec = bundle / "execution-spec.md"
+    try:
+        effective = resolve_limits(
+            case,
+            protocol,
+            max_rounds=settings.get("max_rounds"),
+            timeout_seconds=settings.get("timeout_seconds"),
+            spec_file=spec if protocol.workflow == "exec-mrac" or spec.exists() else None,
         )
-    if maximum is not None:
-        positive_int(maximum, "max_rounds")
-    timeout_value = settings.get("timeout_seconds")
-    timeout = positive_int(
-        case.timeout_seconds if timeout_value is None else timeout_value, "timeout"
-    )
+    except BenchError as exc:
+        raise ContractError(str(exc)) from exc
+    if protocol.workflow == "exec-mrac" and not spec.read_text(encoding="utf-8-sig").strip():
+        raise ContractError("Execution Spec is required")
     return {
         **settings,
-        "max_rounds": maximum,
-        "timeout_seconds": timeout,
+        "max_rounds": effective.max_audit_rounds,
+        "timeout_seconds": effective.timeout_seconds,
         "protocol_version": protocol.version,
-        "repository_access": ("writable" if protocol.policy.writable_checkout else "read_only"),
+        "repository_access": ("read_only" if effective.readonly else "writable"),
     }
 
 
@@ -123,44 +115,7 @@ def inspect(path):
                 for name, expected in read_json(seal_file)["files"].items():
                     if digest((path / name).read_bytes()) != expected:
                         raise ContractError(f"Sealed run evidence changed: {name}")
-        if (path / "exec-state.json").exists():
-            from .exec_flow import load_exec, verify_checkout
-
-            store, result, case, _, config = load_exec(path)
-            if result["flow"].get("candidate") is not None:
-                verify_checkout(store, result, case, config)
-            else:
-                raise ContractError("No verified writable candidate checkpoint")
-            actions = ["recover"] if result["status"] not in {"CONVERGED", "ABORTED"} else []
-            if result["status"] == "PAUSED":
-                actions = ["continue"]
-            if result["status"] == "NEEDS_INPUT":
-                actions = ["answer"]
-        elif (path / "repository-state.json").exists():
-            from .repository_flow import load_session
-
-            _, result, _, _, _, _ = load_session(path)
-            actions = (
-                ["recover"]
-                if result["status"] not in {"CONVERGED", "NON_CONVERGED", "ABORTED"}
-                else []
-            )
-            if result["status"] == "PAUSED":
-                actions = ["continue"]
-            if result["status"] == "NEEDS_INPUT":
-                actions = ["answer"]
-        else:
-            result = read_json(path / "result.json")
-            actions = (
-                ["continue"]
-                if result.get("protocol_id") == "spec-flow-simple-v1"
-                and result.get("flow", {}).get("schema_version") == 3
-                and revision_policy(
-                    "spec-init-freeze", result.get("protocol_version", 0)
-                ).managed_continue
-                and result["status"] == "PAUSED"
-                else []
-            )
+        result, actions = saved_workflow(path).managed_inspection(path)
         artifact = result.get("final_artifact")
         artifacts = []
         if artifact and (path / artifact).is_file():
@@ -279,25 +234,9 @@ def execute(request, adapter=None):
                 response = Path(request["input_file"]) if request.get("input_file") else None
                 if response and digest(response.read_bytes()) != request["input_sha256"]:
                     raise ContractError("Answer changed")
-                if (run_dir / "exec-state.json").exists():
-                    from .exec_flow import resume_exec
-
-                    _, result = resume_exec(
-                        run_dir,
-                        adapter,
-                        response,
-                        recover=request["operation"] in {"recover", "answer"},
-                    )
-                elif (run_dir / "repository-state.json").exists():
-                    from .repository_flow import resume_repository_run
-
-                    _, result = resume_repository_run(run_dir, adapter, response)
-                elif request["operation"] == "continue":
-                    from .simple_flow import resume_run
-
-                    _, result = resume_run(run_dir, adapter)
-                else:
-                    raise ContractError("RECOVERY_UNSUPPORTED")
+                _, result = saved_workflow(run_dir).resume(
+                    run_dir, adapter, response, operation=request["operation"]
+                )
             status.update(
                 lifecycle=outcome(result["status"]),
                 runner_status=result["status"],
