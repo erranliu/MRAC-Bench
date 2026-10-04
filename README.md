@@ -2,7 +2,7 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2@4` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@14` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@5` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@14` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
@@ -24,11 +24,38 @@ uv run python -m mracbench run --case psf__requests-1963 --protocol spec-mrac-v1
 
 内置 case 来自 [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite)，固定 Requests 的 commit `110048f9837f8441ea536804115e80b69f400277`。只需读取目标源码，不安装或运行目标仓库的依赖和测试。
 
+`cases/steerline-pr196/` 保存 SteerLine PR #196 的初始 Spec 和三份固定附件，
+仓库基线是实现前提交 `6dce3cf1abf293e18bd78f92677c72a3fa2f0210`。
+可用源包 ID `steerline-pr196` 直接运行；注册时沿用显示名称 `case3`：
+
+```powershell
+uv run mracbench case register cases/steerline-pr196 --name case3 --request-id register-case3-v1
+```
+
+显示名称与源包 ID 分别保存；永久编号以注册返回值为准。
+
 从其他项目制作 case：将 [casemaker.md](doc/casemaker.md) 交给该项目中的 AI，指定已定稿的 Spec 文件和实现前的仓库 commit。制作器原样封装 Spec，不从上下文补写需求；将生成的 case 目录复制到本仓库的 `cases/` 下即可。
 
 `task.file` 指向固定输入文件（新 case 使用 `spec.md`），必填 `task.sha256` 为该文件原始字节的 SHA-256。loader 在启动 agent 前校验；缺失、格式错误或不匹配均返回 `CASE_ERROR`。已有 case 需补齐哈希。Spec 或基线变化时递增 case version；本仓库通过 `.gitattributes` 保留 case 文件的原始换行。
 
 ## 配置
+
+在制作或注册 case 前，可以直接试跑固定的 Spec 和实现前仓库快照：
+
+```powershell
+uv run mracbench trial --name candidate-pr --spec-file C:\inputs\spec.md --repository-url https://github.com/owner/repo.git --commit <完整实现前SHA> --model gpt-6-luna --reasoning-effort high
+```
+
+`trial` 默认使用 Spec flow（`spec-mrac-v2`），与普通 `run` 一致：每轮结合固定仓库
+审计，所有 findings（含 P3）直接进入修复；同一 Spec 与基线上连续两次零 findings
+才收敛，无独立裁决。仅显式指定 `--protocol spec-flow-simple-v1` 才运行 Simple flow。
+它复用所选协议完整的审计、修复和冻结流程，不创建 `cases/` 包、不注册 case、
+不分配 case 版本。输入按原始字节
+保存在 run 的 `input/task.md` 和 `input/trial.yaml` 中，结果标记 `input_kind: trial`。
+`--spec-path` 指定隔离修复 checkout 内的 Spec 路径（默认 `SPEC.md`）；引用约束可重复
+传 `--related-spec <文件>`。输出目录、预算、超时、provider 以及暂停恢复规则与普通 run
+一致。试跑结束后再决定是否用原始输入制作 case；修复后的 Spec 是 run 产物，不能自动
+替代原始测试输入。需要固定 PR 初始状态时，应先核对最初 head 和实现前 parent SHA。
 
 ```bash
 uv run python -m mracbench run \
@@ -56,7 +83,7 @@ uv run python -m mracbench run \
 | `--workspace-dir` | checkout 根目录，默认 `<project-root>/.workspaces`；exec 每个 run 有独立可写目录 |
 | `--codex-executable` | Codex 可执行文件名称/路径，默认 `codex` |
 
-v2 的总审计上限默认为无，仅使用 `--max-rounds` 或协议配置，不读取 case 的历史轮数预算。两个旧 Spec 协议仍按命令参数 → case limits → protocol limits（默认 8）。exec-mrac-v1 每批固定 6 次 audit，耗尽后显式 resume 增加 6 次。超时优先级仍为命令参数 → case limits（默认 1800 秒）。连续 clean 固定要求 2 次。
+v2 的总审计硬上限默认 8 轮，不读取 case 的历史轮数预算；显式 `--max-rounds` 可选择其他总预算。失败但已启动的 audit 也计入预算，clean 不重置累计轮数；@5 起第 8 轮审计完成即结束：满足双 clean 则 `CONVERGED`，否则 `NON_CONVERGED`，保存该轮全部 findings，不执行该轮修复，也不启动第 9 轮。resume 不扩充预算。历史 @2–@4 仍按其保存的预算完成最后一轮修复，不因新规则回写旧结果。两个旧 Spec 协议仍按命令参数 → case limits → protocol limits（默认 8）。exec-mrac-v1 每批固定 6 次 audit，耗尽后显式 resume 增加 6 次。超时优先级仍为命令参数 → case limits（默认 1800 秒）。连续 clean 固定要求 2 次。
 
 运行退出码：`0` 为 `CONVERGED`，`1` 为 `NON_CONVERGED`，`2` 为配置/执行/校验错误，`3` 为 `PAUSED`；v2 另有 `5`（`NEEDS_INPUT`，阶段仍是 FIX）和 `6`（`ABORTED`）。当前协议不产生 BLOCKED；历史 spec-flow-simple-v1@1 的 BLOCKED 结果仅保留查看。v2 最少两次 audit 即可冻结。
 

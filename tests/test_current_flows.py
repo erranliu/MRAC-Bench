@@ -186,7 +186,7 @@ def test_repository_current_pause_after_six_repairs_and_resume(current_project, 
         CurrentAgent([repository_audit("P1"), repair] * 6),
     )
     assert result["status"] == "PAUSED", result["error"]
-    assert result["protocol_version"] == 4 and result["repair_rounds"] == 6
+    assert result["protocol_version"] == 5 and result["repair_rounds"] == 6
     assert result["flow"]["pending_fix"] is None
     canonical = json.loads((path / "repository-state.json").read_bytes())
     assert canonical["schema_version"] == 3 and canonical["result"] == result

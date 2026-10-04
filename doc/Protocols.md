@@ -13,7 +13,7 @@ Spec、Plan 和验收报告保留为历史设计记录。
 
 | ID | version | workflow | 输入含义 | 起点 | 收敛含义 |
 |---|---:|---|---|---|---|
-| `spec-mrac-v2` | 4 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
+| `spec-mrac-v2` | 5 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
 | `spec-mrac-v1` | 1 | `generate-audit-repair` | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
 | `spec-flow-simple-v1` | 14 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
 | `exec-mrac-v1` | 1 | `exec-mrac` | 显式选定的执行 Spec | 独立可写 checkout 中实施代码 | 同一 Spec、基线和完整产品候选快照连续两轮零问题 |
@@ -212,7 +212,7 @@ spec-mrac-v2，只有显式选择 exec-mrac-v1 才进入可写阶段。
 
 ## 默认协议：spec-mrac-v2
 
-当前修订为 `spec-mrac-v2@4`，参考 1df0 checkout 的
+当前修订为 `spec-mrac-v2@5`，参考 1df0 checkout 的
 `.codex/skills/mrac-spec/SKILL.md`、`scripts/mracspec.py` 和
 `references/controller.md`，固定来源 commit 为
 `a21a921d4ed9039bce606b35e1c3267a0dea0de6`。来源和 Bench 状态版本均为 3；
@@ -285,8 +285,12 @@ frozen hash 和固定基线。冻结记录的是审计员的设计可实施性�
 连续六轮包含 P0–P2 findings，完成第六轮全部修复后 PAUSED。clean 或 P3-only
 重置此计数；P3-only 仍进入 FIX。暂停后显式 resume 清零计数并开始新审计。
 
-默认没有 audit 总硬上限，不读取 case 的 max_audit_rounds；仅显式 --max-rounds
-或协议 limits 设置总上限。最后一轮的全部修复仍完成，随后耗尽则 NON_CONVERGED。
+新 run 默认有 8 轮 audit 总硬上限，不读取 case 的 max_audit_rounds；显式
+--max-rounds 可覆盖总预算。已启动的失败 audit 也计数，clean 不重置累计预算。
+@5 起最后一轮审计完成即结束，不执行该轮修复、不启动第 9 轮。若最后一轮满足
+双 clean，则 CONVERGED；否则 NON_CONVERGED，全部 findings 保留在审计记录和
+pending fix 中，最终 Spec 是该轮实际审计的版本。无 findings 但仅一次 clean 也结束。
+历史 @2–@4 继续使用其保存的预算并完成最后一轮修复；不会套用 @5 的停止语义。
 硬预算终止优先于六轮暂停，resume 不扩充预算。NEEDS_INPUT 保留 FIX，回答后先完成
 修复再检查预算。每次模型调用超时按 CLI / case 生效，默认 1800 秒。
 
@@ -553,6 +557,11 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 产物和审计范围不同，不能把两个协议的“收敛轮数”当作同一标尺直接排名。
 
 ## 变更记录
+
+- 2026-10-04：`spec-mrac-v2@5` 默认总审计预算 8 轮；最后一轮审计完成即结束，
+  不执行该轮修复。满足双 clean 则收敛，否则 NON_CONVERGED 并保留所有未修复
+  findings。已启动的失败审计计数，clean 不重置总预算，resume 不扩预算。
+  历史 @2–@4 沿用保存的原预算及最后一轮修复规则。
 
 - 2026-10-02：`spec-flow-simple-v1@15` 解除 rejected reason 的 500 字符上限，
   保留非空、单行、finding ID、完整裁决及反证要求。仅修改 review 的格式说明；

@@ -1,0 +1,23 @@
+id: steerline-pr196
+version: 1
+repository:
+  url: https://github.com/erranliu/SteerLine.git
+  commit: 6dce3cf1abf293e18bd78f92677c72a3fa2f0210
+task:
+  file: spec.md
+  sha256: 63077ed93d2106435ff1c0a97170e0aa7efd4303d7c69be2fcd379de86e733be
+track:
+  type: spec
+  path: docs/spec/core-decoupling-11-tui.spec.md
+related_specs:
+- file: related/core-decoupling-10-client.spec.md
+  sha256: 676efe210c98fe8c60e1758c233a7dd33eaed428e9b3a77d6de73ffeb7799553
+- file: related/core-maintenance-constraints.md
+  sha256: 5761046aaab4db8ad1f32606bf27e77e4e45edd38f53bb1bf24565ae1d9f4cd1
+- file: related/core-decoupling-constraints.md
+  sha256: 96fd9d8236225d41098d632dc9e7920a2056e9f06fa22fb80eee15c3ca1f407e
+metadata:
+  title: 'TUI与中心实现解耦（PR #196 初始 Spec）'
+  pull_request: https://github.com/erranliu/SteerLine/pull/196
+  initial_head: 6dd144b0b5f0de21e023675d15271aa700bdc6ba
+  source_spec_path: docs/spec/core-decoupling-11-tui.spec.md

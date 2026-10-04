@@ -7,14 +7,16 @@ from mrac_contracts.providers import ProviderError, normalize_provider, provider
 
 from .cases import load_case
 from .configuration import resolve_limits
-from .models import AgentAdapter, BenchError, RunConfig
+from .models import AgentAdapter, BenchError, Case, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID, load_protocol
 from .providers import check_adapter
 from .runs import RunStore
 from .workflows import FLOW_REGISTRY
 
 
-def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
+def run_case(
+    config: RunConfig, adapter: AgentAdapter, *, input_case: Case | None = None
+) -> tuple[Path, dict]:
     config = replace(config, provider=normalize_provider(config.provider))
     check_adapter(adapter, config.provider, config.model, config.reasoning_effort)
     started = time.monotonic()
@@ -44,7 +46,12 @@ def run_case(config: RunConfig, adapter: AgentAdapter) -> tuple[Path, dict]:
     store.save_metadata()
     store.checkpoint(result, active_stage)
     try:
-        case = load_case(config.project_root, config.case_id)
+        case = (
+            input_case if input_case is not None else load_case(config.project_root, config.case_id)
+        )
+        if "trial.yaml" in case.snapshots:
+            result["input_kind"] = "trial"
+            store.metadata["input_kind"] = "trial"
         for name, content in case.snapshots.items():
             store.snapshot(name, content)
         if config.provider is not None:

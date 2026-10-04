@@ -20,6 +20,7 @@ class RevisionPolicy:
     repository_audit_mcp: bool = False
     historical_repository_review: bool = False
     managed_continue: bool = False
+    finish_last_audit_repair: bool = True
 
     @property
     def file_repair(self) -> bool:
@@ -58,10 +59,11 @@ def revision_policy(workflow: str, version: int) -> RevisionPolicy:
         )
     if workflow == "repository-spec-freeze":
         return RevisionPolicy(
-            executable=version in {2, 3, 4},
+            executable=version in {2, 3, 4, 5},
             repair_mode="checkout" if version >= 3 else "json",
             repository_audit_mcp=version >= 4,
             historical_repository_review=version == 1,
+            finish_last_audit_repair=version < 5,
         )
     if workflow == "exec-mrac":
         return RevisionPolicy(repair_mode="checkout")

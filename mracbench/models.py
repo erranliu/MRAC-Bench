@@ -14,7 +14,7 @@ class BenchError(Exception):
 @dataclass(frozen=True)
 class Case:
     id: str
-    version: int
+    version: int | None
     repository_url: str
     commit: str
     task: str

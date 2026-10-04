@@ -26,7 +26,8 @@ def named_project_files(baseline, text):
 
 
 def spec_path(case):
-    track = load_yaml(case.snapshots["case.yaml"], "case.yaml")["track"]
+    descriptor = "trial.yaml" if "trial.yaml" in case.snapshots else "case.yaml"
+    track = load_yaml(case.snapshots[descriptor], descriptor)["track"]
     name = track.get("path", "SPEC.md")
     if (
         not isinstance(name, str)
