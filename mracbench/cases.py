@@ -1,5 +1,6 @@
 import hashlib
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import yaml
@@ -159,9 +160,50 @@ def parse_case(case_id: str, raw: bytes, read) -> Case:
 
 
 def case_from_snapshots(case_id: str, snapshots: dict[str, bytes]) -> Case:
-    raw = snapshots["case.yaml"]
+    trial = "trial.yaml" in snapshots
+    raw = snapshots["trial.yaml" if trial else "case.yaml"]
     data = load_yaml(raw, "case.yaml")
     files = {data["task"]["file"]: snapshots["task.md"]}
     for index, entry in enumerate(data.get("related_specs", []), 1):
         files[entry["file"]] = snapshots[f"related-spec-{index:02d}.md"]
-    return parse_case(case_id, raw, files.__getitem__)
+    case = parse_case(case_id, raw, files.__getitem__)
+    if trial:
+        case.snapshots["trial.yaml"] = case.snapshots.pop("case.yaml")
+        case = replace(case, version=None)
+    return case
+
+
+def load_trial(name, spec_file, repository_url, commit, spec_name="SPEC.md", related_files=()):
+    """Pin direct inputs in run evidence without creating or registering a case."""
+    identifier(name, "trial name")
+    try:
+        raw = spec_file.read_bytes()
+        files = {"spec.md": raw}
+        related = []
+        for index, path in enumerate(related_files, 1):
+            key = f"related-{index:02d}.md"
+            content = path.read_bytes()
+            files[key] = content
+            related.append({"file": key, "sha256": hashlib.sha256(content).hexdigest()})
+    except OSError as exc:
+        raise BenchError("CASE_ERROR", f"Cannot read trial input: {exc}") from exc
+    data = {
+        "id": name,
+        "version": 1,
+        "repository": {"url": repository_url, "commit": commit},
+        "task": {"file": "spec.md", "sha256": hashlib.sha256(raw).hexdigest()},
+        "track": {"type": "spec", "path": spec_name},
+        "related_specs": related,
+        "source_files": {
+            "spec": str(spec_file.resolve()),
+            "related": [str(path.resolve()) for path in related_files],
+        },
+    }
+    descriptor = yaml.safe_dump(data, allow_unicode=True).encode("utf-8")
+    case = parse_case(name, descriptor, files.__getitem__)
+    case.snapshots["trial.yaml"] = case.snapshots.pop("case.yaml")
+    case = replace(case, version=None)
+    from .spec_checkout import spec_path
+
+    spec_path(case)
+    return case

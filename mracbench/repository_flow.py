@@ -34,7 +34,7 @@ from .transitions import repository_after_repair, repository_audited, spec_repai
 
 WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
-PROTOCOL_VERSION = 4
+PROTOCOL_VERSION = 5
 RESUMABLE = {
     "EXECUTION_ENVIRONMENT_ERROR",
     "PROVIDER_ERROR",
@@ -111,7 +111,7 @@ def save_artifact(store, name, raw):
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
     if not protocol.policy.executable:
-        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@4")
+        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@5")
     with session_lock(base.path):
         base.snapshot(
             "execution-config.json",
@@ -425,9 +425,19 @@ class Engine:
     def drive(self, maximum):
         while self.result["status"] == "RUNNING":
             self.guard()
+            if (
+                not self.protocol.policy.finish_last_audit_repair
+                and maximum is not None
+                and self.result["audit_rounds"] >= maximum
+            ):
+                self.result.update(
+                    status="NON_CONVERGED",
+                    terminal_reason="Audit budget exhausted; final audit findings retained without repair",
+                )
+                return
             if self.flow["phase"] == "FIX":
                 self.repair(maximum)
-                # Finish every repair even at the last explicitly budgeted audit.
+                # Historical @2-@4 finish repair after their last budgeted audit.
                 continue
             if maximum is not None and self.result["audit_rounds"] >= maximum:
                 self.result.update(
@@ -589,7 +599,7 @@ def load_session(path, *, allow_historical=False):
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
         # State 2 belongs to the historical adjudicated @1 protocol; @2+ uses state 3.
-        expected_protocol_version = {1} if version == 2 else {2, 3, PROTOCOL_VERSION}
+        expected_protocol_version = {1} if version == 2 else {2, 3, 4, PROTOCOL_VERSION}
         if (
             protocol.version not in expected_protocol_version
             or result["protocol_version"] != protocol.version

@@ -5,6 +5,7 @@ from pathlib import Path
 from mrac_contracts.execution import ContractError
 from mrac_contracts.providers import load_provider
 
+from .cases import load_trial
 from .codex_exec import CodexExecAdapter, saved_windows_sandbox
 from .models import BenchError, RunConfig
 from .protocol import DEFAULT_PROTOCOL_ID
@@ -36,23 +37,23 @@ def main(argv=None) -> int:
         "Registered single runs: run --managed --case <number-or-name> --model <model>.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
-    run = sub.add_parser("run", help="Run one Spec-MRAC case")
-    run.add_argument("--case", required=True, dest="case_id")
+    common = argparse.ArgumentParser(add_help=False)
+    run = common
     run.add_argument(
         "--protocol",
         dest="protocol_id",
-        help=f"Protocol for this run (default: {DEFAULT_PROTOCOL_ID}; independent of case)",
+        help=f"Protocol (run/trial default: {DEFAULT_PROTOCOL_ID})",
     )
     run.add_argument("--project-root", type=Path, default=Path.cwd())
     run.add_argument("--runs-dir", type=Path)
     run.add_argument("--workspace-dir", type=Path)
-    run.add_argument(
-        "--spec-file", type=Path, help="Required immutable execution Spec for exec-mrac"
-    )
+    run.add_argument("--spec-file", type=Path, help="Required input Spec for trial or exec-mrac")
     run.add_argument(
         "--model", help="Explicit model; otherwise Codex built-in default (user config ignored)"
     )
-    run.add_argument("--max-rounds", type=int, help="Total audit cap; v2 has no default hard cap")
+    run.add_argument(
+        "--max-rounds", type=int, help="Override total audit cap (Spec flow default: 8)"
+    )
     run.add_argument("--timeout", type=int, dest="timeout_seconds")
     run.add_argument(
         "--reasoning-effort",
@@ -62,6 +63,14 @@ def main(argv=None) -> int:
     run.add_argument("--codex-executable", default="codex")
     run.add_argument("--windows-sandbox", choices=("elevated", "unelevated"), default="elevated")
     run.add_argument("--provider-file", type=Path, help="Explicit Responses provider YAML/JSON")
+    run = sub.add_parser("run", parents=[common], help="Run one Spec-MRAC case")
+    run.add_argument("--case", required=True, dest="case_id")
+    trial = sub.add_parser("trial", parents=[common], help="Test a Spec before creating a case")
+    trial.add_argument("--name", default="trial", dest="case_id", help="Label for run evidence")
+    trial.add_argument("--repository-url", required=True)
+    trial.add_argument("--commit", required=True, help="Full implementation-before commit SHA")
+    trial.add_argument("--spec-path", default="SPEC.md", help="Spec path in the repair checkout")
+    trial.add_argument("--related-spec", type=Path, action="append", default=[])
     resume = sub.add_parser(
         "resume", help="Resume a supported saved run without changing its protocol"
     )
@@ -110,6 +119,21 @@ def main(argv=None) -> int:
                 args.run_dir, adapter, args.input_file, args.spec_file
             )
         else:
+            input_case = None
+            if args.command == "trial":
+                args.protocol_id = args.protocol_id or DEFAULT_PROTOCOL_ID
+                if args.spec_file is None:
+                    raise BenchError("CASE_ERROR", "trial requires --spec-file")
+                if args.protocol_id not in {"spec-flow-simple-v1", "spec-mrac-v2"}:
+                    raise BenchError("CASE_ERROR", "trial supports only Spec audit/freeze flows")
+                input_case = load_trial(
+                    args.case_id,
+                    args.spec_file,
+                    args.repository_url,
+                    args.commit,
+                    args.spec_path,
+                    args.related_spec,
+                )
             provider = load_provider(args.provider_file) if args.provider_file else None
             adapter = CodexExecAdapter(
                 args.codex_executable, provider=provider, windows_sandbox=args.windows_sandbox
@@ -125,10 +149,10 @@ def main(argv=None) -> int:
                 args.timeout_seconds,
                 args.protocol_id,
                 args.reasoning_effort,
-                args.spec_file,
+                args.spec_file if args.command == "run" else None,
                 provider=provider,
             )
-            path, result = run_case(config, adapter)
+            path, result = run_case(config, adapter, input_case=input_case)
     except (BenchError, ContractError) as exc:
         print(f"{getattr(exc, 'kind', 'CONTRACT_ERROR')}: {exc}")
         return 2
