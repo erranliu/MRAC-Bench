@@ -11,8 +11,9 @@ from test_inputs import change_case
 from mracbench.cli import main
 from mracbench.codex_exec import CodexExecAdapter
 from mracbench.models import AgentResult, BenchError
-from mracbench.repository_flow import inspect_repository_run, resume_repository_run, session_lock
+from mracbench.repository_flow import inspect_repository_run, resume_repository_run
 from mracbench.runner import run_case
+from mracbench.session import session_lock
 
 
 def payload(request):
@@ -370,10 +371,10 @@ def test_interrupted_started_audit_is_counted_once_and_live_child_prevents_resum
     path, result = run_case(repo_config, StubAgent([interrupted]))
     assert result["status"] == "INTERNAL_ERROR"
     assert result["audit_rounds"] == 0
-    monkeypatch.setattr("mracbench.repository_flow.pid_alive", lambda pid: True)
+    monkeypatch.setattr("mracbench.session.pid_alive", lambda pid: True)
     with pytest.raises(BenchError, match="still alive"):
         resume_repository_run(path, StubAgent([]))
-    monkeypatch.setattr("mracbench.repository_flow.pid_alive", lambda pid: False)
+    monkeypatch.setattr("mracbench.session.pid_alive", lambda pid: False)
     _, result = resume_repository_run(path, StubAgent(clean() + clean()))
     assert result["status"] == "CONVERGED", result["error"]
     assert result["audit_rounds"] == 3

@@ -8,11 +8,11 @@ from conftest import StubAgent as BaseStubAgent
 from test_inputs import change_case
 
 from mracbench.cases import load_case
-from mracbench.evidence import run_lock
 from mracbench.machine import inspect
 from mracbench.models import AgentResult, BenchError
 from mracbench.repository import prepare_repository
 from mracbench.runner import run_case
+from mracbench.session import run_lock
 from mracbench.simple_audit import parse_closure_v6, parse_review
 from mracbench.simple_flow import resume_run, verify_repository_read_probe
 

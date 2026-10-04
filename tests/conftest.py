@@ -42,6 +42,9 @@ def project(tmp_path):
     case_dir = root / "cases" / "sample"
     case_dir.mkdir(parents=True)
     shutil.copytree(PROJECT / "protocols", root / "protocols")
+    # These suites exercise saved Simple @9 (6e6e638) and repository @2 (c0623ab)
+    # contracts. Keep their complete historical prompts pinned as current YAML evolves.
+    shutil.copytree(PROJECT / "tests/fixtures/protocols", root / "protocols", dirs_exist_ok=True)
     task_raw = b"Correct the behavior of app.py.\n"
     data = {
         "id": "sample",
@@ -54,6 +57,12 @@ def project(tmp_path):
     (case_dir / "case.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
     (case_dir / "task.md").write_bytes(task_raw)
     return root
+
+
+@pytest.fixture
+def current_project(project):
+    shutil.copytree(PROJECT / "protocols", project / "protocols", dirs_exist_ok=True)
+    return project
 
 
 @pytest.fixture

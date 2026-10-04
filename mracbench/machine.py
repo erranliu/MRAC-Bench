@@ -24,6 +24,7 @@ from .cases import load_case, positive_int
 from .codex_exec import CodexExecAdapter
 from .models import BenchError, RunConfig
 from .protocol import load_protocol
+from .revisions import revision_policy
 
 
 def code_identity():
@@ -97,13 +98,7 @@ def validate(bundle, settings):
         "max_rounds": maximum,
         "timeout_seconds": timeout,
         "protocol_version": protocol.version,
-        "repository_access": (
-            "writable"
-            if protocol.workflow == "exec-mrac"
-            or (protocol.workflow == "repository-spec-freeze" and protocol.version >= 3)
-            or (protocol.workflow == "spec-init-freeze" and protocol.version >= 10)
-            else "read_only"
-        ),
+        "repository_access": ("writable" if protocol.policy.writable_checkout else "read_only"),
     }
 
 
@@ -160,7 +155,9 @@ def inspect(path):
                 ["continue"]
                 if result.get("protocol_id") == "spec-flow-simple-v1"
                 and result.get("flow", {}).get("schema_version") == 3
-                and result.get("protocol_version") in {4, 5, 6, 7, 8, 9, 10, 11}
+                and revision_policy(
+                    "spec-init-freeze", result.get("protocol_version", 0)
+                ).managed_continue
                 and result["status"] == "PAUSED"
                 else []
             )

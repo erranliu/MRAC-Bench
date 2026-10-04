@@ -12,9 +12,16 @@ from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import protocol_from_snapshots, render_exec_prompt
 from .providers import check_adapter
-from .repository_flow import SessionStore, read_spec, session_lock, unfinished_invocation
-from .runs import RunStore, atomic_text, utc_now, write_json
+from .runs import RunStore, atomic_text, utc_now
+from .session import (
+    CheckpointStore,
+    read_spec,
+    reconcile_invocation,
+    session_lock,
+    unfinished_invocation,
+)
 from .simple_audit import assign_ids
+from .transitions import exec_audited, exec_stop
 
 WORKFLOW = "exec-mrac"
 BATCH_SIZE = 6
@@ -31,36 +38,6 @@ RESUMABLE = {
 }
 
 
-class ExecStore(SessionStore):
-    def checkpoint(self, result, stage):
-        write_json(
-            self.path / "exec-state.json",
-            {
-                "schema_version": 1,
-                "result": result,
-                "evidence_sha256": self.evidence.known,
-                "stage": stage,
-                "updated_at": utc_now(),
-            },
-        )
-        self.base.checkpoint(result, stage)
-
-
-def record_bytes(store, name, content):
-    path = store.evidence.path(name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("xb") as stream:
-        stream.write(content)
-    store.evidence.record(name)
-    return name
-
-
-def record_json(store, name, data):
-    return record_bytes(
-        store, name, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    )
-
-
 def save_candidate(store, result, snapshot):
     current = result["flow"]["candidate"]
     if current and current["signature"] == snapshot["signature"]:
@@ -68,9 +45,8 @@ def save_candidate(store, result, snapshot):
     result["flow"]["candidate_sequence"] += 1
     number = result["flow"]["candidate_sequence"]
     folder = f"candidates/{number:04d}"
-    patch = record_bytes(store, folder + "/changes.patch", snapshot["patch"])
-    manifest = record_json(
-        store,
+    patch = store.evidence.write_bytes(folder + "/changes.patch", snapshot["patch"])
+    manifest = store.evidence.write_json(
         folder + "/manifest.json",
         # Keep identity metadata, not a duplicate inventory of the checkout.
         {
@@ -125,7 +101,7 @@ def run_exec(config, adapter, base, case, protocol, result, timeout, started):
         evidence = Evidence(base.path)
         for name in base.metadata["input_sha256"]:
             evidence.record("input/" + name)
-        store = ExecStore(base, evidence)
+        store = CheckpointStore(base, evidence, filename="exec-state.json", schema_version=1)
         result.update(
             workflow=WORKFLOW,
             artifact_type="code",
@@ -231,7 +207,7 @@ class ExecEngine:
         stage, text = self.call(role, inputs)
         outcome = parse_code_result(text, pending["findings"] if pending else None)
         folder = "repairs" if repair else "implementations"
-        record_json(self.store, f"{folder}/{stage}.json", outcome)
+        self.store.evidence.write_json(f"{folder}/{stage}.json", outcome)
         self.flow["validation"] = outcome["validation"]
         if outcome["disposition"] == "needs_input":
             self.flow["questions"] = outcome["questions"]
@@ -279,57 +255,39 @@ class ExecEngine:
             audit = parse_exec_audit(
                 text, audit_id, self.result["spec_sha256"], candidate["signature"]
             )
-            item["audit"] = record_json(self.store, f"audits/{stage}.json", audit)
+            item["audit"] = self.store.evidence.write_json(f"audits/{stage}.json", audit)
         except BenchError as exc:
             item["status"] = exc.kind
             raise
         findings = assign_ids(audit)
-        self.flow["active_audit"] = None
         item.update(issue_count=len(findings), status="issues_found" if findings else "clean")
-        if findings:
-            self.flow.update(
-                phase="FIX", clean=[], pending_fix={"audit_id": audit_id, "findings": findings}
-            )
-        else:
-            clean = {
-                "audit_id": audit_id,
-                "auditor_id": auditor_id,
-                "candidate_sha256": candidate["signature"],
-                "spec_sha256": self.result["spec_sha256"],
-                "base_head": self.case.commit,
-            }
-            if self.flow["clean"] and any(
-                self.flow["clean"][-1][key] != clean[key]
-                for key in ("candidate_sha256", "spec_sha256", "base_head")
-            ):
-                self.flow["clean"] = []
-            self.flow["clean"] = (self.flow["clean"] + [clean])[-2:]
-            if len(self.flow["clean"]) == 2:
-                self.flow["phase"] = "CONVERGED"
-                self.result.update(
-                    status="CONVERGED",
-                    convergence_round=self.result["audit_rounds"],
-                    final_candidate_sha256=candidate["signature"],
-                    clean_audit_ids=[row["audit_id"] for row in self.flow["clean"]],
-                    terminal_reason="Two zero-finding audits on the same Spec and candidate",
-                )
+        transition = exec_audited(
+            self.flow,
+            audit_id,
+            auditor_id,
+            findings,
+            candidate["signature"],
+            self.result["spec_sha256"],
+            self.case.commit,
+            self.result["audit_rounds"],
+        )
+        self.flow.update(transition.flow)
+        self.result.update(transition.result)
         item["clean_streak"] = len(self.flow["clean"])
         self.store.checkpoint(self.result, stage + ":parsed")
 
     def drive(self):
         while self.result["status"] == "RUNNING":
             self.store.evidence.check()
-            if self.result["audit_rounds"] >= self.flow["audit_limit"]:
+            transition = exec_stop(self.result["audit_rounds"], self.flow["audit_limit"])
+            if transition.result:
                 self.repo.expected_signature = self.flow["candidate"]["signature"]
                 self.repo.expected_workspace = None
                 if self.repo.inspect()["violation"]:
                     raise BenchError("PROTOCOL_VIOLATION", "Checkout changed before budget pause")
                 # Preserve both pending findings and a possible first clean. Do not repair here.
-                self.result.update(
-                    status="PAUSED", terminal_reason="Six-audit batch exhausted; resume adds six"
-                )
-                record_json(
-                    self.store,
+                self.result.update(transition.result)
+                self.store.evidence.write_json(
                     f"pauses/pause-{self.flow['resume_count'] + 1:02d}.json",
                     {
                         "at": utc_now(),
@@ -371,7 +329,7 @@ def execute_exec(
             if json.loads(store.evidence.path(control_file).read_bytes()) != repo.control:
                 raise BenchError("PROTOCOL_VIOLATION", "Git baseline/config/index/refs changed")
         else:
-            record_json(store, control_file, repo.control)
+            store.evidence.write_json(control_file, repo.control)
         result["final_checkout"] = str(repo.path)
         store.metadata["repository"]["workspace"] = str(repo.path)
         store.save_metadata()
@@ -501,7 +459,13 @@ def load_exec(path):
             Path(pinned["execution_spec"]["source"]),
             provider=settings.get("provider"),
         )
-        return ExecStore(base, evidence), result, case, protocol, config
+        return (
+            CheckpointStore(base, evidence, filename="exec-state.json", schema_version=1),
+            result,
+            case,
+            protocol,
+            config,
+        )
     except (OSError, KeyError, TypeError, ValueError) as exc:
         raise BenchError("RESUME_ERROR", f"Cannot validate exec run: {exc}") from exc
 
@@ -519,27 +483,6 @@ def verify_checkout(store, result, case, config):
             "CANDIDATE_CHANGED", "Saved code candidate changed; old clean audits cannot be reused"
         )
     return repo
-
-
-def reconcile_failed_call(store, result, invocation):
-    flow = result["flow"]
-    call = flow["last_call"]
-    if call:
-        field = f"{call['role']}_rounds"
-        if invocation and invocation.get("started") and result[field] == call["counter_before"]:
-            result[field] += 1
-            if call["role"] == "audit" and flow["active_audit"]:
-                result["trajectory"].append(dict(flow["active_audit"]))
-        for path in sorted((store.path / "raw" / call["stage"]).rglob("*")):
-            name = path.relative_to(store.path).as_posix()
-            if path.is_file() and name not in store.evidence.known:
-                store.evidence.record(name)
-        flow["last_call"] = None
-    if flow["active_audit"]:
-        for row in result["trajectory"]:
-            if row["audit_id"] == flow["active_audit"]["audit_id"]:
-                row["status"] = "abandoned"
-        flow.update(active_audit=None, clean=[])
 
 
 def resume_exec(path, adapter, input_file=None, *, recover=False):
@@ -567,15 +510,14 @@ def resume_exec(path, adapter, input_file=None, *, recover=False):
         started = time.monotonic()
         flow = result["flow"]
         number = flow["resume_count"] + 1
-        record_json(
-            store,
+        store.evidence.write_json(
             f"resumptions/resume-{number:02d}.json",
             {
                 "at": utc_now(),
                 "previous_result": result,
             },
         )
-        reconcile_failed_call(store, result, invocation)
+        reconcile_invocation(store, result, invocation)
         if result["audit_rounds"] >= flow["audit_limit"] and recover:
             flow["resume_count"] = number
             result.update(status="PAUSED", terminal_reason="Recovery does not extend audit budget")
@@ -591,7 +533,7 @@ def resume_exec(path, adapter, input_file=None, *, recover=False):
             flow["budget_extensions"].append(extension)
             flow["audit_limit"] += 6
         if response is not None:
-            name = record_bytes(store, f"responses/response-{number:02d}.md", response)
+            name = store.evidence.write_bytes(f"responses/response-{number:02d}.md", response)
             flow["responses"].append(name)
         flow["resume_count"] = number
         result.update(status="RUNNING", error=None, terminal_reason=None)
@@ -625,8 +567,7 @@ def inspect_exec(path, *, abort_reason=None):
             if not abort_reason.strip() or result["status"] in {"CONVERGED", "ABORTED"}:
                 raise BenchError("RESUME_ERROR", "Abort requires a reason and a nonterminal run")
             invocation = unfinished_invocation(store, result)
-            record_json(
-                store,
+            store.evidence.write_json(
                 f"resumptions/abort-{result['flow']['resume_count'] + 1:02d}.json",
                 {
                     "at": utc_now(),
@@ -634,7 +575,7 @@ def inspect_exec(path, *, abort_reason=None):
                     "previous_result": result,
                 },
             )
-            reconcile_failed_call(store, result, invocation)
+            reconcile_invocation(store, result, invocation)
             result["flow"]["phase"] = "ABORTED"
             result.update(status="ABORTED", terminal_reason=abort_reason)
             store.finish(result)

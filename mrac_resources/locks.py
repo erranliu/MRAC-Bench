@@ -8,6 +8,21 @@ class BusyError(OSError):
 
 
 @contextmanager
+def marker_lock(path):
+    """Exclusive marker for legacy runs; retain crash markers for manual recovery."""
+    path = Path(path)
+    try:
+        with path.open("x", encoding="utf-8") as stream:
+            stream.write(str(os.getpid()))
+    except FileExistsError as exc:
+        raise BusyError(f"Resource locked: {path}") from exc
+    try:
+        yield
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@contextmanager
 def file_lock(path, *, shared=False, blocking=True):
     """Kernel owned lock; Windows LockFileEx supports real shared locks."""
     path = Path(path)

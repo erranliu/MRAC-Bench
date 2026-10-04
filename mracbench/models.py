@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
+from .revisions import RevisionPolicy, revision_policy
+
 
 class BenchError(Exception):
     def __init__(self, kind: str, message: str):
@@ -31,6 +33,10 @@ class ProtocolDefinition:
     snapshots: dict[str, bytes]
     workflow: str = "generate-audit-repair"
     output_schemas: dict[str, dict] = field(default_factory=dict)
+    policy: RevisionPolicy = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "policy", revision_policy(self.workflow, self.version))
 
 
 @dataclass(frozen=True)
