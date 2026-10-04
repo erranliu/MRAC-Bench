@@ -35,29 +35,11 @@ def export_batch(store, batch_id):
                 resource.get("users", [])
             ):
                 continue
-            operation_id = f"{event['id']}-{batch_id}"
             with store.transaction():
-                if not store.db.execute(
-                    "SELECT 1 FROM operations WHERE id=?", (operation_id,)
-                ).fetchone():
-                    store.event(batch_id, event["kind"], event)
-                    store.db.execute(
-                        "INSERT INTO operations VALUES(?,?,?)",
-                        (operation_id, digest(event), json.dumps({"imported": True})),
-                    )
+                store.import_resource_event(batch_id, event)
         with store.transaction():
             data = summary(store, batch_id)
-            events = [
-                {
-                    "event_id": f"{batch_id}:{row['seq']}",
-                    "seq": row["seq"],
-                    "at": row["at"],
-                    **json.loads(row["data"]),
-                }
-                for row in store.db.execute(
-                    "SELECT * FROM events WHERE batch_id=? ORDER BY seq", (batch_id,)
-                )
-            ]
+            events = store.events(batch_id)
             attempts = store.attempts(batch_id)
         high = events[-1]["seq"] if events else 0
         data.update(event_high_water=high, generated_at=now())

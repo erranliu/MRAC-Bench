@@ -73,6 +73,12 @@ workflow，不支持在 YAML 中编排任意阶段图。
 及异常退出后需人工确认的残留锁语义。
 v2 的历史 state 2 对应协议 @1，只允许只读查看；协议 @2–@4 对应 state 3，不能混用。
 
+`configuration.py` 统一单次 runner 和受管 machine 的预算、超时及仓库权限解析。
+`workflows.py` 登记各 workflow 的启动、状态查看、报告和续跑入口，保留 canonical
+checkpoint 优先于 result 投影的选择顺序。Exec 的显式 continue 与 recover/answer
+由同一入口传递，recover/answer 仍不增加 audit 预算；其他协议沿用原有续跑边界。
+旧 generate/audit/repair 执行体位于 `legacy_flow.py`，也通过同一注册表启动。
+
 历史契约测试固定完整的 Simple @9（commit `6e6e638`）和 v2 @2（commit `c0623ab`）
 协议包于 `tests/fixtures/protocols`，当前协议测试另行加载项目协议。新增修订时应同时
 维护版本策略边界测试和当前流程测试，避免提示词更新让历史恢复测试失去原始语义。
