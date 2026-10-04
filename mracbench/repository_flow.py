@@ -1,9 +1,8 @@
 """Repository-backed MRAC-Spec: every audit finding enters FIX without adjudication."""
 
 import json
-import os
 import time
-from contextlib import contextmanager, nullcontext
+from contextlib import nullcontext
 from pathlib import Path
 
 from .cases import case_from_snapshots, load_yaml, positive_int
@@ -20,10 +19,18 @@ from .providers import check_adapter
 from .repository import git, prepare_repository
 from .repository_audit import parse_audit, parse_repair
 from .repository_mcp import server_config
-from .runs import RunStore, atomic_text, utc_now, write_json
+from .runs import RunStore, atomic_text, utc_now
+from .session import (
+    CheckpointStore,
+    read_spec,
+    reconcile_invocation,
+    session_lock,
+    unfinished_invocation,
+)
 from .simple_audit import assign_ids, decode
 from .simple_repair import unified_spec_diff
 from .spec_checkout import SpecCheckout, spec_path
+from .transitions import repository_after_repair, repository_audited, spec_repaired
 
 WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
@@ -46,113 +53,9 @@ RESUMABLE = {
 }
 
 
-@contextmanager
-def session_lock(path):
-    """OS lock releases on crash; checkpoint files do not act as live-process locks."""
-    with (path / ".repository-run.lock").open("a+b") as stream:
-        stream.seek(0, os.SEEK_END)
-        if stream.tell() == 0:
-            stream.write(b"0")
-            stream.flush()
-        stream.seek(0)
-        try:
-            if os.name == "nt":
-                import msvcrt
-
-                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-
-                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            raise BenchError("RESUME_ERROR", "Run is still active") from exc
-        try:
-            yield
-        finally:
-            if os.name == "nt":
-                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
-
-
-def pid_alive(pid):
-    if not isinstance(pid, int) or pid <= 0:
-        return False
-    if os.name == "nt":
-        import ctypes
-        from ctypes import wintypes
-
-        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-        kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-        kernel.OpenProcess.restype = wintypes.HANDLE
-        kernel.CloseHandle.argtypes = [wintypes.HANDLE]
-        kernel.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
-        handle = kernel.OpenProcess(0x1000, False, pid)
-        if not handle:
-            return ctypes.get_last_error() != 87  # Access denied is not proof of termination.
-        try:
-            code = wintypes.DWORD()
-            if not kernel.GetExitCodeProcess(handle, ctypes.byref(code)):
-                return True
-            return code.value == 259
-        finally:
-            kernel.CloseHandle(handle)
-    try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-
-
-class SessionStore:
-    """Checkpoint hook for Invoker; the v2 checkpoint is the atomic canonical state."""
-
-    def __init__(self, base, evidence):
-        self.base = base
-        self.evidence = evidence
-
-    def __getattr__(self, name):
-        return getattr(self.base, name)
-
-    def checkpoint(self, result, stage):
-        write_json(
-            self.path / "repository-state.json",
-            {
-                "schema_version": STATE_VERSION,
-                "result": result,
-                "evidence_sha256": self.evidence.known,
-                "stage": stage,
-                "updated_at": utc_now(),
-            },
-        )
-        self.base.checkpoint(result, stage)
-
-    def finish(self, result):
-        self.base.metadata["evidence_sha256"] = self.evidence.known
-        self.base.finish(result)
-        self.checkpoint(result, "finished")
-
-
 def save_record(store, folder, name, data):
     relative = f"{folder}/{name}.json"
-    path = store.evidence.path(relative)
-    path.parent.mkdir(exist_ok=True)
-    with path.open("x", encoding="utf-8", newline="\n") as stream:
-        stream.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-    store.evidence.record(relative)
-    return relative
-
-
-def read_spec(path):
-    try:
-        raw = path.read_bytes()
-        if not raw.decode("utf-8-sig").strip():
-            raise BenchError("AUDIT_STALE", "Spec or supplied input is empty")
-        return raw
-    except (OSError, UnicodeError) as exc:
-        raise BenchError("RESUME_ERROR", f"Cannot read UTF-8 Spec/input: {path}: {exc}") from exc
+    return store.evidence.write_json(relative, data)
 
 
 def parse_needs_input(text, audit_id):
@@ -203,14 +106,11 @@ def verify_audit_repository_reads(raw, head):
 
 def save_artifact(store, name, raw):
     relative = f"artifacts/{name}.md"
-    with store.evidence.path(relative).open("xb") as stream:
-        stream.write(raw)
-    store.evidence.record(relative)
-    return relative
+    return store.evidence.write_bytes(relative, raw)
 
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
-    if protocol.version not in {2, 3, PROTOCOL_VERSION}:
+    if not protocol.policy.executable:
         raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@4")
     with session_lock(base.path):
         base.snapshot(
@@ -233,7 +133,9 @@ def run_repository_flow(config, adapter, base, case, protocol, result, maximum, 
         evidence = Evidence(base.path)
         for name in base.metadata["input_sha256"]:
             evidence.record("input/" + name)
-        store = SessionStore(base, evidence)
+        store = CheckpointStore(
+            base, evidence, filename="repository-state.json", schema_version=STATE_VERSION
+        )
         raw = case.snapshots["task.md"]
         current = save_artifact(store, "spec.initial", raw)
         working = evidence.path("working/spec.md")
@@ -345,7 +247,7 @@ class Engine:
         inputs.update(audit_id=pending["audit_id"], findings=pending["findings"])
         self.flow["repair_sequence"] += 1
         stage = f"repair-{self.flow['repair_sequence']:02d}"
-        if self.protocol.version >= 3:
+        if self.protocol.policy.writable_checkout:
             checkout_path = self.store.path / "checkout"
             checkout = {}
             current = self.store.evidence.path("working/spec.md").read_bytes()
@@ -392,14 +294,8 @@ class Engine:
                     raise BenchError("FIX_INVALID", str(exc)) from exc
                 diff_name = f"repairs/{stage}.diff"
                 candidate_name = f"raw/{stage}/candidate.md"
-                with self.store.evidence.path(candidate_name).open("xb") as stream:
-                    stream.write(candidate)
-                self.store.evidence.record(candidate_name)
-                diff_path = self.store.evidence.path(diff_name)
-                diff_path.parent.mkdir(exist_ok=True)
-                with diff_path.open("x", encoding="utf-8", newline="\n") as stream:
-                    stream.write(unified_spec_diff(current, candidate))
-                self.store.evidence.record(diff_name)
+                self.store.evidence.write_bytes(candidate_name, candidate)
+                self.store.evidence.write_text(diff_name, unified_spec_diff(current, candidate))
                 repair = {
                     "audit_id": pending["audit_id"],
                     "disposition": "continue",
@@ -418,7 +314,9 @@ class Engine:
             self.flow["questions"] = repair["questions"]
             self.result.update(status="NEEDS_INPUT", terminal_reason=repair["reason"])
             return
-        raw = candidate if self.protocol.version >= 3 else repair["spec"].encode("utf-8")
+        raw = (
+            candidate if self.protocol.policy.writable_checkout else repair["spec"].encode("utf-8")
+        )
         if digest(raw) == self.flow["artifact_sha256"]:
             raise BenchError("FIX_INVALID", "Repair did not change Spec bytes")
         artifact = save_artifact(self.store, f"spec.round-{self.flow['repair_sequence']:02d}", raw)
@@ -427,21 +325,13 @@ class Engine:
             if row["audit_id"] == pending["audit_id"]:
                 row["repair_artifact"] = artifact
         self.result["final_artifact"] = artifact
-        self.flow.update(
-            phase="AUDIT", artifact_sha256=digest(raw), pending_fix=None, clean=[], questions=[]
-        )
+        self.flow.update(spec_repaired(digest(raw), repository=True).flow)
         self.store.checkpoint(self.result, stage + ":saved")
         # Pause AFTER the sixth repair, never with an unclosed finding.
-        if maximum is not None and self.result["audit_rounds"] >= maximum:
-            self.result.update(
-                status="NON_CONVERGED", terminal_reason="Explicit audit budget exhausted"
-            )
-            return
-        if self.flow["failure_streak"] >= 6:
-            self.flow["phase"] = "PAUSED"
-            self.result.update(
-                status="PAUSED", terminal_reason="Six rounds with P0-P2 findings; repairs recorded"
-            )
+        transition = repository_after_repair(self.flow, self.result["audit_rounds"], maximum)
+        self.flow.update(transition.flow)
+        self.result.update(transition.result)
+        if self.result["status"] == "PAUSED":
             save_record(
                 self.store,
                 "pauses",
@@ -473,7 +363,7 @@ class Engine:
         inputs = self.inputs()
         inputs["audit_id"] = audit_id
         try:
-            if self.protocol.version >= 4:
+            if self.protocol.policy.repository_audit_mcp:
                 raw = self.store.path / "raw" / stage
                 servers = server_config(
                     self.repo.path,
@@ -519,42 +409,16 @@ class Engine:
         )
         if "repository_review" in audit:
             item["repository_review"] = audit["repository_review"]
-        self.flow["active_audit"] = None
-        if findings:
-            self.flow.update(
-                phase="FIX",
-                clean=[],
-                questions=[],
-                pending_fix={
-                    "audit_id": audit_id,
-                    "findings": findings,
-                    "before_sha256": self.flow["artifact_sha256"],
-                },
-            )
-            self.flow["failure_streak"] = self.flow["failure_streak"] + 1 if blockers else 0
-        else:
-            self.flow["failure_streak"] = 0
-            clean = {
-                "audit_id": audit_id,
-                "auditor_id": item["auditor_id"],
-                "sha256": self.flow["artifact_sha256"],
-                "base_head": self.repo.commit,
-            }
-            previous = self.flow["clean"]
-            if previous and any(previous[-1][k] != clean[k] for k in ("sha256", "base_head")):
-                previous = []
-            if any(row["auditor_id"] == clean["auditor_id"] for row in previous):
-                raise BenchError("AUDIT_INVALID", "Auditor identity reused")
-            self.flow["clean"] = (previous + [clean])[-2:]
-            if len(self.flow["clean"]) == 2:
-                self.flow["phase"] = "FROZEN"
-                self.result.update(
-                    status="CONVERGED",
-                    convergence_round=self.result["audit_rounds"],
-                    frozen_spec_sha256=self.flow["artifact_sha256"],
-                    clean_audit_ids=[r["audit_id"] for r in self.flow["clean"]],
-                    terminal_reason="Two empty-findings audits at the fixed baseline",
-                )
+        transition = repository_audited(
+            self.flow,
+            audit_id,
+            item["auditor_id"],
+            findings,
+            self.repo.commit,
+            self.result["audit_rounds"],
+        )
+        self.flow.update(transition.flow)
+        self.result.update(transition.result)
         item["clean_streak"] = len(self.flow["clean"])
         self.store.checkpoint(self.result, stage + ":recorded")
 
@@ -724,7 +588,8 @@ def load_session(path, *, allow_historical=False):
             raise BenchError("RESUME_ERROR", "Pinned execution settings changed")
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
-        expected_protocol_version = {2} if version == 2 else {2, 3, PROTOCOL_VERSION}
+        # State 2 belongs to the historical adjudicated @1 protocol; @2+ uses state 3.
+        expected_protocol_version = {1} if version == 2 else {2, 3, PROTOCOL_VERSION}
         if (
             protocol.version not in expected_protocol_version
             or result["protocol_version"] != protocol.version
@@ -750,57 +615,15 @@ def load_session(path, *, allow_historical=False):
             settings.get("reasoning_effort"),
             provider=settings.get("provider"),
         )
-        store = SessionStore(base, evidence)
+        store = CheckpointStore(
+            base, evidence, filename="repository-state.json", schema_version=STATE_VERSION
+        )
         current = read_spec(evidence.path("working/spec.md"))
         if result["flow"]["phase"] == "FROZEN" and digest(current) != result["frozen_spec_sha256"]:
             raise BenchError("FROZEN_SPEC_CHANGED", "Frozen Spec changed; start a new run")
         return store, result, case, protocol, config, current
     except (OSError, KeyError, ValueError, TypeError) as exc:
         raise BenchError("RESUME_ERROR", f"Cannot validate run checkpoint: {exc}") from exc
-
-
-def unfinished_invocation(store, result):
-    call = result["flow"]["last_call"]
-    if not call:
-        return None
-    path = store.path / "raw" / call["stage"] / "invocation.json"
-    if not path.exists():
-        return None
-    invocation = json.loads(path.read_bytes())
-    if (
-        invocation.get("started")
-        and not invocation.get("ended_at")
-        and pid_alive(invocation.get("pid"))
-    ):
-        raise BenchError(
-            "RESUME_ERROR", "Previous agent process is still alive; end it before resuming"
-        )
-    return invocation
-
-
-def reconcile_interruption(store, result, invocation):
-    flow = result["flow"]
-    call = flow["last_call"]
-    if call:
-        field = f"{call['role']}_rounds"
-        if invocation and invocation.get("started") and result[field] == call["counter_before"]:
-            result[field] += 1
-            if call["role"] == "audit" and flow["active_audit"]:
-                result["trajectory"].append(dict(flow["active_audit"]))
-        raw = store.path / "raw" / call["stage"]
-        if raw.exists():
-            for path in sorted(raw.rglob("*")):
-                name = path.relative_to(store.path).as_posix()
-                if path.is_file() and name not in store.evidence.known:
-                    store.evidence.record(name)
-        flow["last_call"] = None
-    active = flow["active_audit"]
-    if active:
-        for row in result["trajectory"]:
-            if row["audit_id"] == active["audit_id"]:
-                row["status"] = "abandoned"
-        flow["active_audit"] = None
-    flow["clean"] = []
 
 
 def resume_repository_run(path, adapter, input_file=None, spec_file=None):
@@ -849,7 +672,7 @@ def resume_repository_run(path, adapter, input_file=None, spec_file=None):
                 f"resume-{number:02d}",
                 {"at": utc_now(), "previous_result": result},
             )
-            reconcile_interruption(store, result, invocation)
+            reconcile_invocation(store, result, invocation, discard_clean=True)
             if digest(current) != flow["artifact_sha256"]:
                 result["final_artifact"] = save_artifact(
                     store, f"spec.resume-{number:02d}", current
@@ -858,11 +681,7 @@ def resume_repository_run(path, adapter, input_file=None, spec_file=None):
                 flow["artifact_sha256"] = digest(current)
             if response is not None:
                 relative = f"responses/response-{number:02d}.md"
-                target = store.evidence.path(relative)
-                target.parent.mkdir(exist_ok=True)
-                with target.open("xb") as stream:
-                    stream.write(response)
-                store.evidence.record(relative)
+                store.evidence.write_bytes(relative, response)
                 flow["responses"].append(relative)
             if flow["phase"] == "PAUSED":
                 flow.update(phase="AUDIT", failure_streak=0)
@@ -909,7 +728,7 @@ def inspect_repository_run(path, *, abort_reason=None):
                     "previous_result": result,
                 },
             )
-            reconcile_interruption(store, result, invocation)
+            reconcile_invocation(store, result, invocation, discard_clean=True)
             result["flow"]["phase"] = "ABORTED"
             result.update(status="ABORTED", terminal_reason=abort_reason)
             store.finish(result)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .cases import decode_text, identifier, load_yaml, positive_int, read_inside, section
 from .models import BenchError, ProtocolDefinition
+from .revisions import revision_policy
 
 DEFAULT_PROTOCOL_ID = "spec-mrac-v2"
 
@@ -40,13 +41,14 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
     workflow = data.get("workflow", "generate-audit-repair")
     if not isinstance(workflow, str) or workflow not in WORKFLOWS:
         raise BenchError("CASE_ERROR", "Unsupported protocol workflow")
+    policy = revision_policy(workflow, version)
     snapshots = {"protocol.yaml": raw}
     prompts = {}
     stages = section(data, "stages")
     required_stages = WORKFLOWS[workflow]
-    if workflow == "spec-init-freeze" and version >= 6:
+    if workflow == "spec-init-freeze" and policy.file_repair:
         required_stages += ("closure",)
-    if workflow == "repository-spec-freeze" and data.get("version") == 1:
+    if workflow == "repository-spec-freeze" and policy.historical_repository_review:
         # Historical snapshots remain readable; they cannot execute under the new semantics.
         required_stages = ("audit", "review", "repair")
     for stage in required_stages:
@@ -73,10 +75,10 @@ def parse_protocol(protocol_id: str, raw: bytes, read) -> ProtocolDefinition:
     output_schemas = data.get("output_schemas", {})
     if not isinstance(output_schemas, dict):
         raise BenchError("CASE_ERROR", "Output schemas must be a mapping")
-    if workflow == "spec-init-freeze" and version >= 6:
+    if workflow == "spec-init-freeze" and policy.file_repair:
         if output_schemas:
             raise BenchError("CASE_ERROR", "Simple v6 uses plain-text closure results")
-    elif workflow == "spec-init-freeze" and version == 5:
+    elif workflow == "spec-init-freeze" and policy.repair_mode == "json":
         if set(output_schemas) != {"repair"}:
             raise BenchError("CASE_ERROR", "Simple v5 requires a repair output schema")
         if not isinstance(output_schemas["repair"], dict):

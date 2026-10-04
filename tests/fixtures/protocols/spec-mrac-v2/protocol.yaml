@@ -1,0 +1,26 @@
+id: spec-mrac-v2
+version: 2
+artifact_type: spec
+workflow: repository-spec-freeze
+stages:
+  audit:
+    prompt: audit.md
+  repair:
+    prompt: repair.md
+convergence:
+  type: consecutive_clean_audits
+  required_clean_audits: 2
+limits:
+  max_audit_rounds: null
+source:
+  skill: mrac-spec
+  state_version: 3
+  repository_commit: a21a921d4ed9039bce606b35e1c3267a0dea0de6
+  skill_path: .codex/skills/mrac-spec/SKILL.md
+  controller_path: .codex/skills/mrac-spec/scripts/mracspec.py
+  reference_path: .codex/skills/mrac-spec/references/controller.md
+  source_sha256:
+    skill: 24b6c0a8c3dd8f4612dbd9258bdd152cd1db30eb86ab27991eddbd6312c2b18f
+    controller: 81caae53f6b311b5966e6a325544ead4115ad0a3ea1fd496d9284733d436df4e
+    reference: a5d4526e7ee7bdb7e17054a6069f3625b208fbfbdd44c691b0bc501618b9fde7
+  adaptation: doc/Protocols.md

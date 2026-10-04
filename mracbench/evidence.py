@@ -1,8 +1,7 @@
 """Immutable evidence tracking and a single-writer lock for resumable runs."""
 
 import hashlib
-import os
-from contextlib import contextmanager
+import json
 from pathlib import Path
 
 from .models import BenchError
@@ -10,20 +9,6 @@ from .models import BenchError
 
 def digest(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
-
-
-@contextmanager
-def run_lock(path: Path):
-    lock = path / ".run.lock"
-    try:
-        with lock.open("x", encoding="utf-8") as stream:
-            stream.write(str(os.getpid()))
-    except FileExistsError as exc:
-        raise BenchError("RESUME_ERROR", f"Run is locked: {lock}") from exc
-    try:
-        yield
-    finally:
-        lock.unlink(missing_ok=True)
 
 
 class Evidence:
@@ -44,6 +29,21 @@ class Evidence:
         if name in self.known:
             raise BenchError("PROTOCOL_VIOLATION", f"Evidence already exists: {name}")
         self.known[name] = digest(self.path(name).read_bytes())
+
+    def write_bytes(self, name: str, content: bytes) -> str:
+        """Create and register immutable evidence without replacing existing files."""
+        path = self.path(name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("xb") as stream:
+            stream.write(content)
+        self.record(name)
+        return name
+
+    def write_text(self, name: str, content: str) -> str:
+        return self.write_bytes(name, content.encode("utf-8"))
+
+    def write_json(self, name: str, data: dict) -> str:
+        return self.write_text(name, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
     def check(self):
         try:

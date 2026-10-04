@@ -64,6 +64,19 @@ case 或协议文件，也不重新选择默认协议。已经开始或结束的
 收敛/停止条件、预算与恢复、证据格式、兼容性和验证用例。当前只支持登记的四种明确的
 workflow，不支持在 YAML 中编排任意阶段图。
 
+运行层的 `revisions.py` 在协议加载时按 workflow/version 选择不可变能力策略；新运行
+读取项目协议，恢复仍从保存的协议快照选择，不能用当前 YAML 的版本覆盖历史行为。
+`transitions.py` 只计算审计、裁决及修复后的状态更新，不调用模型或写文件。各 flow
+保留自己的阶段顺序与暂停时机，`session.py` 共享检查点和中断调用恢复，`Evidence`
+统一排他写入不可变产物。检查点文件名、schema 和 JSON 字段保持各协议原有格式。
+锁实现集中在 `mrac_resources.locks`：v2/Exec 使用 OS 锁，Simple 保留历史 marker 锁
+及异常退出后需人工确认的残留锁语义。
+v2 的历史 state 2 对应协议 @1，只允许只读查看；协议 @2–@4 对应 state 3，不能混用。
+
+历史契约测试固定完整的 Simple @9（commit `6e6e638`）和 v2 @2（commit `c0623ab`）
+协议包于 `tests/fixtures/protocols`，当前协议测试另行加载项目协议。新增修订时应同时
+维护版本策略边界测试和当前流程测试，避免提示词更新让历史恢复测试失去原始语义。
+
 ## 执行协议：exec-mrac-v1
 
 这是独立的代码执行协议，`artifact_type: code`。默认协议仍是 spec-mrac-v2；执行代码

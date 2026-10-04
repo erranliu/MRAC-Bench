@@ -183,7 +183,10 @@ uv run ruff format --check mracbench mrac_contracts mrac_resources mrac_orchestr
 - `runner.py`：单 case 状态流转；仅依赖 adapter 接口。
 - `repository_flow.py` / `repository_audit.py`：v2 审计 findings 直接进入 FIX、暂停/输入/未完成审计恢复及历史只读报告。
 - `simple_flow.py` / `simple_audit.py`：初始化/裁决/冻结流程、严格输出契约和暂停恢复。
-- `execution.py` / `evidence.py`：共享只读调用，以及新协议不可变证据和 run 锁。
+- `execution.py` / `evidence.py`：共享调用，以及新协议不可变证据的排他创建、哈希登记和校验。
+- `session.py`：共享协议检查点、run 锁和中断调用恢复。
+- `transitions.py`：各协议审计/裁决后的纯状态转换与停止决策；流程模块负责调用、文件操作和检查点顺序。
+- `revisions.py`：从保存的 workflow/version 选择不可变版本策略，集中管理历史输出契约、修复方式和 prompt 能力。
 - `runs.py`：输入快照、阶段状态、日志和最终结果。
 
 Bench 不判断最终 Spec 的绝对正确性。Spec 解析只检查文档外层格式；内容正确性由各自 audit 协议测量。批次已支持矩阵和 repeat；任意损坏状态的自动恢复和其他 agent 实现尚未加入，恢复仍要求可校验的检查点。受管进程监督当前只验收 Windows 10/11。

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .audit import parse_spec
 from .cases import case_from_snapshots, load_yaml, positive_int
-from .evidence import Evidence, digest, run_lock
+from .evidence import Evidence, digest
 from .execution import Invoker
 from .models import BenchError, RunConfig
 from .protocol import (
@@ -22,6 +22,7 @@ from .providers import check_adapter
 from .repository import prepare_repository
 from .repository_mcp import server_config
 from .runs import RunStore, utc_now
+from .session import run_lock
 from .simple_audit import (
     assign_ids,
     parse_closure_v6,
@@ -41,22 +42,7 @@ from .simple_repair import (
     verify_workspace,
 )
 from .spec_checkout import SpecCheckout, named_project_files, spec_path
-
-
-def save_evidence(store, evidence, name, data):
-    path = evidence.path(name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8", newline="\n") as stream:
-        stream.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-    evidence.record(name)
-
-
-def save_text_evidence(store, evidence, name, content):
-    path = evidence.path(name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8", newline="\n") as stream:
-        stream.write(content)
-    evidence.record(name)
+from .transitions import simple_reviewed, simple_stop, spec_repaired
 
 
 def baseline_inputs(case, repo, spec):
@@ -105,7 +91,7 @@ def candidate_mcp_servers(workspace, *, writable):
 
 
 def run_simple(config, adapter, store, case, protocol, result, maximum, timeout, started):
-    if protocol.version < 4:
+    if not protocol.policy.executable:
         raise BenchError("CASE_ERROR", "Simple protocol versions below 4 are read-only")
     with run_lock(store.path):
         store.snapshot(
@@ -141,16 +127,14 @@ def run_simple(config, adapter, store, case, protocol, result, maximum, timeout,
                 "resume_count": 0,
             },
         )
-        if protocol.version >= 6:
+        if protocol.policy.file_repair:
             result["closure_rounds"] = 0
         evidence = Evidence(store.path)
         for name in store.metadata["input_sha256"]:
             evidence.record("input/" + name)
         # Preserve source bytes (including BOM and line endings) before any model invocation.
         relative = "artifacts/spec.initial.md"
-        with evidence.path(relative).open("xb") as stream:
-            stream.write(case.snapshots["task.md"])
-        evidence.record(relative)
+        evidence.write_bytes(relative, case.snapshots["task.md"])
         result["final_artifact"] = relative
         result["flow"]["artifact_sha256"] = evidence.known[relative]
         store.checkpoint(result, "copied")
@@ -186,7 +170,7 @@ def execute_simple(
                 if repo.baseline != expected:
                     raise BenchError("PROTOCOL_VIOLATION", "Repository differs from original run")
             else:
-                save_evidence(store, evidence, baseline_name, repo.baseline)
+                evidence.write_json(baseline_name, repo.baseline)
             store.metadata["repository"]["workspace"] = str(repo.path)
             store.save_metadata()
             invoke = Invoker(
@@ -208,7 +192,7 @@ def execute_simple(
                     "repository_path": str(repo.path),
                     "fixed_repository_head": case.commit,
                 },
-                response_json=protocol.version < 7,
+                response_json=not protocol.policy.preflight_event_only,
             )
             invoke(
                 probe_stage,
@@ -218,8 +202,8 @@ def execute_simple(
             verify_repository_read_probe(
                 store.path / "raw" / probe_stage,
                 case.commit,
-                event_only=protocol.version >= 7,
-                allow_query=protocol.version >= 9,
+                event_only=protocol.policy.preflight_event_only,
+                allow_query=protocol.policy.preflight_allow_query,
             )
             drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.check()
@@ -345,7 +329,7 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
         raw = store.path / "raw" / stage
         workspace = raw / "workspace"
         files, related = repair_files(case, pending["accepted"], seed)
-        native = protocol.version >= 10
+        native = protocol.policy.writable_checkout
         inputs = (
             {
                 "spec_path": spec_path(case),
@@ -365,7 +349,7 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
         )
         if feedback is not None:
             inputs["retry_feedback"] = feedback
-        if native and protocol.version >= 12:
+        if native and protocol.policy.bind_invocation:
             inputs["named_project_files"] = named_project_files(
                 repo.baseline, case.task + "\n" + seed.decode("utf-8-sig")
             )
@@ -382,8 +366,8 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
                 render_spec_checkout_prompt(
                     protocol.prompts[prompt_stage],
                     inputs,
-                    compact=protocol.version >= 12,
-                    literal_source=protocol.version >= 14,
+                    compact=protocol.policy.compact_checkout,
+                    literal_source=protocol.policy.literal_source,
                 ),
                 workspace=checkout_path,
                 readonly=False,
@@ -391,9 +375,7 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
             )
             candidate = checkout["value"].candidate()
             candidate_path = f"raw/{stage}/candidate.md"
-            with evidence.path(candidate_path).open("xb") as stream:
-                stream.write(candidate)
-            evidence.record(candidate_path)
+            evidence.write_bytes(candidate_path, candidate)
         else:
             invoke(
                 stage,
@@ -424,9 +406,7 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
         except BenchError as exc:
             if exc.kind != "REPAIR_INVALID":
                 raise
-            save_evidence(
-                store,
-                evidence,
+            evidence.write_json(
                 f"repairs/{stage}.json",
                 {**record, "status": "REPAIR_INVALID", "reason": str(exc)},
             )
@@ -438,7 +418,7 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
 
         diff = unified_spec_diff(spec_bytes, candidate)
         diff_name = f"repairs/{stage}.diff"
-        save_text_evidence(store, evidence, diff_name, diff)
+        evidence.write_text(diff_name, diff)
         comparison = closure_files(case, pending["accepted"], spec_bytes, candidate, diff)
         closure_feedback = None
         for closure_retry in range(2):
@@ -486,14 +466,12 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
                         },
                     )
                 closure = parse_closure_v6(
-                    closure_text, pending["accepted"], allow_fence=protocol.version >= 7
+                    closure_text, pending["accepted"], allow_fence=protocol.policy.allow_fence
                 )
             except BenchError as exc:
                 if exc.kind != "CLOSURE_INVALID":
                     raise
-                save_evidence(
-                    store,
-                    evidence,
+                evidence.write_json(
                     closure_name,
                     {
                         "audit_id": pending["audit_id"],
@@ -505,18 +483,14 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
                     raise
                 closure_feedback = str(exc)
                 continue
-            save_evidence(
-                store, evidence, closure_name, {"audit_id": pending["audit_id"], **closure}
-            )
+            evidence.write_json(closure_name, {"audit_id": pending["audit_id"], **closure})
             break
         record.update(diff=diff_name, closure=closure_name)
         if closure["unresolved"]:
             feedback = "Unresolved accepted findings: " + "; ".join(
                 f"{item['finding_id']}: {item['reason']}" for item in closure["unresolved"]
             )
-            save_evidence(
-                store,
-                evidence,
+            evidence.write_json(
                 f"repairs/{stage}.json",
                 {**record, "status": "REPAIR_INVALID", "reason": feedback},
             )
@@ -525,24 +499,15 @@ def run_file_repair(store, case, protocol, result, repo, invoke, evidence, spec_
             seed = candidate
             continue
 
-        save_evidence(
-            store,
-            evidence,
+        evidence.write_json(
             f"repairs/{stage}.json",
             {**record, "status": "accepted", "disposition": "continue"},
         )
         artifact = f"artifacts/spec.round-{number:02d}.md"
-        with evidence.path(artifact).open("xb") as stream:
-            stream.write(candidate)
-        evidence.record(artifact)
+        evidence.write_bytes(artifact, candidate)
         result["trajectory"][-1]["repair_artifact"] = artifact
         result["final_artifact"] = artifact
-        result["flow"].update(
-            phase="spec-freeze-loop",
-            pending_fix=None,
-            clean=[],
-            artifact_sha256=evidence.known[artifact],
-        )
+        result["flow"].update(spec_repaired(evidence.known[artifact]).flow)
         store.checkpoint(result, stage + ":saved")
         return
 
@@ -561,7 +526,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             return
         pending = flow["pending_fix"]
         if pending:
-            if protocol.version >= 6:
+            if protocol.policy.file_repair:
                 run_file_repair(
                     store, case, protocol, result, repo, invoke, evidence, spec_bytes, pending
                 )
@@ -579,13 +544,13 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             )
             repair = (
                 parse_repair_v5(reply, pending["audit_id"], pending["accepted"])
-                if protocol.version >= 5
+                if protocol.policy.repair_mode == "json"
                 else parse_repair(reply, pending["audit_id"], pending["accepted"])
             )
-            save_evidence(store, evidence, f"repairs/{stage}.json", repair)
+            evidence.write_json(f"repairs/{stage}.json", repair)
             replacement = (
                 parse_simple_spec(repair["spec"])
-                if protocol.version >= 5
+                if protocol.policy.repair_mode == "json"
                 else parse_spec(repair["spec"])
             )
             if replacement.encode("utf-8") == spec_bytes:
@@ -594,12 +559,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             evidence.record(new_artifact)
             result["trajectory"][-1]["repair_artifact"] = new_artifact
             result["final_artifact"] = new_artifact
-            flow.update(
-                phase="spec-freeze-loop",
-                pending_fix=None,
-                clean=[],
-                artifact_sha256=evidence.known[new_artifact],
-            )
+            flow.update(spec_repaired(evidence.known[new_artifact]).flow)
             store.checkpoint(result, stage + ":saved")
             continue
 
@@ -610,7 +570,7 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
         spec_only = kind == "spec-freeze-loop"
         inputs = {"current_spec": spec} if spec_only else baseline_inputs(case, repo, spec)
         inputs.update(audit_id=audit_id, spec_sha256=flow["artifact_sha256"])
-        if protocol.version >= 12:
+        if protocol.policy.bind_invocation:
             inputs.pop("audit_id")
             inputs.pop("spec_sha256")
         workspace = None
@@ -639,15 +599,15 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             audit = parse_findings(
                 text,
                 audit_id,
-                allow_fence=protocol.version >= 7,
-                allow_trailing_fence=protocol.version >= 8,
-                bind_invocation=protocol.version >= 12,
+                allow_fence=protocol.policy.allow_fence,
+                allow_trailing_fence=protocol.policy.allow_trailing_fence,
+                bind_invocation=protocol.policy.bind_invocation,
             )
-            save_evidence(store, evidence, f"audits/{stage}.json", audit)
+            evidence.write_json(f"audits/{stage}.json", audit)
             findings = assign_ids(audit)
             review_inputs = baseline_inputs(case, repo, spec)
             review_inputs.update(audit_id=audit_id, audit_kind=kind, findings=findings)
-            if protocol.version >= 12:
+            if protocol.policy.bind_invocation:
                 review_inputs.pop("audit_id")
             review, accepted, deferred = parse_review(
                 invoke(
@@ -657,12 +617,12 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
                 ),
                 audit_id,
                 findings,
-                allow_fence=protocol.version >= 7,
-                allow_trailing_fence=protocol.version >= 8,
-                bind_invocation=protocol.version >= 12,
-                max_reason_chars=None if protocol.version >= 15 else 500,
+                allow_fence=protocol.policy.allow_fence,
+                allow_trailing_fence=protocol.policy.allow_trailing_fence,
+                bind_invocation=protocol.policy.bind_invocation,
+                max_reason_chars=protocol.policy.review_max_reason_chars,
             )
-            save_evidence(store, evidence, f"reviews/{stage}.json", review)
+            evidence.write_json(f"reviews/{stage}.json", review)
         except BenchError as exc:
             item["status"] = exc.kind
             raise
@@ -681,42 +641,17 @@ def drive_simple(store, case, protocol, result, maximum, repo, invoke, evidence)
             {"audit_id": audit_id, "artifact_sha256": flow["artifact_sha256"], **f}
             for f in deferred
         )
-        if accepted:
-            flow["clean"] = []
-            flow["pending_fix"] = {"audit_id": audit_id, "kind": kind, "accepted": accepted}
-            if spec_only and blockers:
-                flow["failure_streak"] += 1
-        elif spec_only:
-            flow["failure_streak"] = 0
-            clean = {"audit_id": audit_id, "sha256": flow["artifact_sha256"]}
-            if flow["clean"] and flow["clean"][-1]["sha256"] != clean["sha256"]:
-                flow["clean"] = []
-            flow["clean"] = (flow["clean"] + [clean])[-2:]
-        else:
-            flow["phase"] = "spec-freeze-loop"
+        flow.update(simple_reviewed(flow, audit_id, kind, accepted).flow)
         item["clean_streak"] = len(flow["clean"])
         store.checkpoint(result, stage + ":reviewed")
-        if len(flow["clean"]) == 2:
-            result.update(
-                status="CONVERGED",
-                convergence_round=number,
-                frozen_spec_sha256=flow["artifact_sha256"],
-                clean_audit_ids=[row["audit_id"] for row in flow["clean"]],
-                terminal_reason="Two reviewed clean freeze audits on identical Spec bytes",
-            )
-            flow["phase"] = "FROZEN"
+        # Keep the reviewed checkpoint before convergence or a budget/pause decision.
+        transition = simple_stop(flow, result["audit_rounds"], maximum)
+        flow.update(transition.flow)
+        result.update(transition.result)
+        if result["status"] in {"CONVERGED", "NON_CONVERGED"}:
             return
-        # Hard benchmark budget takes precedence over a resumable soft pause.
-        if result["audit_rounds"] >= maximum:
-            result.update(status="NON_CONVERGED", terminal_reason="Total audit budget exhausted")
-            return
-        if flow["failure_streak"] >= 6:
-            result.update(
-                status="PAUSED", terminal_reason="Six accepted P0-P2 freeze finding rounds"
-            )
-            save_evidence(
-                store,
-                evidence,
+        if result["status"] == "PAUSED":
+            evidence.write_json(
                 f"pauses/pause-{flow['resume_count'] + 1:02d}.json",
                 {
                     "at": utc_now(),
@@ -760,7 +695,7 @@ def resume_run(path: Path, adapter):
             }
             case = case_from_snapshots(result["case_id"], snapshots)
             protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
-            if protocol.version < 4:
+            if not protocol.policy.executable:
                 raise BenchError(
                     "RESUME_ERROR", "Historical Simple protocol versions are read-only"
                 )
@@ -806,9 +741,7 @@ def resume_run(path: Path, adapter):
             flow = result["flow"]
             flow["resume_count"] += 1
             # Archive the previous terminal result before any checkpoint is changed.
-            save_evidence(
-                store,
-                evidence,
+            evidence.write_json(
                 f"resumptions/resume-{flow['resume_count']:02d}.json",
                 {
                     "at": utc_now(),

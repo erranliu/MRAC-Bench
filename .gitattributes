@@ -1,2 +1,4 @@
 # Preserve case inputs byte-for-byte for task.sha256, including on Windows.
 cases/** -text
+# Keep archived protocol test snapshots identical to their source commits.
+tests/fixtures/protocols/** -text
