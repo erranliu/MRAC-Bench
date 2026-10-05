@@ -40,10 +40,9 @@ uv run mracbench case register cases/steerline-pr196 --name case3 --request-id r
 
 ## 从 GitHub PR 制作候选 case
 
-[pr-case 技能](skills/pr-case/SKILL.md) 提供 PR 链接 → 候选 Spec 和实现前基线 →
-试跑 → 人工判断 → 入库或丢弃的流程。将 `skills/pr-case/` 复制到个人 Codex 技能目录
-`~/.codex/skills/pr-case/`（配置了 `CODEX_HOME` 时使用其 `skills/`），然后在本项目的
-Codex 聊天中输入：
+[pr-case 项目技能](.agents/skills/pr-case/SKILL.md) 提供 PR 链接 → 候选 Spec 和实现前基线 →
+试跑 → 人工判断 → 入库或丢弃的流程。技能随仓库保存在 `.agents/skills/pr-case/`，
+Codex 在本项目中发现并加载，无需安装到个人技能目录。在本项目的 Codex 聊天中输入：
 
 ```text
 $pr-case https://github.com/owner/repo/pull/123

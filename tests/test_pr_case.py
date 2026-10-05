@@ -1,4 +1,4 @@
-"""The distributed skill uses local Git and an unavailable CLI, never live models."""
+"""The project skill uses local Git and an unavailable CLI, never live models."""
 
 import importlib.util
 import json
@@ -15,7 +15,7 @@ from mrac_resources.cases import Registry
 from mrac_resources.home import checked
 from mrac_resources.locks import file_lock
 
-HELPER = PROJECT / "skills/pr-case/scripts/pr_case.py"
+HELPER = PROJECT / ".agents/skills/pr-case/scripts/pr_case.py"
 
 
 def json_values(output):

@@ -5,6 +5,8 @@ description: 从 GitHub PR 链接制作 MRAC-Bench 候选 case，自动试跑，
 
 # PR Case
 
+这是 MRAC-Bench 的项目技能，随仓库保存在 `.agents/skills/pr-case/`，在本项目的 Codex 聊天中使用，无需复制到个人技能目录。
+
 目标是简单、可丢弃的制作流程：PR → 候选 Spec 和实现前基线 → 自动试跑 → 人工判断 → 保存或丢弃。正式入库前不另外收集可复现证据、审批报告或来源快照；runner 自带产物保留到清理即可。
 
 ## 使用约定
@@ -22,7 +24,7 @@ description: 从 GitHub PR 链接制作 MRAC-Bench 候选 case，自动试跑，
 
 本技能的 [scripts/pr_case.py](scripts/pr_case.py) 负责候选目录、试跑、注册和清理，PR 理解与 Spec 编写由当前 Codex 完成。助手依赖 MRAC-Bench 的 Python 环境，用 `uv run --project <bench-root> python <本技能目录>/scripts/pr_case.py ...` 执行。
 
-Bench 根目录使用显式 `--bench-root` 或 `PR_CASE_BENCH_ROOT`；未指定时从当前目录的祖先、助手自身位置的祖先寻找 MRAC-Bench checkout。确认包含 `pyproject.toml`、`mracbench/`、`protocols/`。复制到个人技能目录后，从 MRAC-Bench 项目聊天中使用，或显式指定 Bench 根目录。正式库使用现有 `MRACBENCH_HOME` 或默认 `~/.mracbench`，可用 `--bench-home` 覆盖；这些全局选项放在子命令前。
+Bench 根目录使用显式 `--bench-root` 或 `PR_CASE_BENCH_ROOT`；未指定时从当前目录的祖先、助手自身位置的祖先寻找 MRAC-Bench checkout。确认包含 `pyproject.toml`、`mracbench/`、`protocols/`。助手在项目技能目录内，从该目录的祖先即可定位本项目。正式库使用现有 `MRACBENCH_HOME` 或默认 `~/.mracbench`，可用 `--bench-home` 覆盖；这些全局选项放在子命令前。
 
 候选全部位于 `<bench-home>/pr-case-scratch/<候选编号>/`：`project/cases/<case-id>/` 只放 `case.yaml`、`spec.md`；`project/protocols/` 放所选协议；`source/` 放素材和调查仓库；`runs/`、`workspaces/` 放试跑产物；`candidate.json` 只用于操作续接。不得把候选注册进正式库后再试跑，也不要使用共享仓库池。
 
