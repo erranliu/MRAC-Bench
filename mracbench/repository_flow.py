@@ -30,6 +30,7 @@ from .session import (
 from .simple_audit import assign_ids, decode
 from .simple_repair import unified_spec_diff
 from .spec_checkout import SpecCheckout, spec_path
+from .spec_file_mcp import server_config as spec_file_server
 from .transitions import repository_after_repair, repository_audited, spec_repaired
 
 WORKFLOW = "repository-spec-freeze"
@@ -271,6 +272,11 @@ class Engine:
                 ),
                 workspace=checkout_path,
                 readonly=False,
+                mcp_servers=spec_file_server(
+                    checkout_path,
+                    name,
+                    self.store.path / "raw" / stage / "spec-file-events.jsonl",
+                ),
                 workspace_setup=setup_checkout,
             )
             candidate = checkout["value"].candidate()

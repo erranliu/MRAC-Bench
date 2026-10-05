@@ -186,10 +186,18 @@ Windows sandbox 可通过单次运行的 `--windows-sandbox elevated|unelevated`
 选项会固定在 batch settings 和运行记录中，恢复沿用该配置。Windows sandbox
 启动失败会报告 `EXECUTION_ENVIRONMENT_ERROR`，不再作为未修改 Spec 的修复失败处理。
 
+调用 harness v2 实时检测回合完成，提供 30 秒进程收尾窗口和 300 秒单工具上限，
+记录工具、非工具及收尾耗时。Spec 修复提供固定文件的 UTF-8 MCP 读写工具。
+执行条件与历史结果兼容性见[调用监督说明](doc/ExecutionHarness.md)。
+
 ## 历史测试结果
 
 - [Simple v11：case 1 测试统计](doc/benchmarks/simple-v11-case1-results.md)：按模型和 thinking effort 汇总结果、耗时及平均修复轮次，附可复算的逐次运行数据。
 - [Spec v4：case3 模型测试结果](doc/benchmarks/spec-v4-case3-results.md)：7 个模型各 2 次，按统一口径汇总收敛、未收敛、耗时和修复轮次；附完整逐次 JSON 快照。实际测试协议为历史 `spec-mrac-v2@4`。
+
+- [Spec v4：case3 扩展实验（42 次）](doc/benchmarks/spec-v4-case3-results-expanded.md)：记录追加 28 次后的合并统计。
+- [Spec v4：case3 外部模型实验（4 次）](doc/benchmarks/spec-v4-case3-external-results.md)：记录 GLM 和 DeepSeek 官方服务结果。
+- [Spec v5 / harness v2：case3 超时配置复测（6 次）](doc/benchmarks/spec-v5-harness2-case3-timeout-retest-results.md)：记录执行监督调整后的复测。
 
 ## 验证与开发
 
