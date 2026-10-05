@@ -38,6 +38,27 @@ uv run mracbench case register cases/steerline-pr196 --name case3 --request-id r
 
 `task.file` 指向固定输入文件（新 case 使用 `spec.md`），必填 `task.sha256` 为该文件原始字节的 SHA-256。loader 在启动 agent 前校验；缺失、格式错误或不匹配均返回 `CASE_ERROR`。已有 case 需补齐哈希。Spec 或基线变化时递增 case version；本仓库通过 `.gitattributes` 保留 case 文件的原始换行。
 
+## 从 GitHub PR 制作候选 case
+
+[pr-case 项目技能](.agents/skills/pr-case/SKILL.md) 提供 PR 链接 → 候选 Spec 和实现前基线 →
+试跑 → 人工判断 → 入库或丢弃的流程。技能随仓库保存在 `.agents/skills/pr-case/`，
+Codex 在本项目中发现并加载，无需安装到个人技能目录。在本项目的 Codex 聊天中输入：
+
+```text
+$pr-case https://github.com/owner/repo/pull/123
+$pr-case https://github.com/owner/repo/pull/123 只用 gpt-6.1-sol，协议 spec-flow-simple-v1
+```
+
+默认 `gpt-5.6-luna` 和 `gpt-6.1-sol` 按顺序各完整试跑一次，默认协议为
+`spec-mrac-v2`；指定模型列表替换默认列表，其他预算和超时沿用 Bench 默认值。
+生成候选后直接试跑，结束后由用户判断：“保存”注册本次测试的输入 case 并清理；
+“修改后再测”沿用候选；“不要了”丢弃；“清理临时 case”清理已停止的候选。
+
+候选、调查仓库和运行产物集中放在 `<bench-home>/pr-case-scratch/`，不使用长期共享
+仓库池。正式入库只保存 `case.yaml` 和输入 `spec.md`，其中记录 PR 来源链接；不额外
+收集来源快照或验收报告。试跑失败保留现场，入库成功才自动清理；CONVERGED 不自动
+触发入库。助手的 `create/list/test/save/clean` 命令和后续操作见技能说明。
+
 ## 配置
 
 在制作或注册 case 前，可以直接试跑固定的 Spec 和实现前仓库快照：
