@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
@@ -141,6 +142,79 @@ def create_candidate(scratch, args):
     return {**data, **locations(path, data)}
 
 
+def number(value):
+    return type(value) in (int, float) and math.isfinite(value) and value >= 0
+
+
+def invocation_timings(run_path, result):
+    durations = {"audit": [], "repair": []}
+    for path in (run_path / "raw").glob("*/execution.json"):
+        stage = path.parent.name
+        role = (
+            "audit"
+            if stage.startswith(("audit-", "spec-init-", "spec-freeze-"))
+            else "repair"
+            if stage.startswith("repair-")
+            else None
+        )
+        if role is None:
+            continue
+        checked(run_path, path)
+        try:
+            record = json.loads(path.read_bytes())
+        except (OSError, ValueError):
+            continue
+        duration = record.get("duration_seconds")
+        if record.get("started") is True and number(duration):
+            durations[role].append(duration)
+    return {
+        role: {
+            "calls": result.get(f"{role}_rounds"),
+            "timed_calls": len(samples),
+            "timed_total_seconds": round(sum(samples), 3) if samples else None,
+            "average_seconds": round(sum(samples) / len(samples), 3) if samples else None,
+        }
+        for role, samples in durations.items()
+    }
+
+
+def basic_statistics(trials):
+    statistics = {
+        "run_count": len(trials),
+        "converged_runs": sum(trial.get("status") == "CONVERGED" for trial in trials),
+        "status_counts": {},
+    }
+    for trial in trials:
+        status = trial.get("status", "UNKNOWN")
+        statistics["status_counts"][status] = statistics["status_counts"].get(status, 0) + 1
+    for field in ("wall_time_seconds", "audit_rounds", "repair_rounds"):
+        samples = [trial[field] for trial in trials if number(trial.get(field))]
+        statistics[f"{field}_samples"] = len(samples)
+        statistics[f"average_{field}"] = round(sum(samples) / len(samples), 3) if samples else None
+        if field == "wall_time_seconds":
+            statistics["total_wall_time_seconds"] = (
+                round(sum(samples), 3) if samples and len(samples) == len(trials) else None
+            )
+    statistics["timings"] = {}
+    for role in ("audit", "repair"):
+        records = [trial.get("timings", {}).get(role, {}) for trial in trials]
+        calls = [record["calls"] for record in records if number(record.get("calls"))]
+        measured = [
+            record
+            for record in records
+            if number(record.get("timed_total_seconds")) and number(record.get("timed_calls"))
+        ]
+        count = sum(record["timed_calls"] for record in measured)
+        total = sum(record["timed_total_seconds"] for record in measured)
+        statistics["timings"][role] = {
+            "calls": sum(calls) if len(calls) == len(trials) and calls else None,
+            "timed_calls": count,
+            "timed_total_seconds": round(total, 3) if count else None,
+            "average_seconds": round(total / count, 3) if count else None,
+        }
+    return statistics
+
+
 def trial_summary(model, run_path, result, content, workflow):
     artifact = result.get("final_artifact")
     final = None
@@ -161,6 +235,7 @@ def trial_summary(model, run_path, result, content, workflow):
         "repair_rounds": result.get("repair_rounds"),
         "convergence_round": result.get("convergence_round"),
         "wall_time_seconds": (result.get("usage") or {}).get("wall_time_seconds"),
+        "timings": invocation_timings(run_path, result),
         "run_dir": str(run_path),
         "result_file": str(run_path / "result.json"),
         "final_artifact": str(final) if final else None,
@@ -228,6 +303,7 @@ def test_candidate(scratch, args):
         if value is not None:
             data[key] = value
     data.update(state="TESTING", trials=[], tested_package=inventory(package))
+    data.pop("statistics", None)
     persist(path, data)
     for index, model in enumerate(models, 1):
         emit({"testing": model, "invocation": index, "total": len(models)})
@@ -254,6 +330,13 @@ def test_candidate(scratch, args):
         persist(path, data)
         emit(trial)
     data["state"] = "REVIEW_PENDING"
+    data["statistics"] = {
+        "overall": basic_statistics(data["trials"]),
+        "by_model": {
+            model: basic_statistics([trial for trial in data["trials"] if trial["model"] == model])
+            for model in models
+        },
+    }
     persist(path, data)
     return {**data, **locations(path, data)}
 

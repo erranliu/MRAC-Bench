@@ -102,6 +102,8 @@ def test_default_trials_preserve_input_and_save_only_package(candidate):
     tested = candidate["trial"]()
     assert tested["state"] == "REVIEW_PENDING"
     assert tested["windows_sandbox"] == "unelevated"
+    assert tested["statistics"]["overall"]["run_count"] == 2
+    assert tested["statistics"]["overall"]["converged_runs"] == 0
     assert [trial["model"] for trial in tested["trials"]] == ["gpt-5.6-luna", "gpt-6.1-sol"]
     assert len(list((candidate["path"] / "workspaces").iterdir())) == 2
     for trial in tested["trials"]:
@@ -158,6 +160,7 @@ def test_overrides_replace_defaults_and_retest_keeps_configuration(candidate):
     retested = candidate["trial"]()
     assert retested["models"] == ["gpt-6.1-sol"]
     assert retested["protocol"] == "spec-flow-simple-v1"
+    assert retested["statistics"]["overall"]["run_count"] == 1
     metadata = yaml.safe_load((Path(retested["trials"][0]["run_dir"]) / "run.yaml").read_bytes())
     assert metadata["effective_config"]["reasoning_effort"] == "high"
     assert metadata["effective_config"]["max_audit_rounds"] == 2
@@ -264,3 +267,72 @@ def test_summary_exposes_pending_questions_and_distinguishes_code_patch(tmp_path
     )
     assert missing_summary["final_artifact"] is None
     assert missing_summary["spec_changed"] is None
+
+
+def load_helper():
+    spec = importlib.util.spec_from_file_location("pr_case_statistics", HELPER)
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    helper.checked = checked
+    return helper
+
+
+def test_invocation_averages_include_started_failures_and_simple_initial_audit(tmp_path):
+    helper = load_helper()
+    records = {
+        "spec-init-01": {"started": True, "duration_seconds": 10},
+        "spec-freeze-loop-02": {"started": True, "duration_seconds": 30, "error_type": "TIMEOUT"},
+        "audit-03": {"started": False, "duration_seconds": 500},
+        "repair-01": {"started": True, "duration_seconds": 25},
+        "repair-02": {"started": True, "duration_seconds": None},
+        "review-01": {"started": True, "duration_seconds": 900},
+        "closure-01": {"started": True, "duration_seconds": 900},
+        "repository-read-check-01": {"started": True, "duration_seconds": 900},
+    }
+    for stage, record in records.items():
+        path = tmp_path / "raw" / stage
+        path.mkdir(parents=True)
+        (path / "execution.json").write_text(json.dumps(record), encoding="utf-8")
+    timings = helper.invocation_timings(tmp_path, {"audit_rounds": 2, "repair_rounds": 2})
+    assert timings["audit"]["average_seconds"] == 20
+    assert timings["audit"]["timed_calls"] == 2
+    assert timings["repair"]["average_seconds"] == 25
+    assert timings["repair"]["timed_calls"] == 1
+    assert timings["repair"]["calls"] == 2
+
+
+def test_statistics_include_failed_runs_and_do_not_invent_missing_samples():
+    helper = load_helper()
+    trials = [
+        {
+            "status": "CONVERGED",
+            "wall_time_seconds": 10,
+            "audit_rounds": 4,
+            "repair_rounds": 1,
+            "timings": {"audit": {"calls": 4, "timed_calls": 2, "timed_total_seconds": 20}},
+        },
+        {
+            "status": "NON_CONVERGED",
+            "wall_time_seconds": 30,
+            "audit_rounds": 8,
+            "repair_rounds": 2,
+            "timings": {"audit": {"calls": 8, "timed_calls": 1, "timed_total_seconds": 25}},
+        },
+        {"status": "ERROR", "wall_time_seconds": None},
+    ]
+    statistics = helper.basic_statistics(trials)
+    assert statistics["run_count"] == 3 and statistics["converged_runs"] == 1
+    assert statistics["status_counts"] == {"CONVERGED": 1, "NON_CONVERGED": 1, "ERROR": 1}
+    assert statistics["average_wall_time_seconds"] == 20
+    assert statistics["wall_time_seconds_samples"] == 2
+    assert statistics["total_wall_time_seconds"] is None
+    assert statistics["average_audit_rounds"] == 6
+    assert statistics["average_repair_rounds"] == 1.5
+    assert statistics["timings"]["audit"]["average_seconds"] == 15
+    assert statistics["timings"]["audit"]["timed_calls"] == 3
+    assert statistics["timings"]["audit"]["calls"] is None
+    assert statistics["timings"]["repair"]["average_seconds"] is None
+    complete = helper.basic_statistics(trials[:2])
+    assert complete["total_wall_time_seconds"] == 40
+    assert complete["timings"]["audit"]["calls"] == 12
+    assert helper.basic_statistics([])["average_wall_time_seconds"] is None
