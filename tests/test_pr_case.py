@@ -98,8 +98,10 @@ def candidate(tmp_path):
 
 def test_default_trials_preserve_input_and_save_only_package(candidate):
     original = candidate["spec"].read_bytes()
+    assert candidate["windows_sandbox"] == "unelevated"
     tested = candidate["trial"]()
     assert tested["state"] == "REVIEW_PENDING"
+    assert tested["windows_sandbox"] == "unelevated"
     assert [trial["model"] for trial in tested["trials"]] == ["gpt-5.6-luna", "gpt-6.1-sol"]
     assert len(list((candidate["path"] / "workspaces").iterdir())) == 2
     for trial in tested["trials"]:
@@ -107,6 +109,8 @@ def test_default_trials_preserve_input_and_save_only_package(candidate):
         metadata = yaml.safe_load((run_path / "run.yaml").read_bytes())
         result = json.loads(Path(trial["result_file"]).read_bytes())
         assert metadata["effective_config"]["model"] == trial["model"]
+        assert metadata["effective_config"]["windows_sandbox"] == "unelevated"
+        assert trial["windows_sandbox"] == "unelevated"
         assert metadata["protocol_id"] == "spec-mrac-v2"
         assert trial["status"] != "CONVERGED"
         assert trial["audit_rounds"] == result["audit_rounds"]
@@ -158,7 +162,27 @@ def test_overrides_replace_defaults_and_retest_keeps_configuration(candidate):
     assert metadata["effective_config"]["reasoning_effort"] == "high"
     assert metadata["effective_config"]["max_audit_rounds"] == 2
     assert metadata["effective_config"]["agent_timeout_seconds"] == 5
+    assert metadata["effective_config"]["windows_sandbox"] == "unelevated"
     assert first.exists()
+
+
+@pytest.mark.parametrize("saved_mode", [None, "elevated"])
+def test_existing_candidates_retest_with_unelevated(candidate, saved_mode):
+    metadata_path = candidate["path"] / "candidate.json"
+    data = json.loads(metadata_path.read_bytes())
+    if saved_mode is None:
+        data.pop("windows_sandbox")
+    else:
+        data["windows_sandbox"] = saved_mode
+    metadata_path.write_text(json.dumps(data), encoding="utf-8")
+    tested = candidate["trial"]("--model", "gpt-5.6-luna")
+    assert tested["windows_sandbox"] == "unelevated"
+    run = Path(tested["trials"][0]["run_dir"])
+    assert (
+        yaml.safe_load((run / "run.yaml").read_bytes())["effective_config"]["windows_sandbox"]
+        == "unelevated"
+    )
+    assert json.loads(metadata_path.read_bytes())["windows_sandbox"] == "unelevated"
 
 
 def test_save_requires_test_and_rejects_input_changed_after_test(candidate):

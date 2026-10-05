@@ -12,6 +12,7 @@ from pathlib import Path
 
 DEFAULT_MODELS = ["gpt-5.6-luna", "gpt-6.1-sol"]
 DEFAULT_PROTOCOL = "spec-mrac-v2"
+WINDOWS_SANDBOX = "unelevated"
 PR_URL = re.compile(
     r"https://github\.com/([A-Za-z0-9][A-Za-z0-9-]*)/"
     r"([A-Za-z0-9][A-Za-z0-9_.-]*)/pull/([1-9][0-9]*)(?:/)?"
@@ -131,6 +132,7 @@ def create_candidate(scratch, args):
         "repository_url": f"https://github.com/{owner}/{repo}.git",
         "models": DEFAULT_MODELS.copy(),
         "protocol": DEFAULT_PROTOCOL,
+        "windows_sandbox": WINDOWS_SANDBOX,
         "version": 1,
         "state": "DRAFT",
         "trials": [],
@@ -214,7 +216,13 @@ def test_candidate(scratch, args):
     load_case(path / "project", data["case_id"])
     target_protocol = checked(path, path / "project" / "protocols" / protocol_id)
     copy_package(args.bench_root / "protocols" / protocol_id, target_protocol)
-    data.update(commit=commit.lower(), version=version, models=models, protocol=protocol_id)
+    data.update(
+        commit=commit.lower(),
+        version=version,
+        models=models,
+        protocol=protocol_id,
+        windows_sandbox=WINDOWS_SANDBOX,
+    )
     for key in ("reasoning_effort", "max_rounds", "timeout"):
         value = getattr(args, key)
         if value is not None:
@@ -236,10 +244,12 @@ def test_candidate(scratch, args):
             spec_file=spec if protocol.workflow == "exec-mrac" else None,
         )
         try:
-            run_path, result = run_case(config, CodexExecAdapter(args.codex_executable))
+            adapter = CodexExecAdapter(args.codex_executable, windows_sandbox=WINDOWS_SANDBOX)
+            run_path, result = run_case(config, adapter)
             trial = trial_summary(model, run_path, result, content, protocol.workflow)
         except Exception as exc:  # noqa: BLE001 -- record a failed trial and try the next model
             trial = {"model": model, "status": "ERROR", "error": str(exc)}
+        trial["windows_sandbox"] = WINDOWS_SANDBOX
         data["trials"].append(trial)
         persist(path, data)
         emit(trial)
