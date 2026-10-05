@@ -3,6 +3,7 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import threading
 import time
 from collections.abc import Sequence
 from pathlib import Path
@@ -17,12 +18,26 @@ from mrac_contracts.providers import (
 
 from .codex_command import build_command, command_files, mcp_arguments, provider_arguments
 from .codex_events import summarize_events
+from .invocation_monitor import InvocationMonitor
 from .models import AgentRequest, AgentResult
 from .openrouter_accounting import OpenRouterAccounting, uses_openrouter
 from .redaction import RedactedPipe
 from .runs import utc_now, write_json
 
 WINDOWS_SANDBOX_MODES = ("elevated", "unelevated")
+HARNESS_VERSION = 2
+
+
+def send_prompt(process, prompt):
+    try:
+        process.stdin.write(prompt.encode("utf-8"))
+    except (BrokenPipeError, OSError):
+        pass  # Early exits are classified by the process result, not by stdin.
+    finally:
+        try:
+            process.stdin.close()
+        except OSError:
+            pass
 
 
 def saved_windows_sandbox(path):
@@ -83,6 +98,8 @@ class CodexExecAdapter:
         *,
         provider=None,
         windows_sandbox="elevated",
+        completion_grace_seconds=30,
+        tool_timeout_seconds=300,
     ):
         self.executable = executable
         self._command = list(command) if command else None
@@ -90,6 +107,10 @@ class CodexExecAdapter:
         if windows_sandbox not in WINDOWS_SANDBOX_MODES:
             raise ValueError("windows_sandbox must be elevated or unelevated")
         self.windows_sandbox = windows_sandbox
+        if completion_grace_seconds <= 0 or tool_timeout_seconds <= 0:
+            raise ValueError("Completion grace and tool timeout must be positive")
+        self.completion_grace_seconds = completion_grace_seconds
+        self.tool_timeout_seconds = tool_timeout_seconds
 
     def provider_arguments(self, raw):
         if self.provider and "model_catalog" in self.provider:
@@ -120,7 +141,17 @@ class CodexExecAdapter:
         raw = request.raw_dir
         raw.mkdir(parents=True, exist_ok=True)
         final_path = raw / "final.txt"
+        final_path.unlink(missing_ok=True)
         result = AgentResult()
+        prompt = request.prompt
+        if os.name == "nt":
+            prompt = (
+                "## Runner execution environment\n"
+                "The native shell is PowerShell on Windows. Use PowerShell-compatible commands; "
+                "Bash heredocs such as python - <<'PY' do not work here. "
+                "Read and write text explicitly as UTF-8; use literal file paths. "
+                "Use supplied Spec file tools for UTF-8 edits when available.\n\n"
+            ) + prompt
         invocation = {
             "started_at": utc_now(),
             "ended_at": None,
@@ -131,16 +162,22 @@ class CodexExecAdapter:
             "timeout_seconds": request.timeout_seconds,
             "readonly": request.readonly,
             "apps_enabled": False,
+            "harness_version": HARNESS_VERSION,
+            "completion_grace_seconds": self.completion_grace_seconds,
+            "tool_timeout_seconds": self.tool_timeout_seconds,
         }
         # Logs exist even if resolution or process creation fails.
         (raw / "stdout.txt").touch()
         (raw / "stderr.txt").touch()
-        (raw / "request.txt").write_text(request.prompt, encoding="utf-8")
+        (raw / "request.txt").write_text(prompt, encoding="utf-8")
         process = None
         final_directory = None
         output_path = final_path
         secret = None
         accounting = None
+        monitor = None
+        monitor_finished = None
+        forced_cleanup = False
         try:
             validate_selection(self.provider, request.model, request.reasoning_effort)
             secret = credential(self.provider)
@@ -193,28 +230,61 @@ class CodexExecAdapter:
                         RedactedPipe(process.stdout, stdout, secret),
                         RedactedPipe(process.stderr, stderr, secret),
                     ]
-                    # communicate() owns stdin/wait; the readers exclusively own output pipes.
+                    # Readers exclusively own output pipes. The monitor observes redacted files.
                     process.stdout = process.stderr = None
                 result.started = True
                 invocation.update(started=True, pid=process.pid)
                 write_json(raw / "invocation.json", invocation)
+                launched = time.monotonic()
+                monitor = InvocationMonitor(launched)
+                writer = threading.Thread(target=send_prompt, args=(process, prompt), daemon=True)
+                writer.start()
+                next_progress = launched
                 try:
-                    process.communicate(
-                        request.prompt.encode("utf-8"), timeout=request.timeout_seconds
-                    )
-                except subprocess.TimeoutExpired:
-                    result.error_type = "TIMEOUT"
-                    result.error_message = f"Agent exceeded {request.timeout_seconds} seconds"
-                    kill_tree(process)
+                    while process.poll() is None:
+                        current = time.monotonic()
+                        monitor.read(raw / "stdout.txt", current)
+                        if current >= next_progress:
+                            invocation["progress"] = monitor.snapshot(current)
+                            write_json(raw / "invocation.json", invocation)
+                            next_progress = current + 1
+                        completed = monitor.completed_at
+                        if completed is not None and (
+                            current - completed >= self.completion_grace_seconds
+                            or current - launched >= request.timeout_seconds
+                        ):
+                            forced_cleanup = True
+                            invocation["cleanup_reason"] = "process_remained_after_completed_turn"
+                            kill_tree(process)
+                            break
+                        if completed is None:
+                            overdue = monitor.overdue_tool(current, self.tool_timeout_seconds)
+                            if overdue is not None:
+                                result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
+                                result.error_message = (
+                                    f"Tool {overdue} exceeded {self.tool_timeout_seconds} seconds"
+                                )
+                                invocation["cleanup_reason"] = "tool_timeout"
+                                kill_tree(process)
+                                break
+                            if current - launched >= request.timeout_seconds:
+                                result.error_type = "TIMEOUT"
+                                result.error_message = (
+                                    f"Agent exceeded {request.timeout_seconds} seconds"
+                                )
+                                kill_tree(process)
+                                break
+                        time.sleep(0.05)
                 except KeyboardInterrupt:
                     result.error_type = "INTERNAL_ERROR"
                     result.error_message = "Run interrupted by user"
                     kill_tree(process)
                 finally:
+                    writer.join(timeout=1)
                     for reader in readers:
                         reader.finish()
                 result.exit_code = process.returncode
-            if result.exit_code != 0 and result.error_type is None:
+            if result.exit_code != 0 and result.error_type is None and not forced_cleanup:
                 result.error_type = "AGENT_ERROR"
                 result.error_message = (
                     f"Codex exited with code {result.exit_code}; see raw stderr/stdout"
@@ -224,6 +294,20 @@ class CodexExecAdapter:
                 if secret:
                     result.final_text = result.final_text.replace(secret, "[REDACTED]")
                     final_path.write_text(result.final_text, encoding="utf-8")
+            if monitor is not None:
+                monitor.read(raw / "stdout.txt", time.monotonic())
+                if forced_cleanup:
+                    invocation["validated_completed_turn"] = monitor.verifies(result.final_text)
+                    if not invocation["validated_completed_turn"]:
+                        result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
+                        result.error_message = (
+                            "Codex did not exit after completion; final reply or tool completion "
+                            "could not be verified"
+                        )
+                elif result.error_type is None and monitor.completed_at is not None:
+                    if monitor.pending:
+                        result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
+                        result.error_message = "Codex exited with unfinished tools after completion"
         except (OSError, UnicodeError, subprocess.SubprocessError, ProviderError) as exc:
             if process is not None and process.poll() is None:
                 kill_tree(process)
@@ -232,6 +316,9 @@ class CodexExecAdapter:
             )
             result.error_message = str(exc).replace(secret, "[REDACTED]") if secret else str(exc)
         finally:
+            if monitor is not None:
+                monitor_finished = time.monotonic()
+                monitor.read(raw / "stdout.txt", monitor_finished)
             if accounting is not None:
                 try:
                     accounting.__exit__()
@@ -254,6 +341,16 @@ class CodexExecAdapter:
                 invocation["thread_id"] = events.thread_id
             if events.command_executions:
                 invocation["command_executions"] = events.command_executions
+            if monitor is not None:
+                invocation["progress"] = monitor.snapshot(monitor_finished)
+                invocation["startup_seconds"] = round(monitor.start - start, 3)
+                invocation["teardown_seconds"] = round(time.monotonic() - monitor_finished, 3)
+            invocation["diagnostics"] = {
+                "patch_verification_errors": result.stderr.count("apply_patch verification failed"),
+                "unknown_process_errors": result.stderr.count("Unknown process id"),
+                "sandbox_denials": result.stderr.count("recorded sandbox violation"),
+            }
+            invocation["forced_cleanup"] = forced_cleanup
             invocation.update(
                 ended_at=utc_now(),
                 exit_code=result.exit_code,

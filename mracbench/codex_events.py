@@ -30,6 +30,9 @@ def summarize_events(
             continue
         if not isinstance(event, dict):
             continue
+        if event.get("type") == "turn.failed" and summary.error_type is None:
+            summary.error_type = "AGENT_ERROR"
+            summary.error_message = "Codex reported a failed turn; see raw stdout"
         if event.get("type") == "turn.completed":
             summary.usage = event.get("usage")
         if event.get("type") == "thread.started" and isinstance(event.get("thread_id"), str):

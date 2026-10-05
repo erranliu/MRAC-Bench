@@ -84,7 +84,11 @@ class AgentResult:
 
     @property
     def success(self) -> bool:
-        return self.started and self.exit_code == 0 and self.error_type is None
+        return (
+            self.started
+            and self.error_type is None
+            and (self.exit_code == 0 or self.metadata.get("validated_completed_turn") is True)
+        )
 
 
 class AgentAdapter(Protocol):
