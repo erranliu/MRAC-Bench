@@ -217,6 +217,22 @@ Windows sandbox 可通过单次运行的 `--windows-sandbox elevated|unelevated`
 
 ## 历史测试结果
 
+- [case3 v1 · Spec v5 / harness v2 有效流程成绩](doc/benchmarks/spec-v5-harness2-case3-valid-results.md)：10 条完整流程成绩，6 次收敛、4 次未收敛；附排除清单。
+
+- [Spec v5 / harness v2：case3 MiniMax M3.1 Flash 第 2 次](doc/benchmarks/spec-v5-harness2-case3-minimax31flash-retry1-results.md)：原配置重试一次。
+
+- [Spec v5 / harness v2：case3 GPT 七模型重跑（各 1 次）](doc/benchmarks/spec-v5-harness2-case3-gpt-repeat-oct24-results.md)：10 月 24 日重跑结果。
+
+- [Spec v5 / harness v2：case3 Kimi K3（1 次）](doc/benchmarks/spec-v5-harness2-case3-kimi-k3-results.md)：OpenRouter 补测结果。
+
+- [Spec v5 / harness v2：case3 Kimi K3.1 Pro 与 MiniMax M3.1 Flash（各 1 次）](doc/benchmarks/spec-v5-harness2-case3-kimi31pro-minimax31flash-results.md)：OpenRouter 补测结果。
+
+- [Spec v5 / harness v2：case3 DeepSeek Flash 1017（1 次）](doc/benchmarks/spec-v5-harness2-case3-deepseek-flash-1017-results.md)：官方 1017 更新后的单次测试。
+
+- [Spec v5 / harness v2：case3 GPT-6.1 Sol 与 GPT-6 Astra（各 1 次）](doc/benchmarks/spec-v5-harness2-case3-astra-61sol-results.md)：补测结果。
+
+- [case3 v1 · Spec v5 / harness v2 / high 全部成绩](doc/benchmarks/spec-v5-harness2-case3-all-results.md)：20 次运行，6 次收敛、4 次未收敛、8 次调用错误、2 次待完成；按模型及发布版本统一汇总。
+
 - [Simple v11：case 1 测试统计](doc/benchmarks/simple-v11-case1-results.md)：按模型和 thinking effort 汇总结果、耗时及平均修复轮次，附可复算的逐次运行数据。
 - [Spec v4：case3 模型测试结果](doc/benchmarks/spec-v4-case3-results.md)：7 个模型各 2 次，按统一口径汇总收敛、未收敛、耗时和修复轮次；附完整逐次 JSON 快照。实际测试协议为历史 `spec-mrac-v2@4`。
 
