@@ -2,7 +2,7 @@
 
 MRAC Bench 测量模型能否在固定任务与 repository snapshot 上，通过多轮独立审计和修复，使 implementation spec 达到预定义收敛状态。
 
-当前支持四个并存协议：默认的 `spec-mrac-v2@5` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@14` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
+当前支持四个并存协议：默认的 `spec-mrac-v2@6` 原样复制输入 Spec，每轮结合固定仓库审计，所有发现直接进入修复，无裁决阶段；`spec-mrac-v1` 保留生成 implementation Spec 的旧流程；`spec-flow-simple-v1@14` 保留初始化审计后纯 Spec 冻结的流程，接受项进入修复，不支持 BLOCKED；`exec-mrac-v1` 按显式选定的 Spec 实施代码，对照完整 diff 审计并修复。两个现行 Spec flow 的修复阶段都在每次 run 专用的隔离项目 checkout 中直接编辑 Spec 文件。协议契约、选择与维护规则见 [并存协议管理](doc/Protocols.md)。
 
 case 与 protocol 独立，在运行时组合。不传 `--protocol` 时使用运行层默认的 `spec-mrac-v2`；显式指定时使用所选协议。case 不需要协议字段，旧 case 中残留的 `protocol` 字段不参与选择。
 
@@ -211,8 +211,9 @@ Windows sandbox 可通过单次运行的 `--windows-sandbox elevated|unelevated`
 选项会固定在 batch settings 和运行记录中，恢复沿用该配置。Windows sandbox
 启动失败会报告 `EXECUTION_ENVIRONMENT_ERROR`，不再作为未修改 Spec 的修复失败处理。
 
-调用 harness v2 实时检测回合完成，提供 30 秒进程收尾窗口和 300 秒单工具上限，
-记录工具、非工具及收尾耗时。Spec 修复提供固定文件的 UTF-8 MCP 读写工具。
+调用 harness v3 实时检测回合完成，沿用 30 秒进程收尾窗口和命令/MCP 工具的 300 秒上限，
+增加未结束工具的年龄、类型、MCP 服务/工具名与收尾校验失败原因；不会放行未结束工具。
+Spec @6 修复同时提供固定基线的仓库只读 MCP 与当前 Spec 的 UTF-8 读写 MCP，优先使用这些工具。
 执行条件与历史结果兼容性见[调用监督说明](doc/ExecutionHarness.md)。
 
 ## 历史测试结果

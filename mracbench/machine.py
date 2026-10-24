@@ -275,7 +275,7 @@ def main(argv=None):
                 "code_identity": code_identity(),
                 "agent_version": CodexExecAdapter(args.codex_executable).version(),
                 "protocols": {
-                    "spec-mrac-v2": 5,
+                    "spec-mrac-v2": 6,
                     "exec-mrac-v1": 1,
                     "spec-mrac-v1": 1,
                     "spec-flow-simple-v1": 11,

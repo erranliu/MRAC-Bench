@@ -51,21 +51,23 @@ def test_simple_revision_contracts(
 
 
 @pytest.mark.parametrize(
-    "version,executable,checkout,mcp",
+    "version,executable,checkout,mcp,repair_mcp",
     [
-        (1, False, False, False),
-        (2, True, False, False),
-        (3, True, True, False),
-        (4, True, True, True),
-        (5, True, True, True),
-        (6, False, True, True),
+        (1, False, False, False, False),
+        (2, True, False, False, False),
+        (3, True, True, False, False),
+        (4, True, True, True, False),
+        (5, True, True, True, False),
+        (6, True, True, True, True),
+        (7, False, True, True, True),
     ],
 )
-def test_repository_revisions(version, executable, checkout, mcp):
+def test_repository_revisions(version, executable, checkout, mcp, repair_mcp):
     policy = revision_policy("repository-spec-freeze", version)
     assert policy.executable == executable
     assert policy.writable_checkout == checkout
     assert policy.repository_audit_mcp == mcp
+    assert policy.repository_repair_mcp == repair_mcp
     assert policy.historical_repository_review == (version == 1)
     assert policy.finish_last_audit_repair == (version < 5)
 
@@ -88,6 +90,7 @@ def test_current_protocols_use_current_capabilities(current_project):
     assert simple.version == 15 and simple.policy.literal_source
     assert simple.policy.review_max_reason_chars is None
     repository = load_protocol(current_project, "spec-mrac-v2")
-    assert repository.version == 5 and repository.policy.repository_audit_mcp
+    assert repository.version == 6 and repository.policy.repository_audit_mcp
+    assert repository.policy.repository_repair_mcp
     assert not repository.policy.finish_last_audit_repair
     assert load_protocol(current_project, "exec-mrac-v1").policy.writable_checkout

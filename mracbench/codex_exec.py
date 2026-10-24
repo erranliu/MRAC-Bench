@@ -25,7 +25,7 @@ from .redaction import RedactedPipe
 from .runs import utc_now, write_json
 
 WINDOWS_SANDBOX_MODES = ("elevated", "unelevated")
-HARNESS_VERSION = 2
+HARNESS_VERSION = 3
 
 
 def send_prompt(process, prompt):
@@ -297,6 +297,7 @@ class CodexExecAdapter:
             if monitor is not None:
                 monitor.read(raw / "stdout.txt", time.monotonic())
                 if forced_cleanup:
+                    invocation["completion_validation"] = monitor.verification(result.final_text)
                     invocation["validated_completed_turn"] = monitor.verifies(result.final_text)
                     if not invocation["validated_completed_turn"]:
                         result.error_type = "EXECUTION_ENVIRONMENT_ERROR"
@@ -342,6 +343,10 @@ class CodexExecAdapter:
             if events.command_executions:
                 invocation["command_executions"] = events.command_executions
             if monitor is not None:
+                # Retain the forced-cleanup decision even if later buffered events arrive.
+                invocation.setdefault(
+                    "completion_validation", monitor.verification(result.final_text)
+                )
                 invocation["progress"] = monitor.snapshot(monitor_finished)
                 invocation["startup_seconds"] = round(monitor.start - start, 3)
                 invocation["teardown_seconds"] = round(time.monotonic() - monitor_finished, 3)

@@ -57,7 +57,7 @@ def test_default_eight_audit_cap_stops_before_last_repair_and_cannot_resume(conf
     assert result["status"] == "NON_CONVERGED", result["error"]
     assert result["audit_rounds"] == 8
     assert result["repair_rounds"] == 4
-    assert result["protocol_version"] == 5
+    assert result["protocol_version"] == 6
     assert result["trajectory"][-1]["repair_artifact"] is None
     assert result["flow"]["phase"] == "FIX"
     assert result["flow"]["pending_fix"]["findings"][0]["severity"] == "P2"
