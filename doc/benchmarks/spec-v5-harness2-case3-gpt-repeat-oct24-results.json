@@ -1,0 +1,3275 @@
+{
+  "archive": {
+    "actual_cli_version": "codex-cli 0.159.2",
+    "batch_concurrency": 4,
+    "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+    "batch_ids": [
+      "B-af2cd7fee70080ed3c3d0b95"
+    ],
+    "case": {
+      "case_key": "C000003",
+      "name": "case3",
+      "number": 3,
+      "sha256": "6aafb9eba8d19f0733cba4a0a6d9fed2eda673717d67b25c09db22863acb162a",
+      "source_id": "steerline-pr196",
+      "version": 1
+    },
+    "code_identity": {
+      "executable": "C:\\Users\\lmas1\\.mracbench\\control\\requests\\case3-deepseek-flash-1017-spec5-harness2\\source\\.venv\\Scripts\\python.exe",
+      "python": "3.12.13 (main, May 10 2026, 19:35:37) [MSC v.1944 64 bit (AMD64)]",
+      "sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29"
+    },
+    "created_at": "2026-10-24T00:52:51.260607+00:00",
+    "evidence_path_base": "bench_home",
+    "finished_at": "2026-10-24T01:37:50.457610+00:00",
+    "max_auto_recoveries": 0,
+    "models": [
+      "gpt-5.6-luna",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-6-astra",
+      "gpt-6-luna",
+      "gpt-6-sol",
+      "gpt-6.1-sol"
+    ],
+    "preserved_batch_id": "B-c9048f79cf1e6e5d8e8f3ac4",
+    "reference_batch_id": "B-f549b5c3604726356a84cd8d",
+    "repeat_per_model": 1,
+    "samples": 7,
+    "scheduler_groups": {
+      "openai-oct24": 4,
+      "openrouter-oct24": 2
+    },
+    "scheduler_total": 6,
+    "settings": {
+      "harness_version": 2,
+      "max_audit_rounds": 8,
+      "protocol": "spec-mrac-v2@5",
+      "reasoning_effort": "high",
+      "timeout_seconds": 1800,
+      "windows_sandbox": "unelevated"
+    }
+  },
+  "case": {
+    "case_key": "C000003",
+    "name": "case3",
+    "sha256": "6aafb9eba8d19f0733cba4a0a6d9fed2eda673717d67b25c09db22863acb162a",
+    "source_id": "steerline-pr196",
+    "version": 1
+  },
+  "generated_at": "2026-10-24T01:37:49.740190+00:00",
+  "groups": [
+    {
+      "average_cost_per_completed_run_usd": "0.09547440",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 1997570,
+        "mean": 1997570,
+        "min": 1997570,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": 0.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.09547440",
+        "estimated_usd": "0.09547440",
+        "invocations": 2,
+        "known_subtotal_usd": "0.09547440",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.09547440"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 1,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {
+        "repair-01": 1
+      },
+      "error_types": {
+        "EXECUTION_ENVIRONMENT_ERROR": 1
+      },
+      "error_wall_time_seconds": {
+        "max": 915.406,
+        "mean": 915.406,
+        "min": 915.406,
+        "missing": 0,
+        "n": 1
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "gpt-5.6-luna",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "execution_error": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1806720,
+          "input_tokens": 1976400,
+          "output_tokens": 21170,
+          "reasoning_output_tokens": 9055,
+          "total_tokens": 1997570,
+          "uncached_input_tokens": 169680
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": "1.7366096",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 1959322,
+        "mean": 1959322,
+        "min": 1959322,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": 0.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "1.7366096",
+        "estimated_usd": "1.7366096",
+        "invocations": 2,
+        "known_subtotal_usd": "1.7366096",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "1.7366096"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 1,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {
+        "repair-01": 1
+      },
+      "error_types": {
+        "EXECUTION_ENVIRONMENT_ERROR": 1
+      },
+      "error_wall_time_seconds": {
+        "max": 810.031,
+        "mean": 810.031,
+        "min": 810.031,
+        "missing": 0,
+        "n": 1
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "gpt-5.6-sol",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "execution_error": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1777024,
+          "input_tokens": 1940784,
+          "output_tokens": 18538,
+          "reasoning_output_tokens": 7425,
+          "total_tokens": 1959322,
+          "uncached_input_tokens": 163760
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": "0.6232136",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 1222359,
+        "mean": 1222359,
+        "min": 1222359,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": 0.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.6232136",
+        "estimated_usd": "0.6232136",
+        "invocations": 2,
+        "known_subtotal_usd": "0.6232136",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.6232136"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 1,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {
+        "repair-01": 1
+      },
+      "error_types": {
+        "EXECUTION_ENVIRONMENT_ERROR": 1
+      },
+      "error_wall_time_seconds": {
+        "max": 812.609,
+        "mean": 812.609,
+        "min": 812.609,
+        "missing": 0,
+        "n": 1
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "gpt-5.6-terra",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "execution_error": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1079808,
+          "input_tokens": 1210144,
+          "output_tokens": 12215,
+          "reasoning_output_tokens": 6294,
+          "total_tokens": 1222359,
+          "uncached_input_tokens": 130336
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": null,
+      "average_cost_sample_count": 0,
+      "completed_run_tokens": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": null,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "2.441924",
+        "estimated_usd": "2.441924",
+        "invocations": 2,
+        "known_subtotal_usd": "2.441924",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "2.441924"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 0,
+        "excluded": 1,
+        "included": 0,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {},
+      "error_types": {},
+      "error_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "excluded_known_cost_usd": "2.441924",
+      "model": "gpt-6-astra",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "awaiting_input": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1151104,
+          "input_tokens": 1250431,
+          "output_tokens": 5951,
+          "reasoning_output_tokens": 1269,
+          "total_tokens": 1256382,
+          "uncached_input_tokens": 99327
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": "0.12606202",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 4284069,
+        "mean": 4284069,
+        "min": 4284069,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": 0.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.12606202",
+        "estimated_usd": "0.12606202",
+        "invocations": 14,
+        "known_subtotal_usd": "0.12606202",
+        "priced_invocations": 14,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.12606202"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 0,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 1,
+        "runs": 1
+      },
+      "error_stages": {},
+      "error_types": {},
+      "error_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "gpt-6-luna",
+      "normal_repair_rounds": {
+        "max": 6,
+        "mean": 6,
+        "min": 6,
+        "missing": 0,
+        "n": 1
+      },
+      "normal_wall_time_seconds": {
+        "max": 1840.812,
+        "mean": 1840.812,
+        "min": 1840.812,
+        "missing": 0,
+        "n": 1
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "audit_budget_exhausted": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 14,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 3589632,
+          "input_tokens": 4232264,
+          "output_tokens": 51805,
+          "reasoning_output_tokens": 29869,
+          "total_tokens": 4284069,
+          "uncached_input_tokens": 642632
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 14
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": "1.5602668",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 4267207,
+        "mean": 4267207,
+        "min": 4267207,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": 1.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "1.5602668",
+        "estimated_usd": "1.5602668",
+        "invocations": 4,
+        "known_subtotal_usd": "1.5602668",
+        "priced_invocations": 4,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "1.5602668"
+      },
+      "counts": {
+        "converged": 1,
+        "errors": 0,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {},
+      "error_types": {},
+      "error_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "gpt-6-sol",
+      "normal_repair_rounds": {
+        "max": 1,
+        "mean": 1,
+        "min": 1,
+        "missing": 0,
+        "n": 1
+      },
+      "normal_wall_time_seconds": {
+        "max": 988.109,
+        "mean": 988.109,
+        "min": 988.109,
+        "missing": 0,
+        "n": 1
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "converged": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 4,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 3980544,
+          "input_tokens": 4243353,
+          "output_tokens": 23854,
+          "reasoning_output_tokens": 12566,
+          "total_tokens": 4267207,
+          "uncached_input_tokens": 262809
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 4
+      }
+    },
+    {
+      "average_cost_per_completed_run_usd": null,
+      "average_cost_sample_count": 0,
+      "completed_run_tokens": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "bb5c0fac4212566ba84501f3a27a77aded720cc6ab23fe3ed0f554906e886671",
+      "convergence_rate": null,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.5100720",
+        "estimated_usd": "0.5100720",
+        "invocations": 2,
+        "known_subtotal_usd": "0.5100720",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.5100720"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 0,
+        "excluded": 1,
+        "included": 0,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {},
+      "error_types": {},
+      "error_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "excluded_known_cost_usd": "0.5100720",
+      "model": "gpt-6.1-sol",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "awaiting_input": 1
+      },
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1500160,
+          "input_tokens": 1646253,
+          "output_tokens": 6787,
+          "reasoning_output_tokens": 2685,
+          "total_tokens": 1653040,
+          "uncached_input_tokens": 146093
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      }
+    }
+  ],
+  "pricing": {
+    "checked_on": "2026-10-02",
+    "context": "short",
+    "currency": "USD",
+    "notes": [
+      "Standard reasoning mode; token fees only. Subscription charges are not used.",
+      "CLI usage is cumulative across API requests; short context is an explicit estimate assumption.",
+      "Long context is selected explicitly, never inferred from cumulative CLI input tokens.",
+      "GPT-5.6 Sol promotional rates are available at least through 2026-11-21."
+    ],
+    "sources": [
+      "https://developers.openai.com/api/docs/pricing",
+      "https://developers.openai.com/api/docs/models/all"
+    ],
+    "tier": "standard"
+  },
+  "runs": [
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "1.7366096",
+        "estimated_usd": "1.7366096",
+        "invocations": 2,
+        "known_subtotal_usd": "1.7366096",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "1.7366096"
+      },
+      "error_stage": "repair-01",
+      "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-dea4e047b394496cb32bce1cddf05803",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 136.18799999999464,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 133.032,
+            "completion_observed": true,
+            "events_observed": 140,
+            "failed_tools": 0,
+            "non_tool_seconds": 126.25,
+            "pending_tools": [],
+            "post_completion_seconds": 3.125,
+            "tool_active_seconds": 6.782,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 626.8910000000033,
+          "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 596.141,
+            "completion_observed": true,
+            "events_observed": 17,
+            "failed_tools": 1,
+            "non_tool_seconds": 378.594,
+            "pending_tools": [
+              {
+                "id": "item_3",
+                "type": "file_change"
+              }
+            ],
+            "post_completion_seconds": 30.703,
+            "tool_active_seconds": 217.547,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 1.266,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": false
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0",
+              "cached_input": "0.4411392",
+              "input": "0.481332",
+              "output": "0.15092"
+            },
+            "estimated_usd": "1.0733912",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "1.0733912"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1102848,
+            "input_tokens": 1223181,
+            "output_tokens": 7546,
+            "reasoning_output_tokens": 4613
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1102848,
+            "input_tokens": 1223181,
+            "output_tokens": 7546,
+            "reasoning_output_tokens": 4613,
+            "total_tokens": 1230727,
+            "uncached_input_tokens": 120333
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0",
+              "cached_input": "0.2696704",
+              "input": "0.173708",
+              "output": "0.21984"
+            },
+            "estimated_usd": "0.6632184",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.6632184"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 674176,
+            "input_tokens": 717603,
+            "output_tokens": 10992,
+            "reasoning_output_tokens": 2812
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 674176,
+            "input_tokens": 717603,
+            "output_tokens": 10992,
+            "reasoning_output_tokens": 2812,
+            "total_tokens": 728595,
+            "uncached_input_tokens": 43427
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "FAILED",
+      "model": "gpt-5.6-sol",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-5.6-sol",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "5",
+          "cached_input": "0.40",
+          "input": "4",
+          "output": "20"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-dea4e047b394496cb32bce1cddf05803",
+      "status": "ERROR",
+      "stop_reason": "execution_error",
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1777024,
+          "input_tokens": 1940784,
+          "output_tokens": 18538,
+          "reasoning_output_tokens": 7425,
+          "total_tokens": 1959322,
+          "uncached_input_tokens": 163760
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      },
+      "wall_time_seconds": 810.031
+    },
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.09547440",
+        "estimated_usd": "0.09547440",
+        "invocations": 2,
+        "known_subtotal_usd": "0.09547440",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.09547440"
+      },
+      "error_stage": "repair-01",
+      "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-0b93dfb52f304db08ce3df05ebe9106d",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 88.86000000000058,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 85.375,
+            "completion_observed": true,
+            "events_observed": 151,
+            "failed_tools": 3,
+            "non_tool_seconds": 78.89,
+            "pending_tools": [],
+            "post_completion_seconds": 3.454,
+            "tool_active_seconds": 6.485,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 768.3589999999967,
+          "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 736.516,
+            "completion_observed": true,
+            "events_observed": 27,
+            "failed_tools": 1,
+            "non_tool_seconds": 456.313,
+            "pending_tools": [
+              {
+                "id": "item_3",
+                "type": "file_change"
+              },
+              {
+                "id": "item_5",
+                "type": "file_change"
+              }
+            ],
+            "post_completion_seconds": 31.812,
+            "tool_active_seconds": 280.203,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": false
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.01966336",
+              "input": "0.025101",
+              "output": "0.0103296"
+            },
+            "estimated_usd": "0.05509396",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.05509396"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 983168,
+            "input_tokens": 1108673,
+            "output_tokens": 8608,
+            "reasoning_output_tokens": 5802
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 983168,
+            "input_tokens": 1108673,
+            "output_tokens": 8608,
+            "reasoning_output_tokens": 5802,
+            "total_tokens": 1117281,
+            "uncached_input_tokens": 125505
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.01647104",
+              "input": "0.008835",
+              "output": "0.0150744"
+            },
+            "estimated_usd": "0.04038044",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.04038044"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 823552,
+            "input_tokens": 867727,
+            "output_tokens": 12562,
+            "reasoning_output_tokens": 3253
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 823552,
+            "input_tokens": 867727,
+            "output_tokens": 12562,
+            "reasoning_output_tokens": 3253,
+            "total_tokens": 880289,
+            "uncached_input_tokens": 44175
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "FAILED",
+      "model": "gpt-5.6-luna",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-5.6-luna",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "0.25",
+          "cached_input": "0.02",
+          "input": "0.20",
+          "output": "1.20"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-0b93dfb52f304db08ce3df05ebe9106d",
+      "status": "ERROR",
+      "stop_reason": "execution_error",
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1806720,
+          "input_tokens": 1976400,
+          "output_tokens": 21170,
+          "reasoning_output_tokens": 9055,
+          "total_tokens": 1997570,
+          "uncached_input_tokens": 169680
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      },
+      "wall_time_seconds": 915.406
+    },
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.6232136",
+        "estimated_usd": "0.6232136",
+        "invocations": 2,
+        "known_subtotal_usd": "0.6232136",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.6232136"
+      },
+      "error_stage": "repair-01",
+      "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-7ab55a443654423aad3546d54ec6cff9",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 126.84399999999732,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 125.344,
+            "completion_observed": true,
+            "events_observed": 92,
+            "failed_tools": 0,
+            "non_tool_seconds": 120.578,
+            "pending_tools": [],
+            "post_completion_seconds": 1.469,
+            "tool_active_seconds": 4.766,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 628.9839999999967,
+          "error_type": "EXECUTION_ENVIRONMENT_ERROR",
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 597.812,
+            "completion_observed": true,
+            "events_observed": 9,
+            "failed_tools": 0,
+            "non_tool_seconds": 286.906,
+            "pending_tools": [
+              {
+                "id": "item_3",
+                "type": "file_change"
+              }
+            ],
+            "post_completion_seconds": 31.031,
+            "tool_active_seconds": 310.906,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.141,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": false
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.099328",
+              "input": "0.175322",
+              "output": "0.056532"
+            },
+            "estimated_usd": "0.331182",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.331182"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 496640,
+            "input_tokens": 584301,
+            "output_tokens": 4711,
+            "reasoning_output_tokens": 2590
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 496640,
+            "input_tokens": 584301,
+            "output_tokens": 4711,
+            "reasoning_output_tokens": 2590,
+            "total_tokens": 589012,
+            "uncached_input_tokens": 87661
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.1166336",
+              "input": "0.08535",
+              "output": "0.090048"
+            },
+            "estimated_usd": "0.2920316",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.2920316"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 583168,
+            "input_tokens": 625843,
+            "output_tokens": 7504,
+            "reasoning_output_tokens": 3704
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 583168,
+            "input_tokens": 625843,
+            "output_tokens": 7504,
+            "reasoning_output_tokens": 3704,
+            "total_tokens": 633347,
+            "uncached_input_tokens": 42675
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "FAILED",
+      "model": "gpt-5.6-terra",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-5.6-terra",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "2.50",
+          "cached_input": "0.20",
+          "input": "2",
+          "output": "12"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "EXECUTION_ENVIRONMENT_ERROR",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-7ab55a443654423aad3546d54ec6cff9",
+      "status": "ERROR",
+      "stop_reason": "execution_error",
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1079808,
+          "input_tokens": 1210144,
+          "output_tokens": 12215,
+          "reasoning_output_tokens": 6294,
+          "total_tokens": 1222359,
+          "uncached_input_tokens": 130336
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      },
+      "wall_time_seconds": 812.609
+    },
+    {
+      "audit_rounds": 3,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "1.5602668",
+        "estimated_usd": "1.5602668",
+        "invocations": 4,
+        "known_subtotal_usd": "1.5602668",
+        "priced_invocations": 4,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "1.5602668"
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-c845e2ead673474d8295998d73a03cbf",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 101.29699999999139,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 98.282,
+            "completion_observed": true,
+            "events_observed": 130,
+            "failed_tools": 0,
+            "non_tool_seconds": 94.859,
+            "pending_tools": [],
+            "post_completion_seconds": 2.984,
+            "tool_active_seconds": 3.423,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 137.95300000000861,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 132.969,
+            "completion_observed": true,
+            "events_observed": 140,
+            "failed_tools": 0,
+            "non_tool_seconds": 100.719,
+            "pending_tools": [],
+            "post_completion_seconds": 4.922,
+            "tool_active_seconds": 32.25,
+            "warnings": []
+          },
+          "stage": "audit-02",
+          "started": true,
+          "startup_seconds": 0.062,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 137.14100000000326,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 132.172,
+            "completion_observed": true,
+            "events_observed": 146,
+            "failed_tools": 0,
+            "non_tool_seconds": 93.312,
+            "pending_tools": [],
+            "post_completion_seconds": 4.922,
+            "tool_active_seconds": 38.86,
+            "warnings": []
+          },
+          "stage": "audit-03",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 549.2030000000086,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 518.485,
+            "completion_observed": true,
+            "events_observed": 21,
+            "failed_tools": 0,
+            "non_tool_seconds": 518.422,
+            "pending_tools": [],
+            "post_completion_seconds": 30.687,
+            "tool_active_seconds": 0.063,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.2003456",
+              "input": "0.164016",
+              "output": "0.05688"
+            },
+            "estimated_usd": "0.4212416",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.4212416"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1001728,
+            "input_tokens": 1083736,
+            "output_tokens": 5688,
+            "reasoning_output_tokens": 2463
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1001728,
+            "input_tokens": 1083736,
+            "output_tokens": 5688,
+            "reasoning_output_tokens": 2463,
+            "total_tokens": 1089424,
+            "uncached_input_tokens": 82008
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.2175488",
+              "input": "0.15314",
+              "output": "0.05459"
+            },
+            "estimated_usd": "0.4252788",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.4252788"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1087744,
+            "input_tokens": 1164314,
+            "output_tokens": 5459,
+            "reasoning_output_tokens": 3109
+          },
+          "stage": "audit-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1087744,
+            "input_tokens": 1164314,
+            "output_tokens": 5459,
+            "reasoning_output_tokens": 3109,
+            "total_tokens": 1169773,
+            "uncached_input_tokens": 76570
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.1893632",
+              "input": "0.128906",
+              "output": "0.05708"
+            },
+            "estimated_usd": "0.3753492",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.3753492"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 946816,
+            "input_tokens": 1011269,
+            "output_tokens": 5708,
+            "reasoning_output_tokens": 3543
+          },
+          "stage": "audit-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 946816,
+            "input_tokens": 1011269,
+            "output_tokens": 5708,
+            "reasoning_output_tokens": 3543,
+            "total_tokens": 1016977,
+            "uncached_input_tokens": 64453
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.1888512",
+              "input": "0.079556",
+              "output": "0.06999"
+            },
+            "estimated_usd": "0.3383972",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.3383972"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 944256,
+            "input_tokens": 984034,
+            "output_tokens": 6999,
+            "reasoning_output_tokens": 3451
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 944256,
+            "input_tokens": 984034,
+            "output_tokens": 6999,
+            "reasoning_output_tokens": 3451,
+            "total_tokens": 991033,
+            "uncached_input_tokens": 39778
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "COMPLETED",
+      "model": "gpt-6-sol",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-6-sol",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "2.50",
+          "cached_input": "0.20",
+          "input": "2",
+          "output": "10"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-sol",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "CONVERGED",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-c845e2ead673474d8295998d73a03cbf",
+      "status": "CONVERGED",
+      "stop_reason": "converged",
+      "tokens": {
+        "complete": true,
+        "invocations": 4,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 3980544,
+          "input_tokens": 4243353,
+          "output_tokens": 23854,
+          "reasoning_output_tokens": 12566,
+          "total_tokens": 4267207,
+          "uncached_input_tokens": 262809
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 4
+      },
+      "wall_time_seconds": 988.109
+    },
+    {
+      "audit_rounds": 8,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.12606202",
+        "estimated_usd": "0.12606202",
+        "invocations": 14,
+        "known_subtotal_usd": "0.12606202",
+        "priced_invocations": 14,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.12606202"
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-f042c90c33eb4bb6a7d8505b67c40742",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 42.34300000000803,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 36.266,
+            "completion_observed": true,
+            "events_observed": 41,
+            "failed_tools": 0,
+            "non_tool_seconds": 32.437,
+            "pending_tools": [],
+            "post_completion_seconds": 6.015,
+            "tool_active_seconds": 3.829,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.062,
+          "teardown_seconds": 0.032,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 43.34399999999732,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 42.187,
+            "completion_observed": true,
+            "events_observed": 43,
+            "failed_tools": 0,
+            "non_tool_seconds": 36.999,
+            "pending_tools": [],
+            "post_completion_seconds": 1.094,
+            "tool_active_seconds": 5.188,
+            "warnings": []
+          },
+          "stage": "audit-02",
+          "started": true,
+          "startup_seconds": 0.063,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 62.04700000000594,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 55.969,
+            "completion_observed": true,
+            "events_observed": 57,
+            "failed_tools": 0,
+            "non_tool_seconds": 50.531,
+            "pending_tools": [],
+            "post_completion_seconds": 6.031,
+            "tool_active_seconds": 5.438,
+            "warnings": []
+          },
+          "stage": "audit-03",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 64.65699999999197,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 61.422,
+            "completion_observed": true,
+            "events_observed": 75,
+            "failed_tools": 0,
+            "non_tool_seconds": 57.188,
+            "pending_tools": [],
+            "post_completion_seconds": 3.203,
+            "tool_active_seconds": 4.234,
+            "warnings": []
+          },
+          "stage": "audit-04",
+          "started": true,
+          "startup_seconds": 0.032,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 53.703000000008615,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 47.735,
+            "completion_observed": true,
+            "events_observed": 55,
+            "failed_tools": 0,
+            "non_tool_seconds": 44.97,
+            "pending_tools": [],
+            "post_completion_seconds": 5.921,
+            "tool_active_seconds": 2.765,
+            "warnings": []
+          },
+          "stage": "audit-05",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.032,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 47.625,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 43.625,
+            "completion_observed": true,
+            "events_observed": 46,
+            "failed_tools": 0,
+            "non_tool_seconds": 41.141,
+            "pending_tools": [],
+            "post_completion_seconds": 3.968,
+            "tool_active_seconds": 2.484,
+            "warnings": []
+          },
+          "stage": "audit-06",
+          "started": true,
+          "startup_seconds": 0.032,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 65.84399999999732,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 62.109,
+            "completion_observed": true,
+            "events_observed": 57,
+            "failed_tools": 1,
+            "non_tool_seconds": 60.203,
+            "pending_tools": [],
+            "post_completion_seconds": 3.704,
+            "tool_active_seconds": 1.906,
+            "warnings": []
+          },
+          "stage": "audit-07",
+          "started": true,
+          "startup_seconds": 0.031,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 45.203000000008615,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 39.718,
+            "completion_observed": true,
+            "events_observed": 41,
+            "failed_tools": 0,
+            "non_tool_seconds": 37.874,
+            "pending_tools": [],
+            "post_completion_seconds": 5.438,
+            "tool_active_seconds": 1.844,
+            "warnings": []
+          },
+          "stage": "audit-08",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 276.2810000000027,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 245.547,
+            "completion_observed": true,
+            "events_observed": 16,
+            "failed_tools": 0,
+            "non_tool_seconds": 245.422,
+            "pending_tools": [],
+            "post_completion_seconds": 30.672,
+            "tool_active_seconds": 0.125,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.062,
+          "teardown_seconds": 0.422,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 413.1560000000027,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 382.594,
+            "completion_observed": true,
+            "events_observed": 20,
+            "failed_tools": 1,
+            "non_tool_seconds": 381.688,
+            "pending_tools": [],
+            "post_completion_seconds": 30.5,
+            "tool_active_seconds": 0.906,
+            "warnings": []
+          },
+          "stage": "repair-02",
+          "started": true,
+          "startup_seconds": 0.062,
+          "teardown_seconds": 0.0,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 301.79700000000594,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 271.157,
+            "completion_observed": true,
+            "events_observed": 12,
+            "failed_tools": 0,
+            "non_tool_seconds": 271.157,
+            "pending_tools": [],
+            "post_completion_seconds": 30.562,
+            "tool_active_seconds": 0.0,
+            "warnings": []
+          },
+          "stage": "repair-03",
+          "started": true,
+          "startup_seconds": 0.078,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 199.31299999999464,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 168.75,
+            "completion_observed": true,
+            "events_observed": 17,
+            "failed_tools": 0,
+            "non_tool_seconds": 164.828,
+            "pending_tools": [],
+            "post_completion_seconds": 30.516,
+            "tool_active_seconds": 3.922,
+            "warnings": []
+          },
+          "stage": "repair-04",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 42.04700000000594,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 34.828,
+            "completion_observed": true,
+            "events_observed": 12,
+            "failed_tools": 0,
+            "non_tool_seconds": 32.656,
+            "pending_tools": [],
+            "post_completion_seconds": 7.172,
+            "tool_active_seconds": 2.172,
+            "warnings": []
+          },
+          "stage": "repair-05",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 39.40600000000268,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 36.938,
+            "completion_observed": true,
+            "events_observed": 14,
+            "failed_tools": 0,
+            "non_tool_seconds": 34.219,
+            "pending_tools": [],
+            "post_completion_seconds": 2.421,
+            "tool_active_seconds": 2.719,
+            "warnings": []
+          },
+          "stage": "repair-06",
+          "started": true,
+          "startup_seconds": 0.047,
+          "teardown_seconds": 0.016,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.0013696",
+              "input": "0.0052695",
+              "output": "0.000916"
+            },
+            "estimated_usd": "0.0075551",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.0075551"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 136960,
+            "input_tokens": 189655,
+            "output_tokens": 1832,
+            "reasoning_output_tokens": 702
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 136960,
+            "input_tokens": 189655,
+            "output_tokens": 1832,
+            "reasoning_output_tokens": 702,
+            "total_tokens": 191487,
+            "uncached_input_tokens": 52695
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00151808",
+              "input": "0.0043281",
+              "output": "0.001277"
+            },
+            "estimated_usd": "0.00712318",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00712318"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 151808,
+            "input_tokens": 195089,
+            "output_tokens": 2554,
+            "reasoning_output_tokens": 1501
+          },
+          "stage": "audit-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 151808,
+            "input_tokens": 195089,
+            "output_tokens": 2554,
+            "reasoning_output_tokens": 1501,
+            "total_tokens": 197643,
+            "uncached_input_tokens": 43281
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00306688",
+              "input": "0.00592",
+              "output": "0.002203"
+            },
+            "estimated_usd": "0.01118988",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.01118988"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 306688,
+            "input_tokens": 365888,
+            "output_tokens": 4406,
+            "reasoning_output_tokens": 2985
+          },
+          "stage": "audit-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 306688,
+            "input_tokens": 365888,
+            "output_tokens": 4406,
+            "reasoning_output_tokens": 2985,
+            "total_tokens": 370294,
+            "uncached_input_tokens": 59200
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00377088",
+              "input": "0.007052",
+              "output": "0.002253"
+            },
+            "estimated_usd": "0.01307588",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.01307588"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 377088,
+            "input_tokens": 447608,
+            "output_tokens": 4506,
+            "reasoning_output_tokens": 2978
+          },
+          "stage": "audit-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 377088,
+            "input_tokens": 447608,
+            "output_tokens": 4506,
+            "reasoning_output_tokens": 2978,
+            "total_tokens": 452114,
+            "uncached_input_tokens": 70520
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00246528",
+              "input": "0.0050415",
+              "output": "0.002021"
+            },
+            "estimated_usd": "0.00952778",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00952778"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 246528,
+            "input_tokens": 296943,
+            "output_tokens": 4042,
+            "reasoning_output_tokens": 3014
+          },
+          "stage": "audit-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 246528,
+            "input_tokens": 296943,
+            "output_tokens": 4042,
+            "reasoning_output_tokens": 3014,
+            "total_tokens": 300985,
+            "uncached_input_tokens": 50415
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.0016128",
+              "input": "0.0058605",
+              "output": "0.0019295"
+            },
+            "estimated_usd": "0.0094028",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.0094028"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 161280,
+            "input_tokens": 219885,
+            "output_tokens": 3859,
+            "reasoning_output_tokens": 2627
+          },
+          "stage": "audit-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 161280,
+            "input_tokens": 219885,
+            "output_tokens": 3859,
+            "reasoning_output_tokens": 2627,
+            "total_tokens": 223744,
+            "uncached_input_tokens": 58605
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00225152",
+              "input": "0.0059207",
+              "output": "0.0027835"
+            },
+            "estimated_usd": "0.01095572",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.01095572"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 225152,
+            "input_tokens": 284359,
+            "output_tokens": 5567,
+            "reasoning_output_tokens": 4335
+          },
+          "stage": "audit-07",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 225152,
+            "input_tokens": 284359,
+            "output_tokens": 5567,
+            "reasoning_output_tokens": 4335,
+            "total_tokens": 289926,
+            "uncached_input_tokens": 59207
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00202624",
+              "input": "0.004736",
+              "output": "0.0015855"
+            },
+            "estimated_usd": "0.00834774",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00834774"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 202624,
+            "input_tokens": 249984,
+            "output_tokens": 3171,
+            "reasoning_output_tokens": 2356
+          },
+          "stage": "audit-08",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 202624,
+            "input_tokens": 249984,
+            "output_tokens": 3171,
+            "reasoning_output_tokens": 2356,
+            "total_tokens": 253155,
+            "uncached_input_tokens": 47360
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00419968",
+              "input": "0.0035293",
+              "output": "0.002542"
+            },
+            "estimated_usd": "0.01027098",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.01027098"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 419968,
+            "input_tokens": 455261,
+            "output_tokens": 5084,
+            "reasoning_output_tokens": 2740
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 419968,
+            "input_tokens": 455261,
+            "output_tokens": 5084,
+            "reasoning_output_tokens": 2740,
+            "total_tokens": 460345,
+            "uncached_input_tokens": 35293
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.0052096",
+              "input": "0.003484",
+              "output": "0.0023865"
+            },
+            "estimated_usd": "0.0110801",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.0110801"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 520960,
+            "input_tokens": 555800,
+            "output_tokens": 4773,
+            "reasoning_output_tokens": 2282
+          },
+          "stage": "repair-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 520960,
+            "input_tokens": 555800,
+            "output_tokens": 4773,
+            "reasoning_output_tokens": 2282,
+            "total_tokens": 560573,
+            "uncached_input_tokens": 34840
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00443136",
+              "input": "0.0033562",
+              "output": "0.001905"
+            },
+            "estimated_usd": "0.00969256",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00969256"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 443136,
+            "input_tokens": 476698,
+            "output_tokens": 3810,
+            "reasoning_output_tokens": 1580
+          },
+          "stage": "repair-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 443136,
+            "input_tokens": 476698,
+            "output_tokens": 3810,
+            "reasoning_output_tokens": 1580,
+            "total_tokens": 480508,
+            "uncached_input_tokens": 33562
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00228224",
+              "input": "0.0033253",
+              "output": "0.0015105"
+            },
+            "estimated_usd": "0.00711804",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00711804"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 228224,
+            "input_tokens": 261477,
+            "output_tokens": 3021,
+            "reasoning_output_tokens": 886
+          },
+          "stage": "repair-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 228224,
+            "input_tokens": 261477,
+            "output_tokens": 3021,
+            "reasoning_output_tokens": 886,
+            "total_tokens": 264498,
+            "uncached_input_tokens": 33253
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00069248",
+              "input": "0.0033062",
+              "output": "0.0011875"
+            },
+            "estimated_usd": "0.00518618",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00518618"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 69248,
+            "input_tokens": 102310,
+            "output_tokens": 2375,
+            "reasoning_output_tokens": 841
+          },
+          "stage": "repair-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 69248,
+            "input_tokens": 102310,
+            "output_tokens": 2375,
+            "reasoning_output_tokens": 841,
+            "total_tokens": 104685,
+            "uncached_input_tokens": 33062
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.000",
+              "cached_input": "0.00099968",
+              "input": "0.0031339",
+              "output": "0.0014025"
+            },
+            "estimated_usd": "0.00553608",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.00553608"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 99968,
+            "input_tokens": 131307,
+            "output_tokens": 2805,
+            "reasoning_output_tokens": 1042
+          },
+          "stage": "repair-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 99968,
+            "input_tokens": 131307,
+            "output_tokens": 2805,
+            "reasoning_output_tokens": 1042,
+            "total_tokens": 134112,
+            "uncached_input_tokens": 31339
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "COMPLETED",
+      "model": "gpt-6-luna",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "0.125",
+          "cached_input": "0.01",
+          "input": "0.10",
+          "output": "0.50"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "NON_CONVERGED",
+      "reasoning_effort": "high",
+      "repair_rounds": 6,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-f042c90c33eb4bb6a7d8505b67c40742",
+      "status": "NON_CONVERGED",
+      "stop_reason": "audit_budget_exhausted",
+      "tokens": {
+        "complete": true,
+        "invocations": 14,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 3589632,
+          "input_tokens": 4232264,
+          "output_tokens": 51805,
+          "reasoning_output_tokens": 29869,
+          "total_tokens": 4284069,
+          "uncached_input_tokens": 642632
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 14
+      },
+      "wall_time_seconds": 1840.812
+    },
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "2.441924",
+        "estimated_usd": "2.441924",
+        "invocations": 2,
+        "known_subtotal_usd": "2.441924",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "2.441924"
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-adbaa66d40cc45408ef5897b9c6265ea",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 102.70300000000861,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 100.578,
+            "completion_observed": true,
+            "events_observed": 68,
+            "failed_tools": 1,
+            "non_tool_seconds": 99.438,
+            "pending_tools": [],
+            "post_completion_seconds": 2.063,
+            "tool_active_seconds": 1.14,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.062,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 352.5310000000027,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 321.86,
+            "completion_observed": true,
+            "events_observed": 11,
+            "failed_tools": 0,
+            "non_tool_seconds": 321.86,
+            "pending_tools": [],
+            "post_completion_seconds": 30.625,
+            "tool_active_seconds": 0.0,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.046,
+          "teardown_seconds": 0.015,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        }
+      ],
+      "included": false,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.435456",
+              "input": "0.67065",
+              "output": "0.1744"
+            },
+            "estimated_usd": "1.280506",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "1.280506"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 435456,
+            "input_tokens": 502521,
+            "output_tokens": 3488,
+            "reasoning_output_tokens": 295
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 435456,
+            "input_tokens": 502521,
+            "output_tokens": 3488,
+            "reasoning_output_tokens": 295,
+            "total_tokens": 506009,
+            "uncached_input_tokens": 67065
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.715648",
+              "input": "0.32262",
+              "output": "0.12315"
+            },
+            "estimated_usd": "1.161418",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "1.161418"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 715648,
+            "input_tokens": 747910,
+            "output_tokens": 2463,
+            "reasoning_output_tokens": 974
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 715648,
+            "input_tokens": 747910,
+            "output_tokens": 2463,
+            "reasoning_output_tokens": 974,
+            "total_tokens": 750373,
+            "uncached_input_tokens": 32262
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "WAITING_INPUT",
+      "model": "gpt-6-astra",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-6-astra",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "12.50",
+          "cached_input": "1",
+          "input": "10",
+          "output": "50"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "NEEDS_INPUT",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-adbaa66d40cc45408ef5897b9c6265ea",
+      "status": null,
+      "stop_reason": "awaiting_input",
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1151104,
+          "input_tokens": 1250431,
+          "output_tokens": 5951,
+          "reasoning_output_tokens": 1269,
+          "total_tokens": 1256382,
+          "uncached_input_tokens": 99327
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      },
+      "wall_time_seconds": 517.687
+    },
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 4,
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0.5100720",
+        "estimated_usd": "0.5100720",
+        "invocations": 2,
+        "known_subtotal_usd": "0.5100720",
+        "priced_invocations": 2,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": "0.5100720"
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-458607b05f204752a2aadeae9382be36",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 105.84400000001187,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 101.718,
+            "completion_observed": true,
+            "events_observed": 92,
+            "failed_tools": 1,
+            "non_tool_seconds": 97.42,
+            "pending_tools": [],
+            "post_completion_seconds": 4.016,
+            "tool_active_seconds": 4.298,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.11,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": "process_remained_after_completed_turn",
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 466.7189999999973,
+          "error_type": null,
+          "exit_code": 1,
+          "forced_cleanup": true,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 435.953,
+            "completion_observed": true,
+            "events_observed": 10,
+            "failed_tools": 0,
+            "non_tool_seconds": 435.953,
+            "pending_tools": [],
+            "post_completion_seconds": 30.703,
+            "tool_active_seconds": 0.0,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "startup_seconds": 0.063,
+          "teardown_seconds": 0.031,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": true
+        }
+      ],
+      "included": false,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.0475264",
+              "input": "0.16639",
+              "output": "0.03229"
+            },
+            "estimated_usd": "0.2462064",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.2462064"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 475264,
+            "input_tokens": 558459,
+            "output_tokens": 3229,
+            "reasoning_output_tokens": 1177
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 475264,
+            "input_tokens": 558459,
+            "output_tokens": 3229,
+            "reasoning_output_tokens": 1177,
+            "total_tokens": 561688,
+            "uncached_input_tokens": 83195
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": {
+              "cache_write": "0.00",
+              "cached_input": "0.1024896",
+              "input": "0.125796",
+              "output": "0.03558"
+            },
+            "estimated_usd": "0.2638656",
+            "issue": null,
+            "kind": "estimated",
+            "total_usd": "0.2638656"
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1024896,
+            "input_tokens": 1087794,
+            "output_tokens": 3558,
+            "reasoning_output_tokens": 1508
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1024896,
+            "input_tokens": 1087794,
+            "output_tokens": 3558,
+            "reasoning_output_tokens": 1508,
+            "total_tokens": 1091352,
+            "uncached_input_tokens": 62898
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "WAITING_INPUT",
+      "model": "gpt-6.1-sol",
+      "price": {
+        "checked_on": "2026-10-02",
+        "context": "short",
+        "currency": "USD",
+        "model": "gpt-6.1-sol",
+        "provider": "openai",
+        "rates": {
+          "cache_write": "2.50",
+          "cached_input": "0.10",
+          "input": "2",
+          "output": "10"
+        },
+        "source": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+        "tier": "standard",
+        "unit_tokens": 1000000
+      },
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openai",
+      "raw_status": "NEEDS_INPUT",
+      "reasoning_effort": "high",
+      "repair_rounds": 1,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-458607b05f204752a2aadeae9382be36",
+      "status": null,
+      "stop_reason": "awaiting_input",
+      "tokens": {
+        "complete": true,
+        "invocations": 2,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 1500160,
+          "input_tokens": 1646253,
+          "output_tokens": 6787,
+          "reasoning_output_tokens": 2685,
+          "total_tokens": 1653040,
+          "uncached_input_tokens": 146093
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 2
+      },
+      "wall_time_seconds": 639.579
+    }
+  ],
+  "schema_version": 1,
+  "summary": {
+    "average_cost_per_completed_run_usd": "0.828325284",
+    "average_cost_sample_count": 5,
+    "completed_run_tokens": {
+      "max": 4284069,
+      "mean": 2746105.4,
+      "min": 1222359,
+      "missing": 0,
+      "n": 5
+    },
+    "convergence_rate": 0.2,
+    "cost": {
+      "complete": true,
+      "currency": "USD",
+      "estimated_subtotal_usd": "7.09362242",
+      "estimated_usd": "7.09362242",
+      "invocations": 28,
+      "known_subtotal_usd": "7.09362242",
+      "priced_invocations": 28,
+      "reported_invocations": 0,
+      "reported_subtotal_usd": "0",
+      "total_usd": "7.09362242"
+    },
+    "counts": {
+      "converged": 1,
+      "errors": 3,
+      "excluded": 2,
+      "included": 5,
+      "non_converged": 1,
+      "runs": 7
+    },
+    "error_stages": {
+      "repair-01": 3
+    },
+    "error_types": {
+      "EXECUTION_ENVIRONMENT_ERROR": 3
+    },
+    "error_wall_time_seconds": {
+      "max": 915.406,
+      "mean": 846.0153333333333,
+      "min": 810.031,
+      "missing": 0,
+      "n": 3
+    },
+    "excluded_known_cost_usd": "2.9519960",
+    "normal_repair_rounds": {
+      "max": 6,
+      "mean": 3.5,
+      "min": 1,
+      "missing": 0,
+      "n": 2
+    },
+    "normal_wall_time_seconds": {
+      "max": 1840.812,
+      "mean": 1414.4605,
+      "min": 988.109,
+      "missing": 0,
+      "n": 2
+    },
+    "stop_reasons": {
+      "audit_budget_exhausted": 1,
+      "awaiting_input": 2,
+      "converged": 1,
+      "execution_error": 3
+    },
+    "tokens": {
+      "complete": true,
+      "invocations": 28,
+      "known_totals": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 14884992,
+        "input_tokens": 16499629,
+        "output_tokens": 140320,
+        "reasoning_output_tokens": 69163,
+        "total_tokens": 16639949,
+        "uncached_input_tokens": 1614637
+      },
+      "missing_by_field": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 0,
+        "uncached_input_tokens": 0
+      },
+      "usage_recorded_invocations": 28
+    }
+  }
+}

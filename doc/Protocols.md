@@ -13,7 +13,7 @@ Spec、Plan 和验收报告保留为历史设计记录。
 
 | ID | version | workflow | 输入含义 | 起点 | 收敛含义 |
 |---|---:|---|---|---|---|
-| `spec-mrac-v2` | 5 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
+| `spec-mrac-v2` | 6 | `repository-spec-freeze`（默认） | 待审计的原始 Spec | 原样复制，直接仓库审计 | 同一 Spec 与基线上两次独立空 findings 审计 |
 | `spec-mrac-v1` | 1 | `generate-audit-repair` | 原始任务 | 生成 implementation Spec | 同一产物连续两次无 blocking issue |
 | `spec-flow-simple-v1` | 14 | `spec-init-freeze` | 待审计的原始 Spec | 原样复制输入 Spec，初始化审计 | 同一 Spec 字节连续两次经裁决的冻结 clean |
 | `exec-mrac-v1` | 1 | `exec-mrac` | 显式选定的执行 Spec | 独立可写 checkout 中实施代码 | 同一 Spec、基线和完整产品候选快照连续两轮零问题 |
@@ -212,7 +212,7 @@ spec-mrac-v2，只有显式选择 exec-mrac-v1 才进入可写阶段。
 
 ## 默认协议：spec-mrac-v2
 
-当前修订为 `spec-mrac-v2@5`，参考 1df0 checkout 的
+当前修订为 `spec-mrac-v2@6`，参考 1df0 checkout 的
 `.codex/skills/mrac-spec/SKILL.md`、`scripts/mracspec.py` 和
 `references/controller.md`，固定来源 commit 为
 `a21a921d4ed9039bce606b35e1c3267a0dea0de6`。来源和 Bench 状态版本均为 3；
@@ -251,6 +251,15 @@ CLI 禁用自动用户配置/规则加载。Spec 引用其他版本时，在 cas
 @4 的审计通过固定仓库只读 MCP 查询 HEAD 并读取相关文件；runner 核对实际成功的工具事件，缺少固定 HEAD 或文件读取证据时返回 `REPOSITORY_ACCESS_ERROR`。@2/@3 的冻结快照仍使用原来的仓库读取方式。
 
 ### 直接 FIX 和必要输入
+
+@6 修复阶段同时提供固定基线的 `mrac_repository` 只读 MCP 与当前 checkout Spec 的
+`mrac_spec_file` 读写 MCP。提示优先通过前者核验 HEAD、读取规则/源码及搜索依赖，
+通过后者读取当前 Spec 并编辑；原生 Shell/apply_patch 未被禁用。仓库 MCP 指向原始
+只读快照并逐文件核验 manifest，不能指向已修改的 checkout；其返回的 Spec 是基线
+版本，修复候选必须从 Spec MCP 读取。不会把 MCP 路径当成访问其他工作区的授权。
+保留原有 Spec-only 修改范围校验，没有增加强制读取清单或独立裁决调用。
+已保存 @2–@5 的修复工具集继续由各自修订选择，@5 不会因默认升级获得这些工具。
+严格 JSON、双 clean、六轮暂停、8 轮预算及末轮不修复规则沿用 @5。
 
 审计记录成功即完成本轮：有发现则所有 P0–P3 直接进入 FIX，无接受、驳回、暂缓或
 exception 分类。修复输入为 `findings`，待修复项存为 `pending_fix.findings`。
@@ -557,6 +566,11 @@ accepted P3 也会触发修复，因此不能只用这个数推断 clean。`defe
 产物和审计范围不同，不能把两个协议的“收敛轮数”当作同一标尺直接排名。
 
 ## 变更记录
+
+- 2026-10-24：`spec-mrac-v2@6` 修复阶段补齐固定基线的仓库只读 MCP，优先通过
+  Spec MCP 修改当前候选，区分固定基线与修复 checkout。harness v3 增加未结束工具
+  与完成校验的诊断字段，收尾判定和超时不变。无 JSON 容错、自动重试或历史成绩改判；
+  Simple 协议版本及提示保持原样。历史 @5 / harness v2 成绩独立归档。
 
 - 2026-10-04：`spec-mrac-v2@5` 默认总审计预算 8 轮；最后一轮审计完成即结束，
   不执行该轮修复。满足双 clean 则收敛，否则 NON_CONVERGED 并保留所有未修复

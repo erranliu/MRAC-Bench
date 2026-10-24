@@ -1,0 +1,1974 @@
+{
+  "archive": {
+    "actual_cli_version": "codex-cli 0.159.2",
+    "batch_concurrency": 1,
+    "batch_id": "B-18b8e96e5dbdb75798ca0cc4",
+    "batch_ids": [
+      "B-18b8e96e5dbdb75798ca0cc4"
+    ],
+    "case": {
+      "case_key": "C000003",
+      "name": "case3",
+      "number": 3,
+      "sha256": "6aafb9eba8d19f0733cba4a0a6d9fed2eda673717d67b25c09db22863acb162a",
+      "source_id": "steerline-pr196",
+      "version": 1
+    },
+    "code_identity": {
+      "executable": "C:\\Users\\lmas1\\.mracbench\\control\\requests\\case3-deepseek-flash-1017-spec5-harness2\\source\\.venv\\Scripts\\python.exe",
+      "python": "3.12.13 (main, May 10 2026, 19:35:37) [MSC v.1944 64 bit (AMD64)]",
+      "sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29"
+    },
+    "created_at": "2026-10-24T01:13:58.836308+00:00",
+    "evidence_path_base": "bench_home",
+    "finished_at": "2026-10-24T01:19:45.185756+00:00",
+    "max_auto_recoveries": 0,
+    "model_api_metadata": {
+      "architecture": {
+        "input_modalities": [
+          "text",
+          "image",
+          "video"
+        ],
+        "instruct_type": null,
+        "modality": "text+image+video->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "benchmarks": {
+        "artificial_analysis": {
+          "agentic_index": 50,
+          "coding_index": 76.2,
+          "intelligence_index": 43.6
+        },
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "agenticgamedev",
+            "elo": 1252,
+            "rank": 3,
+            "win_rate": 54.9
+          },
+          {
+            "arena": "agents",
+            "category": "androidnative",
+            "elo": 1255,
+            "rank": 4,
+            "win_rate": 56
+          },
+          {
+            "arena": "agents",
+            "category": "blender3d",
+            "elo": 1207,
+            "rank": 10,
+            "win_rate": 49.1
+          },
+          {
+            "arena": "agents",
+            "category": "fullstack",
+            "elo": 1315,
+            "rank": 2,
+            "win_rate": 61.8
+          },
+          {
+            "arena": "agents",
+            "category": "godotgamedev",
+            "elo": 1223,
+            "rank": 14,
+            "win_rate": 48.2
+          },
+          {
+            "arena": "agents",
+            "category": "htmlslides",
+            "elo": 1153,
+            "rank": 5,
+            "win_rate": 55.6
+          },
+          {
+            "arena": "agents",
+            "category": "mobileapps",
+            "elo": 1270,
+            "rank": 3,
+            "win_rate": 57.7
+          },
+          {
+            "arena": "agents",
+            "category": "python-pptxslides",
+            "elo": 1219,
+            "rank": 7,
+            "win_rate": 54.8
+          },
+          {
+            "arena": "agents",
+            "category": "spreadsheet",
+            "elo": 1105,
+            "rank": 12,
+            "win_rate": 32.9
+          },
+          {
+            "arena": "agents",
+            "category": "webapps",
+            "elo": 1295,
+            "rank": 7,
+            "win_rate": 59.3
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1389,
+            "rank": 7,
+            "win_rate": 67.2
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1360,
+            "rank": 3,
+            "win_rate": 62.3
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1351,
+            "rank": 4,
+            "win_rate": 63.3
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1362,
+            "rank": 7,
+            "win_rate": 60.6
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1302,
+            "rank": 5,
+            "win_rate": 59.4
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1340,
+            "rank": 6,
+            "win_rate": 60
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1335,
+            "rank": 3,
+            "win_rate": 59.3
+          }
+        ]
+      },
+      "canonical_slug": "moonshotai/kimi-k3-20260715",
+      "context_length": 1048576,
+      "created": 1784215858,
+      "default_parameters": {
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null,
+        "temperature": null,
+        "top_k": null,
+        "top_p": 0.95
+      },
+      "description": "Kimi K3 is a 2.8T parameter open-weight multimodal reasoning model from Moonshot AI. It is suited for complex coding, knowledge work, and long-horizon agentic workflows, and is particularly strong at...",
+      "expiration_date": null,
+      "hugging_face_id": "moonshotai/Kimi-K3",
+      "id": "moonshotai/kimi-k3",
+      "knowledge_cutoff": null,
+      "links": {
+        "details": "/api/v1/models/moonshotai/kimi-k3-20260715/endpoints"
+      },
+      "name": "MoonshotAI: Kimi K3",
+      "per_request_limits": null,
+      "pricing": {
+        "completion": "0.0000108",
+        "input_cache_read": "0.00000021",
+        "prompt": "0.000000239"
+      },
+      "reasoning": {
+        "default_effort": "max",
+        "default_enabled": true,
+        "mandatory": false,
+        "supported_efforts": [
+          "max",
+          "high",
+          "low",
+          "none"
+        ]
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_completion_tokens",
+        "max_tokens",
+        "min_p",
+        "parallel_tool_calls",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "supported_voices": null,
+      "top_provider": {
+        "context_length": 1048576,
+        "is_moderated": false,
+        "max_completion_tokens": 943718
+      }
+    },
+    "model_catalog_source": "https://openrouter.ai/api/v1/models",
+    "reference_batch_id": "B-c9048f79cf1e6e5d8e8f3ac4",
+    "reference_run_id": "run-4523278275104ec0b760026fead6b5b9",
+    "repeat_per_model": 1,
+    "requested_model": "moonshotai/kimi-k3",
+    "run_id": "run-71242b2f21234db2b9679ea31cc60441",
+    "scheduler_groups": {
+      "openai-oct24": 4,
+      "openrouter-oct24": 2
+    },
+    "scheduler_total": 6,
+    "settings": {
+      "harness_version": 2,
+      "max_audit_rounds": 8,
+      "protocol": "spec-mrac-v2@5",
+      "reasoning_effort": "high",
+      "timeout_seconds": 1800,
+      "windows_sandbox": "unelevated"
+    }
+  },
+  "case": {
+    "case_key": "C000003",
+    "name": "case3",
+    "sha256": "6aafb9eba8d19f0733cba4a0a6d9fed2eda673717d67b25c09db22863acb162a",
+    "source_id": "steerline-pr196",
+    "version": 1
+  },
+  "generated_at": "2026-10-24T01:19:44.426420+00:00",
+  "groups": [
+    {
+      "average_cost_per_completed_run_usd": "0.472337582",
+      "average_cost_sample_count": 1,
+      "completed_run_tokens": {
+        "max": 1179433,
+        "mean": 1179433,
+        "min": 1179433,
+        "missing": 0,
+        "n": 1
+      },
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": "https://openrouter.ai/api/v1",
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "conditions_id": "74e693851d4a868c6bf981398f6190ee7612bcd4f4a827a8c78116d4eebd6d27",
+      "convergence_rate": 0.0,
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0E-9",
+        "estimated_usd": null,
+        "invocations": 31,
+        "known_subtotal_usd": "0.472337582",
+        "priced_invocations": 31,
+        "reported_invocations": 31,
+        "reported_subtotal_usd": "0.472337582",
+        "total_usd": "0.472337582"
+      },
+      "counts": {
+        "converged": 0,
+        "errors": 1,
+        "excluded": 0,
+        "included": 1,
+        "non_converged": 0,
+        "runs": 1
+      },
+      "error_stages": {
+        "audit-01": 1
+      },
+      "error_types": {
+        "AUDIT_INVALID": 1
+      },
+      "error_wall_time_seconds": {
+        "max": 224.968,
+        "mean": 224.968,
+        "min": 224.968,
+        "missing": 0,
+        "n": 1
+      },
+      "excluded_known_cost_usd": "0",
+      "model": "moonshotai/kimi-k3",
+      "normal_repair_rounds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "normal_wall_time_seconds": {
+        "max": null,
+        "mean": null,
+        "min": null,
+        "missing": 0,
+        "n": 0
+      },
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openrouter",
+      "reasoning_effort": "high",
+      "stop_reasons": {
+        "execution_error": 1
+      },
+      "tokens": {
+        "complete": false,
+        "invocations": 31,
+        "known_totals": {
+          "cache_write_input_tokens": null,
+          "cached_input_tokens": 1069952,
+          "input_tokens": 1165973,
+          "output_tokens": 13460,
+          "reasoning_output_tokens": 10134,
+          "total_tokens": 1179433,
+          "uncached_input_tokens": null
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 31,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 31
+        },
+        "usage_recorded_invocations": 31
+      }
+    }
+  ],
+  "pricing": {
+    "checked_on": "2026-10-02",
+    "context": "short",
+    "currency": "USD",
+    "notes": [
+      "Standard reasoning mode; token fees only. Subscription charges are not used.",
+      "CLI usage is cumulative across API requests; short context is an explicit estimate assumption.",
+      "Long context is selected explicitly, never inferred from cumulative CLI input tokens.",
+      "GPT-5.6 Sol promotional rates are available at least through 2026-11-21."
+    ],
+    "sources": [
+      "https://developers.openai.com/api/docs/pricing",
+      "https://developers.openai.com/api/docs/models/all"
+    ],
+    "tier": "standard"
+  },
+  "runs": [
+    {
+      "audit_rounds": 1,
+      "batch_concurrency": 1,
+      "batch_id": "B-18b8e96e5dbdb75798ca0cc4",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": "https://openrouter.ai/api/v1",
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": true,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0E-9",
+        "estimated_usd": null,
+        "invocations": 31,
+        "known_subtotal_usd": "0.472337582",
+        "priced_invocations": 31,
+        "reported_invocations": 31,
+        "reported_subtotal_usd": "0.472337582",
+        "total_usd": "0.472337582"
+      },
+      "error_stage": "audit-01",
+      "error_type": "AUDIT_INVALID",
+      "evidence_path": "batches/B-18b8e96e5dbdb75798ca0cc4/runs/run-71242b2f21234db2b9679ea31cc60441",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_grace_seconds": 30,
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 210.75,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 2,
+          "progress": {
+            "agent_active_seconds": 208.813,
+            "completion_observed": true,
+            "events_observed": 121,
+            "failed_tools": 0,
+            "non_tool_seconds": 196.219,
+            "pending_tools": [],
+            "post_completion_seconds": 1.406,
+            "tool_active_seconds": 12.594,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "startup_seconds": 0.093,
+          "teardown_seconds": 0.469,
+          "tool_timeout_seconds": 300,
+          "validated_completed_turn": null
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0046494",
+            "response_id": "gen-1792804528-wHwJeaaFLLO5uCZcSDtg",
+            "source": "openrouter",
+            "total_usd": "0.0046494"
+          },
+          "raw_usage": {
+            "cost": 0.0046494,
+            "cost_details": {
+              "upstream_inference_cost": 0.0046494,
+              "upstream_inference_input_cost": 0.0035214,
+              "upstream_inference_output_cost": 0.001128
+            },
+            "input_tokens": 11738,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "is_byok": false,
+            "output_tokens": 94,
+            "output_tokens_details": {
+              "reasoning_tokens": 19
+            },
+            "total_tokens": 11832
+          },
+          "stage": "audit-01/api-1",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 0,
+            "input_tokens": 11738,
+            "output_tokens": 94,
+            "reasoning_output_tokens": 19,
+            "total_tokens": 11832,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0043162",
+            "response_id": "gen-1792804532-LZctNdShYVLOcJ2pn6CO",
+            "source": "openrouter",
+            "total_usd": "0.0043162"
+          },
+          "raw_usage": {
+            "cost": 0.0043162,
+            "cost_details": {
+              "upstream_inference_cost": 0.0043162,
+              "upstream_inference_input_cost": 0.0030082,
+              "upstream_inference_output_cost": 0.001308
+            },
+            "input_tokens": 11990,
+            "input_tokens_details": {
+              "cached_tokens": 11776
+            },
+            "is_byok": false,
+            "output_tokens": 109,
+            "output_tokens_details": {
+              "reasoning_tokens": 21
+            },
+            "total_tokens": 12099
+          },
+          "stage": "audit-01/api-2",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 11776,
+            "input_tokens": 11990,
+            "output_tokens": 109,
+            "reasoning_output_tokens": 21,
+            "total_tokens": 12099,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0043954",
+            "response_id": "gen-1792804534-6QAjqC64HsdSAw9Qel4W",
+            "source": "openrouter",
+            "total_usd": "0.0043954"
+          },
+          "raw_usage": {
+            "cost": 0.0043954,
+            "cost_details": {
+              "upstream_inference_cost": 0.0043954,
+              "upstream_inference_input_cost": 0.0032194,
+              "upstream_inference_output_cost": 0.001176
+            },
+            "input_tokens": 12694,
+            "input_tokens_details": {
+              "cached_tokens": 11776
+            },
+            "is_byok": false,
+            "output_tokens": 98,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 12792
+          },
+          "stage": "audit-01/api-3",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 11776,
+            "input_tokens": 12694,
+            "output_tokens": 98,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 12792,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0054822",
+            "response_id": "gen-1792804536-0eoYgQZlNpo6ErL5Wa7j",
+            "source": "openrouter",
+            "total_usd": "0.0054822"
+          },
+          "raw_usage": {
+            "cost": 0.0054822,
+            "cost_details": {
+              "upstream_inference_cost": 0.0054822,
+              "upstream_inference_input_cost": 0.0034902,
+              "upstream_inference_output_cost": 0.001992
+            },
+            "input_tokens": 13682,
+            "input_tokens_details": {
+              "cached_tokens": 12288
+            },
+            "is_byok": false,
+            "output_tokens": 166,
+            "output_tokens_details": {
+              "reasoning_tokens": 82
+            },
+            "total_tokens": 13848
+          },
+          "stage": "audit-01/api-4",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 12288,
+            "input_tokens": 13682,
+            "output_tokens": 166,
+            "reasoning_output_tokens": 82,
+            "total_tokens": 13848,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0112548",
+            "response_id": "gen-1792804539-hFoc72ZslG2SsyZqN37n",
+            "source": "openrouter",
+            "total_usd": "0.0112548"
+          },
+          "raw_usage": {
+            "cost": 0.0112548,
+            "cost_details": {
+              "upstream_inference_cost": 0.0112548,
+              "upstream_inference_input_cost": 0.0037428,
+              "upstream_inference_output_cost": 0.007512
+            },
+            "input_tokens": 14780,
+            "input_tokens_details": {
+              "cached_tokens": 13824
+            },
+            "is_byok": false,
+            "output_tokens": 626,
+            "output_tokens_details": {
+              "reasoning_tokens": 599
+            },
+            "total_tokens": 15406
+          },
+          "stage": "audit-01/api-5",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 13824,
+            "input_tokens": 14780,
+            "output_tokens": 626,
+            "reasoning_output_tokens": 599,
+            "total_tokens": 15406,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0078084",
+            "response_id": "gen-1792804545-F7ZEPKcLweFNvpGmrg62",
+            "source": "openrouter",
+            "total_usd": "0.0078084"
+          },
+          "raw_usage": {
+            "cost": 0.0078084,
+            "cost_details": {
+              "upstream_inference_cost": 0.0078084,
+              "upstream_inference_input_cost": 0.0048204,
+              "upstream_inference_output_cost": 0.002988
+            },
+            "input_tokens": 18628,
+            "input_tokens_details": {
+              "cached_tokens": 15360
+            },
+            "is_byok": false,
+            "output_tokens": 249,
+            "output_tokens_details": {
+              "reasoning_tokens": 154
+            },
+            "total_tokens": 18877
+          },
+          "stage": "audit-01/api-6",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 15360,
+            "input_tokens": 18628,
+            "output_tokens": 249,
+            "reasoning_output_tokens": 154,
+            "total_tokens": 18877,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0059889",
+            "response_id": "gen-1792804549-218rUDmdf8zDxjEXeCUU",
+            "source": "openrouter",
+            "total_usd": "0.0059889"
+          },
+          "raw_usage": {
+            "cost": 0.0059889,
+            "cost_details": {
+              "upstream_inference_cost": 0.0059889,
+              "upstream_inference_input_cost": 0.0049209,
+              "upstream_inference_output_cost": 0.001068
+            },
+            "input_tokens": 19475,
+            "input_tokens_details": {
+              "cached_tokens": 18432
+            },
+            "is_byok": false,
+            "output_tokens": 89,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 19564
+          },
+          "stage": "audit-01/api-7",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 18432,
+            "input_tokens": 19475,
+            "output_tokens": 89,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 19564,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0064891",
+            "response_id": "gen-1792804552-m5p1725NcfFD3sXr3s8p",
+            "source": "openrouter",
+            "total_usd": "0.0064891"
+          },
+          "raw_usage": {
+            "cost": 0.0064891,
+            "cost_details": {
+              "upstream_inference_cost": 0.0064891,
+              "upstream_inference_input_cost": 0.0051451,
+              "upstream_inference_output_cost": 0.001344
+            },
+            "input_tokens": 20393,
+            "input_tokens_details": {
+              "cached_tokens": 19456
+            },
+            "is_byok": false,
+            "output_tokens": 112,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 20505
+          },
+          "stage": "audit-01/api-8",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 19456,
+            "input_tokens": 20393,
+            "output_tokens": 112,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 20505,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0108152",
+            "response_id": "gen-1792804554-8NGgKAmqQ8avpQApNE4v",
+            "source": "openrouter",
+            "total_usd": "0.0108152"
+          },
+          "raw_usage": {
+            "cost": 0.0108152,
+            "cost_details": {
+              "upstream_inference_cost": 0.0108152,
+              "upstream_inference_input_cost": 0.0062552,
+              "upstream_inference_output_cost": 0.00456
+            },
+            "input_tokens": 24264,
+            "input_tokens_details": {
+              "cached_tokens": 20480
+            },
+            "is_byok": false,
+            "output_tokens": 380,
+            "output_tokens_details": {
+              "reasoning_tokens": 304
+            },
+            "total_tokens": 24644
+          },
+          "stage": "audit-01/api-9",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 20480,
+            "input_tokens": 24264,
+            "output_tokens": 380,
+            "reasoning_output_tokens": 304,
+            "total_tokens": 24644,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0129699",
+            "response_id": "gen-1792804560-RgZFe6OC432gxQNKM7BE",
+            "source": "openrouter",
+            "total_usd": "0.0129699"
+          },
+          "raw_usage": {
+            "cost": 0.0129699,
+            "cost_details": {
+              "upstream_inference_cost": 0.0129699,
+              "upstream_inference_input_cost": 0.0068139,
+              "upstream_inference_output_cost": 0.006156
+            },
+            "input_tokens": 26809,
+            "input_tokens_details": {
+              "cached_tokens": 24576
+            },
+            "is_byok": false,
+            "output_tokens": 513,
+            "output_tokens_details": {
+              "reasoning_tokens": 461
+            },
+            "total_tokens": 27322
+          },
+          "stage": "audit-01/api-10",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 24576,
+            "input_tokens": 26809,
+            "output_tokens": 513,
+            "reasoning_output_tokens": 461,
+            "total_tokens": 27322,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0081214",
+            "response_id": "gen-1792804567-0DHIb6WJ7qZMfGkY6uRu",
+            "source": "openrouter",
+            "total_usd": "0.0081214"
+          },
+          "raw_usage": {
+            "cost": 0.0081214,
+            "cost_details": {
+              "upstream_inference_cost": 0.0081214,
+              "upstream_inference_input_cost": 0.0070294,
+              "upstream_inference_output_cost": 0.001092
+            },
+            "input_tokens": 27954,
+            "input_tokens_details": {
+              "cached_tokens": 27136
+            },
+            "is_byok": false,
+            "output_tokens": 91,
+            "output_tokens_details": {
+              "reasoning_tokens": 42
+            },
+            "total_tokens": 28045
+          },
+          "stage": "audit-01/api-11",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 27136,
+            "input_tokens": 27954,
+            "output_tokens": 91,
+            "reasoning_output_tokens": 42,
+            "total_tokens": 28045,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0124161",
+            "response_id": "gen-1792804569-45VILVImn5j5CAefAJ6D",
+            "source": "openrouter",
+            "total_usd": "0.0124161"
+          },
+          "raw_usage": {
+            "cost": 0.0124161,
+            "cost_details": {
+              "upstream_inference_cost": 0.0124161,
+              "upstream_inference_input_cost": 0.0073521,
+              "upstream_inference_output_cost": 0.005064
+            },
+            "input_tokens": 29115,
+            "input_tokens_details": {
+              "cached_tokens": 27648
+            },
+            "is_byok": false,
+            "output_tokens": 422,
+            "output_tokens_details": {
+              "reasoning_tokens": 379
+            },
+            "total_tokens": 29537
+          },
+          "stage": "audit-01/api-12",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 27648,
+            "input_tokens": 29115,
+            "output_tokens": 422,
+            "reasoning_output_tokens": 379,
+            "total_tokens": 29537,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0234294",
+            "response_id": "gen-1792804574-NkIkYPfjpuao1Cc1aX6y",
+            "source": "openrouter",
+            "total_usd": "0.0234294"
+          },
+          "raw_usage": {
+            "cost": 0.0234294,
+            "cost_details": {
+              "upstream_inference_cost": 0.0234294,
+              "upstream_inference_input_cost": 0.0081534,
+              "upstream_inference_output_cost": 0.015276
+            },
+            "input_tokens": 32042,
+            "input_tokens_details": {
+              "cached_tokens": 29184
+            },
+            "is_byok": false,
+            "output_tokens": 1273,
+            "output_tokens_details": {
+              "reasoning_tokens": 1402
+            },
+            "total_tokens": 33315
+          },
+          "stage": "audit-01/api-13",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 29184,
+            "input_tokens": 32042,
+            "output_tokens": 1273,
+            "reasoning_output_tokens": 1402,
+            "total_tokens": 33315,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid",
+            "reasoning_exceeds_output"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.012976416",
+            "response_id": "gen-1792804589-bSwxgGH9Vg1meF30rpsG",
+            "source": "openrouter",
+            "total_usd": "0.012976416"
+          },
+          "raw_usage": {
+            "cost": 0.012976416,
+            "cost_details": {
+              "upstream_inference_cost": 0.012976416,
+              "upstream_inference_input_cost": 0.008480416,
+              "upstream_inference_output_cost": 0.004496
+            },
+            "input_tokens": 35632,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "is_byok": false,
+            "output_tokens": 281,
+            "output_tokens_details": {
+              "reasoning_tokens": 151
+            },
+            "total_tokens": 35913
+          },
+          "stage": "audit-01/api-14",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 0,
+            "input_tokens": 35632,
+            "output_tokens": 281,
+            "reasoning_output_tokens": 151,
+            "total_tokens": 35913,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.0187035",
+            "response_id": "gen-1792804595-OwtzfDGe1BmmgIVaveq7",
+            "source": "openrouter",
+            "total_usd": "0.0187035"
+          },
+          "raw_usage": {
+            "cost": 0.0187035,
+            "cost_details": {
+              "upstream_inference_cost": 0.0187035,
+              "upstream_inference_input_cost": 0.0086715,
+              "upstream_inference_output_cost": 0.010032
+            },
+            "input_tokens": 37930,
+            "input_tokens_details": {
+              "cached_tokens": 35584
+            },
+            "is_byok": false,
+            "output_tokens": 627,
+            "output_tokens_details": {
+              "reasoning_tokens": 512
+            },
+            "total_tokens": 38557
+          },
+          "stage": "audit-01/api-15",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 35584,
+            "input_tokens": 37930,
+            "output_tokens": 627,
+            "reasoning_output_tokens": 512,
+            "total_tokens": 38557,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.019109322",
+            "response_id": "gen-1792804604-5viou9fJ02bXrhGNQfKX",
+            "source": "openrouter",
+            "total_usd": "0.019109322"
+          },
+          "raw_usage": {
+            "cost": 0.019109322,
+            "cost_details": {
+              "upstream_inference_cost": 0.019109322,
+              "upstream_inference_input_cost": 0.009045322,
+              "upstream_inference_output_cost": 0.010064
+            },
+            "input_tokens": 39619,
+            "input_tokens_details": {
+              "cached_tokens": 38400
+            },
+            "is_byok": false,
+            "output_tokens": 629,
+            "output_tokens_details": {
+              "reasoning_tokens": 540
+            },
+            "total_tokens": 40248
+          },
+          "stage": "audit-01/api-16",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 38400,
+            "input_tokens": 39619,
+            "output_tokens": 629,
+            "reasoning_output_tokens": 540,
+            "total_tokens": 40248,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.016851798",
+            "response_id": "gen-1792804614-hMHXThjLfsYRWPAiYj39",
+            "source": "openrouter",
+            "total_usd": "0.016851798"
+          },
+          "raw_usage": {
+            "cost": 0.016851798,
+            "cost_details": {
+              "upstream_inference_cost": 0.016851798,
+              "upstream_inference_input_cost": 0.009347798,
+              "upstream_inference_output_cost": 0.007504
+            },
+            "input_tokens": 40941,
+            "input_tokens_details": {
+              "cached_tokens": 39616
+            },
+            "is_byok": false,
+            "output_tokens": 469,
+            "output_tokens_details": {
+              "reasoning_tokens": 412
+            },
+            "total_tokens": 41410
+          },
+          "stage": "audit-01/api-17",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 39616,
+            "input_tokens": 40941,
+            "output_tokens": 469,
+            "reasoning_output_tokens": 412,
+            "total_tokens": 41410,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.017334592",
+            "response_id": "gen-1792804620-gx12sFrbvOWEn8cUcSkV",
+            "source": "openrouter",
+            "total_usd": "0.017334592"
+          },
+          "raw_usage": {
+            "cost": 0.017334592,
+            "cost_details": {
+              "upstream_inference_cost": 0.017334592,
+              "upstream_inference_input_cost": 0.009846592,
+              "upstream_inference_output_cost": 0.007488
+            },
+            "input_tokens": 43104,
+            "input_tokens_details": {
+              "cached_tokens": 41216
+            },
+            "is_byok": false,
+            "output_tokens": 468,
+            "output_tokens_details": {
+              "reasoning_tokens": 355
+            },
+            "total_tokens": 43572
+          },
+          "stage": "audit-01/api-18",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 41216,
+            "input_tokens": 43104,
+            "output_tokens": 468,
+            "reasoning_output_tokens": 355,
+            "total_tokens": 43572,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.01234184",
+            "response_id": "gen-1792804628-tRJZvATownAGVYaBZDGU",
+            "source": "openrouter",
+            "total_usd": "0.01234184"
+          },
+          "raw_usage": {
+            "cost": 0.01234184,
+            "cost_details": {
+              "upstream_inference_cost": 0.01234184,
+              "upstream_inference_input_cost": 0.01006984,
+              "upstream_inference_output_cost": 0.002272
+            },
+            "input_tokens": 44120,
+            "input_tokens_details": {
+              "cached_tokens": 43072
+            },
+            "is_byok": false,
+            "output_tokens": 142,
+            "output_tokens_details": {
+              "reasoning_tokens": 3
+            },
+            "total_tokens": 44262
+          },
+          "stage": "audit-01/api-19",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 43072,
+            "input_tokens": 44120,
+            "output_tokens": 142,
+            "reasoning_output_tokens": 3,
+            "total_tokens": 44262,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.022133452",
+            "response_id": "gen-1792804630-UNMQ2qlwQfMYsLFD9Qdf",
+            "source": "openrouter",
+            "total_usd": "0.022133452"
+          },
+          "raw_usage": {
+            "cost": 0.022133452,
+            "cost_details": {
+              "upstream_inference_cost": 0.022133452,
+              "upstream_inference_input_cost": 0.010245452,
+              "upstream_inference_output_cost": 0.011888
+            },
+            "input_tokens": 44874,
+            "input_tokens_details": {
+              "cached_tokens": 43456
+            },
+            "is_byok": false,
+            "output_tokens": 743,
+            "output_tokens_details": {
+              "reasoning_tokens": 600
+            },
+            "total_tokens": 45617
+          },
+          "stage": "audit-01/api-20",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 43456,
+            "input_tokens": 44874,
+            "output_tokens": 743,
+            "reasoning_output_tokens": 600,
+            "total_tokens": 45617,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.012946236",
+            "response_id": "gen-1792804641-a7CRyYg74qia2YiVsdRo",
+            "source": "openrouter",
+            "total_usd": "0.012946236"
+          },
+          "raw_usage": {
+            "cost": 0.012946236,
+            "cost_details": {
+              "upstream_inference_cost": 0.012946236,
+              "upstream_inference_input_cost": 0.010690236,
+              "upstream_inference_output_cost": 0.002256
+            },
+            "input_tokens": 46802,
+            "input_tokens_details": {
+              "cached_tokens": 44864
+            },
+            "is_byok": false,
+            "output_tokens": 141,
+            "output_tokens_details": {
+              "reasoning_tokens": 3
+            },
+            "total_tokens": 46943
+          },
+          "stage": "audit-01/api-21",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 44864,
+            "input_tokens": 46802,
+            "output_tokens": 141,
+            "reasoning_output_tokens": 3,
+            "total_tokens": 46943,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.015682714",
+            "response_id": "gen-1792804645-a2iv7OHEYC9T5ycaF2ty",
+            "source": "openrouter",
+            "total_usd": "0.015682714"
+          },
+          "raw_usage": {
+            "cost": 0.015682714,
+            "cost_details": {
+              "upstream_inference_cost": 0.015682714,
+              "upstream_inference_input_cost": 0.010946714,
+              "upstream_inference_output_cost": 0.004736
+            },
+            "input_tokens": 47963,
+            "input_tokens_details": {
+              "cached_tokens": 46848
+            },
+            "is_byok": false,
+            "output_tokens": 296,
+            "output_tokens_details": {
+              "reasoning_tokens": 150
+            },
+            "total_tokens": 48259
+          },
+          "stage": "audit-01/api-22",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 46848,
+            "input_tokens": 47963,
+            "output_tokens": 296,
+            "reasoning_output_tokens": 150,
+            "total_tokens": 48259,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.01354712",
+            "response_id": "gen-1792804649-ICxeRSFFWeN8wkEctkcG",
+            "source": "openrouter",
+            "total_usd": "0.01354712"
+          },
+          "raw_usage": {
+            "cost": 0.01354712,
+            "cost_details": {
+              "upstream_inference_cost": 0.01354712,
+              "upstream_inference_input_cost": 0.01137112,
+              "upstream_inference_output_cost": 0.002176
+            },
+            "input_tokens": 49800,
+            "input_tokens_details": {
+              "cached_tokens": 48128
+            },
+            "is_byok": false,
+            "output_tokens": 136,
+            "output_tokens_details": {
+              "reasoning_tokens": 62
+            },
+            "total_tokens": 49936
+          },
+          "stage": "audit-01/api-23",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 48128,
+            "input_tokens": 49800,
+            "output_tokens": 136,
+            "reasoning_output_tokens": 62,
+            "total_tokens": 49936,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.021359706",
+            "response_id": "gen-1792804652-7jJI6cXBqWUeqI3iuWb7",
+            "source": "openrouter",
+            "total_usd": "0.021359706"
+          },
+          "raw_usage": {
+            "cost": 0.021359706,
+            "cost_details": {
+              "upstream_inference_cost": 0.021359706,
+              "upstream_inference_input_cost": 0.011503706,
+              "upstream_inference_output_cost": 0.009856
+            },
+            "input_tokens": 50427,
+            "input_tokens_details": {
+              "cached_tokens": 49792
+            },
+            "is_byok": false,
+            "output_tokens": 616,
+            "output_tokens_details": {
+              "reasoning_tokens": 482
+            },
+            "total_tokens": 51043
+          },
+          "stage": "audit-01/api-24",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 49792,
+            "input_tokens": 50427,
+            "output_tokens": 616,
+            "reasoning_output_tokens": 482,
+            "total_tokens": 51043,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.021742086",
+            "response_id": "gen-1792804662-ZEkn5BFY97NKvEqUVXIf",
+            "source": "openrouter",
+            "total_usd": "0.021742086"
+          },
+          "raw_usage": {
+            "cost": 0.021742086,
+            "cost_details": {
+              "upstream_inference_cost": 0.021742086,
+              "upstream_inference_input_cost": 0.012286086,
+              "upstream_inference_output_cost": 0.009456
+            },
+            "input_tokens": 53717,
+            "input_tokens_details": {
+              "cached_tokens": 49856
+            },
+            "is_byok": false,
+            "output_tokens": 591,
+            "output_tokens_details": {
+              "reasoning_tokens": 440
+            },
+            "total_tokens": 54308
+          },
+          "stage": "audit-01/api-25",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 49856,
+            "input_tokens": 53717,
+            "output_tokens": 591,
+            "reasoning_output_tokens": 440,
+            "total_tokens": 54308,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.013948886",
+            "response_id": "gen-1792804671-lTtO78wHiRXetydpacqf",
+            "source": "openrouter",
+            "total_usd": "0.013948886"
+          },
+          "raw_usage": {
+            "cost": 0.013948886,
+            "cost_details": {
+              "upstream_inference_cost": 0.013948886,
+              "upstream_inference_input_cost": 0.012460886,
+              "upstream_inference_output_cost": 0.001488
+            },
+            "input_tokens": 54637,
+            "input_tokens_details": {
+              "cached_tokens": 54272
+            },
+            "is_byok": false,
+            "output_tokens": 93,
+            "output_tokens_details": {
+              "reasoning_tokens": 3
+            },
+            "total_tokens": 54730
+          },
+          "stage": "audit-01/api-26",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 54272,
+            "input_tokens": 54637,
+            "output_tokens": 93,
+            "reasoning_output_tokens": 3,
+            "total_tokens": 54730,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.030635746",
+            "response_id": "gen-1792804675-8VFiyINotMOAzWrnJ1TA",
+            "source": "openrouter",
+            "total_usd": "0.030635746"
+          },
+          "raw_usage": {
+            "cost": 0.030635746,
+            "cost_details": {
+              "upstream_inference_cost": 0.030635746,
+              "upstream_inference_input_cost": 0.013259746,
+              "upstream_inference_output_cost": 0.017376
+            },
+            "input_tokens": 58007,
+            "input_tokens_details": {
+              "cached_tokens": 54592
+            },
+            "is_byok": false,
+            "output_tokens": 1086,
+            "output_tokens_details": {
+              "reasoning_tokens": 998
+            },
+            "total_tokens": 59093
+          },
+          "stage": "audit-01/api-27",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 54592,
+            "input_tokens": 58007,
+            "output_tokens": 1086,
+            "reasoning_output_tokens": 998,
+            "total_tokens": 59093,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.024489926",
+            "response_id": "gen-1792804690-8yEvGmqRW3fAOyHzb8x8",
+            "source": "openrouter",
+            "total_usd": "0.024489926"
+          },
+          "raw_usage": {
+            "cost": 0.024489926,
+            "cost_details": {
+              "upstream_inference_cost": 0.024489926,
+              "upstream_inference_input_cost": 0.014137926,
+              "upstream_inference_output_cost": 0.010352
+            },
+            "input_tokens": 61877,
+            "input_tokens_details": {
+              "cached_tokens": 58880
+            },
+            "is_byok": false,
+            "output_tokens": 647,
+            "output_tokens_details": {
+              "reasoning_tokens": 516
+            },
+            "total_tokens": 62524
+          },
+          "stage": "audit-01/api-28",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 58880,
+            "input_tokens": 61877,
+            "output_tokens": 647,
+            "reasoning_output_tokens": 516,
+            "total_tokens": 62524,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.015250156",
+            "response_id": "gen-1792804700-YKconBPIPWmiyj94aw5z",
+            "source": "openrouter",
+            "total_usd": "0.015250156"
+          },
+          "raw_usage": {
+            "cost": 0.015250156,
+            "cost_details": {
+              "upstream_inference_cost": 0.015250156,
+              "upstream_inference_input_cost": 0.014338156,
+              "upstream_inference_output_cost": 0.000912
+            },
+            "input_tokens": 62842,
+            "input_tokens_details": {
+              "cached_tokens": 61824
+            },
+            "is_byok": false,
+            "output_tokens": 57,
+            "output_tokens_details": {
+              "reasoning_tokens": 3
+            },
+            "total_tokens": 62899
+          },
+          "stage": "audit-01/api-29",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 61824,
+            "input_tokens": 62842,
+            "output_tokens": 57,
+            "reasoning_output_tokens": 3,
+            "total_tokens": 62899,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.025268676",
+            "response_id": "gen-1792804704-QTMEhVJPUftRsxpn1Wca",
+            "source": "openrouter",
+            "total_usd": "0.025268676"
+          },
+          "raw_usage": {
+            "cost": 0.025268676,
+            "cost_details": {
+              "upstream_inference_cost": 0.025268676,
+              "upstream_inference_input_cost": 0.014756676,
+              "upstream_inference_output_cost": 0.010512
+            },
+            "input_tokens": 64622,
+            "input_tokens_details": {
+              "cached_tokens": 62336
+            },
+            "is_byok": false,
+            "output_tokens": 657,
+            "output_tokens_details": {
+              "reasoning_tokens": 505
+            },
+            "total_tokens": 65279
+          },
+          "stage": "audit-01/api-30",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 62336,
+            "input_tokens": 64622,
+            "output_tokens": 657,
+            "reasoning_output_tokens": 505,
+            "total_tokens": 65279,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        },
+        {
+          "cost": {
+            "billing_issue": null,
+            "components_usd": null,
+            "estimated_usd": null,
+            "http_status": 200,
+            "issue": null,
+            "kind": "reported",
+            "reported_usd": "0.03987901",
+            "response_id": "gen-1792804714-DPU25ldOg8OoaLp5fwLi",
+            "source": "openrouter",
+            "total_usd": "0.03987901"
+          },
+          "raw_usage": {
+            "cost": 0.03987901,
+            "cost_details": {
+              "upstream_inference_cost": 0.03987901,
+              "upstream_inference_input_cost": 0.01493501,
+              "upstream_inference_output_cost": 0.024944
+            },
+            "input_tokens": 65495,
+            "input_tokens_details": {
+              "cached_tokens": 65280
+            },
+            "is_byok": false,
+            "output_tokens": 1559,
+            "output_tokens_details": {
+              "reasoning_tokens": 936
+            },
+            "total_tokens": 67054
+          },
+          "stage": "audit-01/api-31",
+          "tokens": {
+            "cache_write_input_tokens": null,
+            "cached_input_tokens": 65280,
+            "input_tokens": 65495,
+            "output_tokens": 1559,
+            "reasoning_output_tokens": 936,
+            "total_tokens": 67054,
+            "uncached_input_tokens": null
+          },
+          "usage_issues": [
+            "cache_write_input_tokens_missing_or_invalid"
+          ]
+        }
+      ],
+      "lifecycle": "FAILED",
+      "model": "moonshotai/kimi-k3",
+      "price": null,
+      "pricing_issue": null,
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "provider": "openrouter",
+      "raw_status": "AUDIT_INVALID",
+      "reasoning_effort": "high",
+      "repair_rounds": 0,
+      "repeat": 1,
+      "revision": 2,
+      "run_id": "run-71242b2f21234db2b9679ea31cc60441",
+      "status": "ERROR",
+      "stop_reason": "execution_error",
+      "tokens": {
+        "complete": false,
+        "invocations": 31,
+        "known_totals": {
+          "cache_write_input_tokens": null,
+          "cached_input_tokens": 1069952,
+          "input_tokens": 1165973,
+          "output_tokens": 13460,
+          "reasoning_output_tokens": 10134,
+          "total_tokens": 1179433,
+          "uncached_input_tokens": null
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 31,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 31
+        },
+        "usage_recorded_invocations": 31
+      },
+      "wall_time_seconds": 224.968
+    }
+  ],
+  "schema_version": 1,
+  "summary": {
+    "average_cost_per_completed_run_usd": "0.472337582",
+    "average_cost_sample_count": 1,
+    "completed_run_tokens": {
+      "max": 1179433,
+      "mean": 1179433,
+      "min": 1179433,
+      "missing": 0,
+      "n": 1
+    },
+    "convergence_rate": 0.0,
+    "cost": {
+      "complete": true,
+      "currency": "USD",
+      "estimated_subtotal_usd": "0E-9",
+      "estimated_usd": null,
+      "invocations": 31,
+      "known_subtotal_usd": "0.472337582",
+      "priced_invocations": 31,
+      "reported_invocations": 31,
+      "reported_subtotal_usd": "0.472337582",
+      "total_usd": "0.472337582"
+    },
+    "counts": {
+      "converged": 0,
+      "errors": 1,
+      "excluded": 0,
+      "included": 1,
+      "non_converged": 0,
+      "runs": 1
+    },
+    "error_stages": {
+      "audit-01": 1
+    },
+    "error_types": {
+      "AUDIT_INVALID": 1
+    },
+    "error_wall_time_seconds": {
+      "max": 224.968,
+      "mean": 224.968,
+      "min": 224.968,
+      "missing": 0,
+      "n": 1
+    },
+    "excluded_known_cost_usd": "0",
+    "normal_repair_rounds": {
+      "max": null,
+      "mean": null,
+      "min": null,
+      "missing": 0,
+      "n": 0
+    },
+    "normal_wall_time_seconds": {
+      "max": null,
+      "mean": null,
+      "min": null,
+      "missing": 0,
+      "n": 0
+    },
+    "stop_reasons": {
+      "execution_error": 1
+    },
+    "tokens": {
+      "complete": false,
+      "invocations": 31,
+      "known_totals": {
+        "cache_write_input_tokens": null,
+        "cached_input_tokens": 1069952,
+        "input_tokens": 1165973,
+        "output_tokens": 13460,
+        "reasoning_output_tokens": 10134,
+        "total_tokens": 1179433,
+        "uncached_input_tokens": null
+      },
+      "missing_by_field": {
+        "cache_write_input_tokens": 31,
+        "cached_input_tokens": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 0,
+        "uncached_input_tokens": 31
+      },
+      "usage_recorded_invocations": 31
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # 调用完成、超时与 Spec 文件工具
 
-`codex_exec` harness v2 将 agent 回合完成与 CLI 进程退出分别监督。每次调用的
-`raw/<stage>/invocation.json` 保存 `harness_version: 2`、实际命令和执行条件。
+`codex_exec` harness v3 沿用 v2 的 agent 回合完成与 CLI 进程退出监督。每次调用的
+`raw/<stage>/invocation.json` 保存 `harness_version: 3`、实际命令和执行条件。
 整轮上限仍使用原有 `timeout_seconds`，case3 实验设为 1800 秒。
 
 ## 完成检测与收尾
@@ -33,6 +33,12 @@ Shell/命令和 MCP 工具从 `item.started` 到 `item.completed` 的连续执�
 - `post_completion_seconds`：完成事件后等待退出及清理的时间。
 - `pending_tools`、`failed_tools` 和 `warnings`：未完成工具、失败次数及告警。
 
+v3 增加 `progress.pending_tool_diagnostics`：记录未结束工具的类型、年龄、是否适用
+超时，以及可用的 MCP 服务/工具名，不保存参数或工具输出。`completion_validation`
+分别记录完成事件、失败事件、未结束工具、最终消息存在性及文件/事件流文本一致性，
+并列出 `failure_reasons`。这些字段只解释判定，不改变 v2 的成功条件。
+文件修改事件仍不直接套用 300 秒上限；未闭合工具仍会阻止完成后恢复。
+
 `startup_seconds` 与 `teardown_seconds` 单列启动准备及退出后的证据/费用记录开销，
 不会将费用查询误记为模型或工具执行时间。`diagnostics` 记录补丁验证失败、失效
 进程 ID 和沙箱拒绝的次数。
@@ -52,8 +58,12 @@ repository Spec flow 的独立修复 checkout 提供 `mrac_spec_file` MCP：
 这些工具只可访问本轮指定的 Spec，不可修改产品代码。旧有 checkout 改动范围检查
 继续执行。Windows 调用同时明确提示原生 Shell 为 PowerShell，文件读写使用 UTF-8。
 
-审计与修复协议模板、独立审计和审计轮数规则保持原配置。工具集和执行环境提示
-属于新的 harness 条件；runner 代码身份哈希会变化，统计会与旧代码条件分组。
+Spec @6 为修复补上与审计相同的 `mrac_repository` 只读服务：固定 HEAD、源码与规则
+来自原始仓库快照，当前候选则从 `mrac_spec_file` 读取。提示优先使用这些工具，
+避免不必要地依赖原生 Shell/apply_patch；未禁用原生工具或放宽文件写入边界。
+独立审计、严格 JSON、轮数预算、收尾条件及超时规则保持原配置。协议工具策略
+随 Spec @6 固定，历史 @5 仍使用原工具配置；harness v3 新增诊断字段。
+runner 代码身份哈希会变化，统计会与旧代码条件分组。
 新模型实验需要重新提交以冻结新身份，受管旧运行不能直接套用新环境恢复。
 
 ## 验证

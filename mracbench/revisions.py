@@ -18,6 +18,7 @@ class RevisionPolicy:
     literal_source: bool = False
     review_max_reason_chars: int | None = 500
     repository_audit_mcp: bool = False
+    repository_repair_mcp: bool = False
     historical_repository_review: bool = False
     managed_continue: bool = False
     finish_last_audit_repair: bool = True
@@ -59,9 +60,10 @@ def revision_policy(workflow: str, version: int) -> RevisionPolicy:
         )
     if workflow == "repository-spec-freeze":
         return RevisionPolicy(
-            executable=version in {2, 3, 4, 5},
+            executable=version in {2, 3, 4, 5, 6},
             repair_mode="checkout" if version >= 3 else "json",
             repository_audit_mcp=version >= 4,
+            repository_repair_mcp=version >= 6,
             historical_repository_review=version == 1,
             finish_last_audit_repair=version < 5,
         )

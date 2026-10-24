@@ -162,3 +162,48 @@ def test_command_plan_preserves_isolation_and_provider_override_without_io(
 def test_command_builder_rejects_invalid_mcp_configuration(server):
     with pytest.raises(ValueError):
         mcp_arguments({"repo": server})
+
+
+def test_pending_mcp_diagnostics_identify_tool_without_arguments_or_output():
+    from mracbench.invocation_monitor import InvocationMonitor
+
+    monitor = InvocationMonitor(10)
+    monitor.observe(
+        {
+            "type": "item.started",
+            "item": {
+                "id": "read-1",
+                "type": "mcp_tool_call",
+                "server": "mrac_repository",
+                "tool": "repository_read",
+                "arguments": {"secret": "do-not-log"},
+                "result": "private tool output",
+            },
+        },
+        12,
+    )
+    snapshot = monitor.snapshot(19)
+    assert snapshot["pending_tool_diagnostics"] == [
+        {
+            "id": "read-1",
+            "type": "mcp_tool_call",
+            "server": "mrac_repository",
+            "tool": "repository_read",
+            "age_seconds": 7,
+            "timeout_applies": True,
+        }
+    ]
+    assert "do-not-log" not in json.dumps(snapshot)
+    assert "private tool output" not in json.dumps(snapshot)
+    monitor.observe(
+        {
+            "type": "item.completed",
+            "item": {
+                "id": "read-1",
+                "type": "mcp_tool_call",
+                "status": "completed",
+            },
+        },
+        20,
+    )
+    assert monitor.snapshot(21)["pending_tool_diagnostics"] == []

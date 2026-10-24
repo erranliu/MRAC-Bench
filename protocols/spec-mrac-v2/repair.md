@@ -2,8 +2,8 @@
 
 Use source intent and fixed_repository_head, reading only named symbols, explicitly
 referenced documents and direct dependencies needed to resolve these findings.
-Read relevant repository operational rules at that commit using ordinary file
-tools in the isolated checkout. If source_spec names
+Read relevant repository operational rules at that commit using the tools
+supplied by the runner. If source_spec names
 another baseline, reconcile the discrepancy against the captured execution commit;
 do not silently switch repositories, fetch another baseline or use a moving branch.
 

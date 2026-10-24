@@ -210,6 +210,8 @@ def test_completed_turn_is_verified_and_hanging_process_is_cleaned_early(tmp_pat
     assert result.success, result.error_message
     assert result.exit_code != 0  # Preserve the actual killed-process exit code.
     assert result.metadata["validated_completed_turn"] is True
+    assert result.metadata["completion_validation"]["failure_reasons"] == []
+    assert result.metadata["harness_version"] == 3
     assert result.metadata["forced_cleanup"] is True
     assert result.metadata["cleanup_reason"] == "process_remained_after_completed_turn"
     assert result.duration_seconds < 3
@@ -228,6 +230,17 @@ def test_completed_event_cannot_hide_unfinished_tools_or_missing_or_wrong_final(
     assert not result.success
     assert result.error_type == "EXECUTION_ENVIRONMENT_ERROR"
     assert result.metadata["validated_completed_turn"] is False
+    checks = result.metadata["completion_validation"]
+    if pending:
+        assert "pending_tools" in checks["failure_reasons"]
+        diagnostics = result.metadata["progress"]["pending_tool_diagnostics"]
+        assert diagnostics[0]["type"] == "file_change"
+        assert diagnostics[0]["age_seconds"] > 0
+        assert diagnostics[0]["timeout_applies"] is False
+    elif not final:
+        assert "missing_final_file" in checks["failure_reasons"]
+    else:
+        assert "final_text_mismatch" in checks["failure_reasons"]
     assert result.duration_seconds < 3
 
 

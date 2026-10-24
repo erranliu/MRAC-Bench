@@ -62,7 +62,18 @@ class InvocationMonitor:
         if kind == "item.started":
             if not self.pending:
                 self.tool_since = now
-            self.pending.setdefault(identity, {"type": item["type"], "started": now})
+            self.pending.setdefault(
+                identity,
+                {
+                    "type": item["type"],
+                    "started": now,
+                    **{
+                        key: item[key]
+                        for key in ("server", "tool")
+                        if isinstance(item.get(key), str)
+                    },
+                },
+            )
         elif kind == "item.completed":
             self.pending.pop(identity, None)
             if not self.pending and self.tool_since is not None:
@@ -95,14 +106,31 @@ class InvocationMonitor:
         )
 
     def verifies(self, text):
-        return (
-            self.completed_at is not None
-            and not self.failed
-            and not self.pending
-            and isinstance(self.final_message, str)
-            and bool(text.strip())
-            and text.strip() == self.final_message.strip()
-        )
+        return not self.verification(text)["failure_reasons"]
+
+    def verification(self, text):
+        checks = {
+            "turn_completed": self.completed_at is not None,
+            "no_failed_event": not self.failed,
+            "no_pending_tools": not self.pending,
+            "final_message_present": isinstance(self.final_message, str),
+            "final_file_nonempty": bool(text.strip()),
+            "final_text_matches": (
+                isinstance(self.final_message, str) and text.strip() == self.final_message.strip()
+            ),
+        }
+        reasons = {
+            "turn_completed": "turn_not_completed",
+            "no_failed_event": "failed_event",
+            "no_pending_tools": "pending_tools",
+            "final_message_present": "missing_final_message",
+            "final_file_nonempty": "missing_final_file",
+            "final_text_matches": "final_text_mismatch",
+        }
+        return {
+            **checks,
+            "failure_reasons": [reasons[name] for name, passed in checks.items() if not passed],
+        }
 
     def snapshot(self, now):
         active_end = self.completed_at if self.completed_at is not None else now
@@ -125,6 +153,16 @@ class InvocationMonitor:
             "completion_observed": self.completed_at is not None,
             "events_observed": self.event_count,
             "pending_tools": [{"id": k, "type": v["type"]} for k, v in self.pending.items()],
+            "pending_tool_diagnostics": [
+                {
+                    "id": identity,
+                    "type": tool["type"],
+                    "age_seconds": round(max(0, now - tool["started"]), 3),
+                    "timeout_applies": tool["type"] in TIMED_TOOL_TYPES,
+                    **{key: tool[key] for key in ("server", "tool") if key in tool},
+                }
+                for identity, tool in self.pending.items()
+            ],
             "failed_tools": sum(self.failures.values()),
             "warnings": warnings,
         }

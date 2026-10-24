@@ -35,7 +35,7 @@ from .transitions import repository_after_repair, repository_audited, spec_repai
 
 WORKFLOW = "repository-spec-freeze"
 STATE_VERSION = 3
-PROTOCOL_VERSION = 5
+PROTOCOL_VERSION = 6
 RESUMABLE = {
     "EXECUTION_ENVIRONMENT_ERROR",
     "PROVIDER_ERROR",
@@ -112,7 +112,7 @@ def save_artifact(store, name, raw):
 
 def run_repository_flow(config, adapter, base, case, protocol, result, maximum, timeout, started):
     if not protocol.policy.executable:
-        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@5")
+        raise BenchError("CASE_ERROR", "Unsupported protocol revision; use spec-mrac-v2@6")
     with session_lock(base.path):
         base.snapshot(
             "execution-config.json",
@@ -263,20 +263,29 @@ class Engine:
                 "repository_path": str(checkout_path),
             }
             checkout_inputs.pop("current_spec")
+            raw = self.store.path / "raw" / stage
+            servers = spec_file_server(checkout_path, name, raw / "spec-file-events.jsonl")
+            if self.protocol.policy.repository_repair_mcp:
+                servers.update(
+                    server_config(
+                        self.repo.path,
+                        self.repo.commit,
+                        self.store.path / "input" / "repository-manifest.json",
+                        raw / "repository-read-events.jsonl",
+                    )
+                )
             reply = self.call(
                 stage,
                 "repair",
                 checkout_inputs,
                 prompt=render_spec_checkout_prompt(
-                    self.protocol.prompts["repair"], checkout_inputs
+                    self.protocol.prompts["repair"],
+                    checkout_inputs,
+                    repository_mcp=self.protocol.policy.repository_repair_mcp,
                 ),
                 workspace=checkout_path,
                 readonly=False,
-                mcp_servers=spec_file_server(
-                    checkout_path,
-                    name,
-                    self.store.path / "raw" / stage / "spec-file-events.jsonl",
-                ),
+                mcp_servers=servers,
                 workspace_setup=setup_checkout,
             )
             candidate = checkout["value"].candidate()
@@ -605,7 +614,7 @@ def load_session(path, *, allow_historical=False):
         case = case_from_snapshots(result["case_id"], snapshots)
         protocol = protocol_from_snapshots(result["protocol_id"], snapshots)
         # State 2 belongs to the historical adjudicated @1 protocol; @2+ uses state 3.
-        expected_protocol_version = {1} if version == 2 else {2, 3, 4, PROTOCOL_VERSION}
+        expected_protocol_version = {1} if version == 2 else {2, 3, 4, 5, PROTOCOL_VERSION}
         if (
             protocol.version not in expected_protocol_version
             or result["protocol_version"] != protocol.version
