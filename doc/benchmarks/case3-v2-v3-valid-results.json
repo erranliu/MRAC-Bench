@@ -1,0 +1,491 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-27T10:06:42+08:00",
+  "case": {
+    "case_key": "C000003",
+    "name": "case3",
+    "sha256": "6aafb9eba8d19f0733cba4a0a6d9fed2eda673717d67b25c09db22863acb162a",
+    "source_id": "steerline-pr196",
+    "version": 1
+  },
+  "selection": {
+    "valid_statuses": [
+      "CONVERGED",
+      "NON_CONVERGED"
+    ],
+    "paused_treated_as": "NON_CONVERGED",
+    "excluded": [
+      "ERROR",
+      "NEEDS_INPUT",
+      "RUNNING",
+      "diagnostic replays"
+    ],
+    "old_source": "spec-v5-harness2-case3-valid-results.json",
+    "new_source": "spec-v6-harness3-case3-results.json"
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-sol",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 1,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 1359.672,
+      "mean_audit_rounds": 4.0,
+      "run_ids": [
+        "run-321dc516c30e4cfca3d9dc3cb2d2438f"
+      ]
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 0,
+      "convergence_rate": 0.0,
+      "mean_wall_time_seconds": 3376.781,
+      "mean_audit_rounds": 6.0,
+      "run_ids": [
+        "run-8e03ce8a5f7a4cdda80ac0ac213ee3ac"
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 1,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 988.109,
+      "mean_audit_rounds": 3.0,
+      "run_ids": [
+        "run-c845e2ead673474d8295998d73a03cbf"
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "runs": 2,
+      "converged": 1,
+      "convergence_rate": 0.5,
+      "mean_wall_time_seconds": 1740.5155,
+      "mean_audit_rounds": 7.5,
+      "run_ids": [
+        "run-6827eb102763484499ebe2697055cefd",
+        "run-f042c90c33eb4bb6a7d8505b67c40742"
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "provider": "openai",
+      "runs": 2,
+      "converged": 2,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 388.3825,
+      "mean_audit_rounds": 2.5,
+      "run_ids": [
+        "run-a963a56d69814deaa95a086dcebc4896",
+        "run-268df80aeaaa4a149c12ea6a4b93c82e"
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "runs": 2,
+      "converged": 2,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 234.555,
+      "mean_audit_rounds": 2.0,
+      "run_ids": [
+        "run-c470ab93f02d440e8554b3637200809b",
+        "run-0b83ad63cb3c4027bbab380789004174"
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 1,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 305.86,
+      "mean_audit_rounds": 4.0,
+      "run_ids": [
+        "run-2d9f0906686f4bc1b19f6de053dfd0cd"
+      ]
+    },
+    {
+      "model": "moonshotai/kimi-k3.1-pro",
+      "provider": "openrouter",
+      "runs": 1,
+      "converged": 1,
+      "convergence_rate": 1.0,
+      "mean_wall_time_seconds": 357.875,
+      "mean_audit_rounds": 2.0,
+      "run_ids": [
+        "run-4523278275104ec0b760026fead6b5b9"
+      ]
+    },
+    {
+      "model": "DeepSeek V4.1 Flash（10-05）",
+      "provider": "deepseek",
+      "runs": 1,
+      "converged": 0,
+      "convergence_rate": 0.0,
+      "mean_wall_time_seconds": 3044.797,
+      "mean_audit_rounds": 6.0,
+      "run_ids": [
+        "run-8a9fa5b3f8c34609af1292cd867457c0"
+      ]
+    },
+    {
+      "model": "DeepSeek V4.1 Flash 1017",
+      "provider": "deepseek",
+      "runs": 1,
+      "converged": 0,
+      "convergence_rate": 0.0,
+      "mean_wall_time_seconds": 5761.39,
+      "mean_audit_rounds": 8.0,
+      "run_ids": [
+        "run-4e15e1e82db2403aab37a29967392a7f"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "run-321dc516c30e4cfca3d9dc3cb2d2438f",
+      "batch_id": "B-04350627bf891a30b456b184",
+      "model": "gpt-5.6-sol",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 4,
+      "repair_rounds": 2,
+      "wall_time_seconds": 1359.672,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "a5cb5dc744b76a1c1e876126afedf7759d67bb5817e9bbbf847555752330a972",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-04350627bf891a30b456b184/runs/run-321dc516c30e4cfca3d9dc3cb2d2438f",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-8e03ce8a5f7a4cdda80ac0ac213ee3ac",
+      "batch_id": "B-04350627bf891a30b456b184",
+      "model": "gpt-5.6-luna",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "NON_CONVERGED",
+      "raw_status": "PAUSED",
+      "audit_rounds": 6,
+      "repair_rounds": 6,
+      "wall_time_seconds": 3376.781,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "a5cb5dc744b76a1c1e876126afedf7759d67bb5817e9bbbf847555752330a972",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-04350627bf891a30b456b184/runs/run-8e03ce8a5f7a4cdda80ac0ac213ee3ac",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-c845e2ead673474d8295998d73a03cbf",
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "model": "gpt-6-sol",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 3,
+      "repair_rounds": 1,
+      "wall_time_seconds": 988.109,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-c845e2ead673474d8295998d73a03cbf",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-6827eb102763484499ebe2697055cefd",
+      "batch_id": "B-04350627bf891a30b456b184",
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 7,
+      "repair_rounds": 3,
+      "wall_time_seconds": 1640.219,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "a5cb5dc744b76a1c1e876126afedf7759d67bb5817e9bbbf847555752330a972",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-04350627bf891a30b456b184/runs/run-6827eb102763484499ebe2697055cefd",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-f042c90c33eb4bb6a7d8505b67c40742",
+      "batch_id": "B-af2cd7fee70080ed3c3d0b95",
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "NON_CONVERGED",
+      "raw_status": "NON_CONVERGED",
+      "audit_rounds": 8,
+      "repair_rounds": 6,
+      "wall_time_seconds": 1840.812,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-af2cd7fee70080ed3c3d0b95/runs/run-f042c90c33eb4bb6a7d8505b67c40742",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-a963a56d69814deaa95a086dcebc4896",
+      "batch_id": "B-f549b5c3604726356a84cd8d",
+      "model": "gpt-6-astra",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 3,
+      "repair_rounds": 1,
+      "wall_time_seconds": 566.5,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-f549b5c3604726356a84cd8d/runs/run-a963a56d69814deaa95a086dcebc4896",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-c470ab93f02d440e8554b3637200809b",
+      "batch_id": "B-f549b5c3604726356a84cd8d",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 2,
+      "repair_rounds": 0,
+      "wall_time_seconds": 203.844,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-f549b5c3604726356a84cd8d/runs/run-c470ab93f02d440e8554b3637200809b",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-4523278275104ec0b760026fead6b5b9",
+      "batch_id": "B-c9048f79cf1e6e5d8e8f3ac4",
+      "model": "moonshotai/kimi-k3.1-pro",
+      "provider": "openrouter",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 2,
+      "repair_rounds": 0,
+      "wall_time_seconds": 357.875,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": "https://openrouter.ai/api/v1",
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-c9048f79cf1e6e5d8e8f3ac4/runs/run-4523278275104ec0b760026fead6b5b9",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-8a9fa5b3f8c34609af1292cd867457c0",
+      "batch_id": "B-04350627bf891a30b456b184",
+      "model": "deepseek-flash",
+      "provider": "deepseek",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "NON_CONVERGED",
+      "raw_status": "PAUSED",
+      "audit_rounds": 6,
+      "repair_rounds": 6,
+      "wall_time_seconds": 3044.797,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "a5cb5dc744b76a1c1e876126afedf7759d67bb5817e9bbbf847555752330a972",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": "https://api.deepseek.com",
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-04350627bf891a30b456b184/runs/run-8a9fa5b3f8c34609af1292cd867457c0",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-4e15e1e82db2403aab37a29967392a7f",
+      "batch_id": "B-8e046bf4f5085be06f2e9050",
+      "model": "deepseek-flash",
+      "provider": "deepseek",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 5,
+      "status": "NON_CONVERGED",
+      "raw_status": "NON_CONVERGED",
+      "audit_rounds": 8,
+      "repair_rounds": 6,
+      "wall_time_seconds": 5761.39,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "7dc3fc566c0e002706d31bd09db15afc785203e33049e599c9cb4f24fbe6cf29",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "e42f8f6b8e8da472a0fd23222d9c65a3b019080e5fc0fcb3d972ad4c5f91791f",
+        "provider_base_url": "https://api.deepseek.com",
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-8e046bf4f5085be06f2e9050/runs/run-4e15e1e82db2403aab37a29967392a7f",
+      "harness_version": 2
+    },
+    {
+      "run_id": "run-268df80aeaaa4a149c12ea6a4b93c82e",
+      "batch_id": "B-ebb9f600372bbce45abe455f",
+      "model": "gpt-6-astra",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 2,
+      "repair_rounds": 0,
+      "wall_time_seconds": 210.265,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-ebb9f600372bbce45abe455f/runs/run-268df80aeaaa4a149c12ea6a4b93c82e",
+      "harness_version": 3
+    },
+    {
+      "run_id": "run-0b83ad63cb3c4027bbab380789004174",
+      "batch_id": "B-ebb9f600372bbce45abe455f",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 2,
+      "repair_rounds": 0,
+      "wall_time_seconds": 265.266,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-ebb9f600372bbce45abe455f/runs/run-0b83ad63cb3c4027bbab380789004174",
+      "harness_version": 3
+    },
+    {
+      "run_id": "run-2d9f0906686f4bc1b19f6de053dfd0cd",
+      "batch_id": "B-dd14204653b17d79cab01609",
+      "model": "gpt-6.1-terra",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "status": "CONVERGED",
+      "raw_status": "CONVERGED",
+      "audit_rounds": 4,
+      "repair_rounds": 1,
+      "wall_time_seconds": 305.86,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.159.2",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-dd14204653b17d79cab01609/runs/run-2d9f0906686f4bc1b19f6de053dfd0cd",
+      "harness_version": 3
+    }
+  ]
+}
