@@ -218,6 +218,9 @@ Spec @6 修复同时提供固定基线的仓库只读 MCP 与当前 Spec 的 UTF
 
 ## 历史测试结果
 
+- [case3 v1 · v2 / v3 合并有效成绩](doc/benchmarks/case3-v2-v3-valid-results.md)：13 次完整流程的模型汇总。
+- [case3 v1 · Spec v6 / harness v3 成绩](doc/benchmarks/spec-v6-harness3-case3-results.md)：3 次正式运行及逐轮发现。
+
 - [case3 v1 · Spec v5 / harness v2 有效流程成绩](doc/benchmarks/spec-v5-harness2-case3-valid-results.md)：10 条完整流程成绩，6 次收敛、4 次未收敛；附排除清单。
 
 - [Spec v5 / harness v2：case3 MiniMax M3.1 Flash 第 2 次](doc/benchmarks/spec-v5-harness2-case3-minimax31flash-retry1-results.md)：原配置重试一次。
