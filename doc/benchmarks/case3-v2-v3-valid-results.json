@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-27T10:06:42+08:00",
+  "generated_at": "2026-11-18T14:45:58+08:00",
   "case": {
     "case_key": "C000003",
     "name": "case3",
@@ -109,6 +109,30 @@
       "mean_audit_rounds": 4.0,
       "run_ids": [
         "run-2d9f0906686f4bc1b19f6de053dfd0cd"
+      ]
+    },
+    {
+      "model": "gpt-6.2-sol",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 0,
+      "convergence_rate": 0.0,
+      "mean_wall_time_seconds": 4804.141,
+      "mean_audit_rounds": 6.0,
+      "run_ids": [
+        "run-d5c2b5d09ea04302bec5b9083b9aa5c2"
+      ]
+    },
+    {
+      "model": "gpt-6.2-astra",
+      "provider": "openai",
+      "runs": 1,
+      "converged": 0,
+      "convergence_rate": 0.0,
+      "mean_wall_time_seconds": 5015.688,
+      "mean_audit_rounds": 6.0,
+      "run_ids": [
+        "run-d1ce03d002cd446d8923f0d1969aab68"
       ]
     },
     {
@@ -485,6 +509,58 @@
         "windows_sandbox": "unelevated"
       },
       "evidence_path": "batches/B-dd14204653b17d79cab01609/runs/run-2d9f0906686f4bc1b19f6de053dfd0cd",
+      "harness_version": 3
+    },
+    {
+      "run_id": "run-d5c2b5d09ea04302bec5b9083b9aa5c2",
+      "batch_id": "B-a2abd43c482ae4e5e115ee00",
+      "model": "gpt-6.2-sol",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "status": "NON_CONVERGED",
+      "raw_status": "PAUSED",
+      "audit_rounds": 6,
+      "repair_rounds": 6,
+      "wall_time_seconds": 4804.141,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.166.0",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-a2abd43c482ae4e5e115ee00/runs/run-d5c2b5d09ea04302bec5b9083b9aa5c2",
+      "harness_version": 3
+    },
+    {
+      "run_id": "run-d1ce03d002cd446d8923f0d1969aab68",
+      "batch_id": "B-a2abd43c482ae4e5e115ee00",
+      "model": "gpt-6.2-astra",
+      "provider": "openai",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "status": "NON_CONVERGED",
+      "raw_status": "PAUSED",
+      "audit_rounds": 6,
+      "repair_rounds": 6,
+      "wall_time_seconds": 5015.688,
+      "reasoning_effort": "high",
+      "conditions": {
+        "cli_version": "codex-cli 0.166.0",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "evidence_path": "batches/B-a2abd43c482ae4e5e115ee00/runs/run-d1ce03d002cd446d8923f0d1969aab68",
       "harness_version": 3
     }
   ]
