@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-27T10:06:42+08:00",
+  "generated_at": "2026-11-18T14:45:58+08:00",
   "case": {
     "case_key": "C000003",
     "name": "case3",
@@ -53,6 +53,23 @@
       "timeout_seconds": 1800,
       "updated_at": "2026-10-26T22:49:02.888968+00:00",
       "windows_sandbox": "unelevated"
+    },
+    {
+      "batch_concurrency": 2,
+      "batch_ids": [
+        "B-a2abd43c482ae4e5e115ee00"
+      ],
+      "cli_version": "codex-cli 0.166.0",
+      "code_identity": {
+        "python": "3.12.13 (main, May 10 2026, 19:35:37) [MSC v.1944 64 bit (AMD64)]",
+        "sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946"
+      },
+      "complete": true,
+      "evidence_path_base": "bench_home",
+      "harness_version": 3,
+      "max_auto_recoveries": 0,
+      "source": "frozen v3 source snapshot used for the previous Terra run",
+      "updated_at": "2026-11-18T05:47:00.935728+00:00"
     }
   ],
   "runs": [
@@ -959,6 +976,2060 @@
         {
           "stage": "audit-04",
           "findings": []
+        }
+      ]
+    },
+    {
+      "audit_rounds": 6,
+      "batch_id": "B-a2abd43c482ae4e5e115ee00",
+      "conditions": {
+        "cli_version": "codex-cli 0.166.0",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": false,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0",
+        "estimated_usd": null,
+        "invocations": 12,
+        "known_subtotal_usd": "0",
+        "priced_invocations": 0,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": null
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-a2abd43c482ae4e5e115ee00/runs/run-d5c2b5d09ea04302bec5b9083b9aa5c2",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 203.68700000000536,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 199.437,
+            "completion_observed": true,
+            "events_observed": 186,
+            "failed_tools": 0,
+            "non_tool_seconds": 196.061,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.203,
+            "tool_active_seconds": 3.376,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 320.76599999997416,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 315.672,
+            "completion_observed": true,
+            "events_observed": 254,
+            "failed_tools": 0,
+            "non_tool_seconds": 303.061,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 5.047,
+            "tool_active_seconds": 12.611,
+            "warnings": []
+          },
+          "stage": "audit-02",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 558.0620000000054,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 553.844,
+            "completion_observed": true,
+            "events_observed": 316,
+            "failed_tools": 1,
+            "non_tool_seconds": 520.611,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.187,
+            "tool_active_seconds": 33.233,
+            "warnings": []
+          },
+          "stage": "audit-03",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 540.7969999999914,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 535.843,
+            "completion_observed": true,
+            "events_observed": 340,
+            "failed_tools": 0,
+            "non_tool_seconds": 485.92,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.5,
+            "tool_active_seconds": 49.923,
+            "warnings": []
+          },
+          "stage": "audit-04",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 554.5780000000086,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 550.046,
+            "completion_observed": true,
+            "events_observed": 326,
+            "failed_tools": 0,
+            "non_tool_seconds": 515.766,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.375,
+            "tool_active_seconds": 34.28,
+            "warnings": []
+          },
+          "stage": "audit-05",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 624.6409999999742,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 619.985,
+            "completion_observed": true,
+            "events_observed": 412,
+            "failed_tools": 0,
+            "non_tool_seconds": 567.014,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.578,
+            "tool_active_seconds": 52.971,
+            "warnings": []
+          },
+          "stage": "audit-06",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 337.9070000000065,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 334.89,
+            "completion_observed": true,
+            "events_observed": 236,
+            "failed_tools": 0,
+            "non_tool_seconds": 328.624,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 2.985,
+            "tool_active_seconds": 6.266,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 293.35999999998603,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 289.843,
+            "completion_observed": true,
+            "events_observed": 190,
+            "failed_tools": 0,
+            "non_tool_seconds": 282.967,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.485,
+            "tool_active_seconds": 6.876,
+            "warnings": []
+          },
+          "stage": "repair-02",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 380.4530000000086,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 376.828,
+            "completion_observed": true,
+            "events_observed": 204,
+            "failed_tools": 0,
+            "non_tool_seconds": 368.968,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.547,
+            "tool_active_seconds": 7.86,
+            "warnings": []
+          },
+          "stage": "repair-03",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 199.53099999998813,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 196.109,
+            "completion_observed": true,
+            "events_observed": 122,
+            "failed_tools": 0,
+            "non_tool_seconds": 191.046,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.375,
+            "tool_active_seconds": 5.063,
+            "warnings": []
+          },
+          "stage": "repair-04",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 271.39000000001397,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 267.281,
+            "completion_observed": true,
+            "events_observed": 224,
+            "failed_tools": 0,
+            "non_tool_seconds": 256.905,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.078,
+            "tool_active_seconds": 10.376,
+            "warnings": []
+          },
+          "stage": "repair-05",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 353.5,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 350.906,
+            "completion_observed": true,
+            "events_observed": 184,
+            "failed_tools": 0,
+            "non_tool_seconds": 343.454,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 2.532,
+            "tool_active_seconds": 7.452,
+            "warnings": []
+          },
+          "stage": "repair-06",
+          "started": true,
+          "validated_completed_turn": null
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1090816,
+            "input_tokens": 1198404,
+            "output_tokens": 7057,
+            "reasoning_output_tokens": 1022
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1090816,
+            "input_tokens": 1198404,
+            "output_tokens": 7057,
+            "reasoning_output_tokens": 1022,
+            "total_tokens": 1205461,
+            "uncached_input_tokens": 107588
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1461632,
+            "input_tokens": 1576199,
+            "output_tokens": 11587,
+            "reasoning_output_tokens": 1874
+          },
+          "stage": "audit-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1461632,
+            "input_tokens": 1576199,
+            "output_tokens": 11587,
+            "reasoning_output_tokens": 1874,
+            "total_tokens": 1587786,
+            "uncached_input_tokens": 114567
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 4573696,
+            "input_tokens": 4710419,
+            "output_tokens": 19109,
+            "reasoning_output_tokens": 5284
+          },
+          "stage": "audit-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 4573696,
+            "input_tokens": 4710419,
+            "output_tokens": 19109,
+            "reasoning_output_tokens": 5284,
+            "total_tokens": 4729528,
+            "uncached_input_tokens": 136723
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2610816,
+            "input_tokens": 2763498,
+            "output_tokens": 18262,
+            "reasoning_output_tokens": 4726
+          },
+          "stage": "audit-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2610816,
+            "input_tokens": 2763498,
+            "output_tokens": 18262,
+            "reasoning_output_tokens": 4726,
+            "total_tokens": 2781760,
+            "uncached_input_tokens": 152682
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2821760,
+            "input_tokens": 2978603,
+            "output_tokens": 19722,
+            "reasoning_output_tokens": 5378
+          },
+          "stage": "audit-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2821760,
+            "input_tokens": 2978603,
+            "output_tokens": 19722,
+            "reasoning_output_tokens": 5378,
+            "total_tokens": 2998325,
+            "uncached_input_tokens": 156843
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 3667712,
+            "input_tokens": 3829510,
+            "output_tokens": 21130,
+            "reasoning_output_tokens": 3122
+          },
+          "stage": "audit-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 3667712,
+            "input_tokens": 3829510,
+            "output_tokens": 21130,
+            "reasoning_output_tokens": 3122,
+            "total_tokens": 3850640,
+            "uncached_input_tokens": 161798
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1489792,
+            "input_tokens": 1596183,
+            "output_tokens": 11988,
+            "reasoning_output_tokens": 3464
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1489792,
+            "input_tokens": 1596183,
+            "output_tokens": 11988,
+            "reasoning_output_tokens": 3464,
+            "total_tokens": 1608171,
+            "uncached_input_tokens": 106391
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1364608,
+            "input_tokens": 1458590,
+            "output_tokens": 10523,
+            "reasoning_output_tokens": 2829
+          },
+          "stage": "repair-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1364608,
+            "input_tokens": 1458590,
+            "output_tokens": 10523,
+            "reasoning_output_tokens": 2829,
+            "total_tokens": 1469113,
+            "uncached_input_tokens": 93982
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1276800,
+            "input_tokens": 1383627,
+            "output_tokens": 14393,
+            "reasoning_output_tokens": 3714
+          },
+          "stage": "repair-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1276800,
+            "input_tokens": 1383627,
+            "output_tokens": 14393,
+            "reasoning_output_tokens": 3714,
+            "total_tokens": 1398020,
+            "uncached_input_tokens": 106827
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 779392,
+            "input_tokens": 840876,
+            "output_tokens": 6757,
+            "reasoning_output_tokens": 1560
+          },
+          "stage": "repair-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 779392,
+            "input_tokens": 840876,
+            "output_tokens": 6757,
+            "reasoning_output_tokens": 1560,
+            "total_tokens": 847633,
+            "uncached_input_tokens": 61484
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1215872,
+            "input_tokens": 1323382,
+            "output_tokens": 9286,
+            "reasoning_output_tokens": 2016
+          },
+          "stage": "repair-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1215872,
+            "input_tokens": 1323382,
+            "output_tokens": 9286,
+            "reasoning_output_tokens": 2016,
+            "total_tokens": 1332668,
+            "uncached_input_tokens": 107510
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1781120,
+            "input_tokens": 1869989,
+            "output_tokens": 12254,
+            "reasoning_output_tokens": 1967
+          },
+          "stage": "repair-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1781120,
+            "input_tokens": 1869989,
+            "output_tokens": 12254,
+            "reasoning_output_tokens": 1967,
+            "total_tokens": 1882243,
+            "uncached_input_tokens": 88869
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "PAUSED",
+      "model": "gpt-6.2-sol",
+      "price": null,
+      "pricing_issue": "price_missing",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "provider": "openai",
+      "raw_status": "PAUSED",
+      "reasoning_effort": "high",
+      "repair_rounds": 6,
+      "revision": 2,
+      "run_id": "run-d5c2b5d09ea04302bec5b9083b9aa5c2",
+      "status": "NON_CONVERGED",
+      "stop_reason": "early_pause",
+      "tokens": {
+        "complete": true,
+        "invocations": 12,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 24134016,
+          "input_tokens": 25529280,
+          "output_tokens": 162068,
+          "reasoning_output_tokens": 36956,
+          "total_tokens": 25691348,
+          "uncached_input_tokens": 1395264
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 12
+      },
+      "wall_time_seconds": 4804.141,
+      "audit_findings": [
+        {
+          "stage": "audit-01",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "手动启动没有把用户确认的任务版本传到中心领取",
+              "evidence": "固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 中，`docs/spec/core-decoupling-11-tui.spec.md` 第 3 项和 CM72-2 要求提交时重检精确对象与版本。`internal/steerline/console/profile_choice.go:43–48` 只匹配任务 ID、服务实例和控制 revision。`internal/steerline/clientcontracts/observations.go:118–123` 的 `ControlPayload` 没有任务版本，`internal/steerline/control_protocol.go:174–193` 的 `start_task` 解码也没有这个字段。`internal/steerline/control_service.go:373–386` 的 `validateReadyTarget` 只按当前 Ready 集合匹配 ID 和类型，随后 `internal/steerline/native_service.go:447–486` 用重新读取的 `task.Version` 领取。任务变更后若仍符合 Ready 条件，中心可能领取用户未确认的新版本。Spec 缺少把显示版本贯穿查询、控制请求和现有领取事务的交付范围。"
+            },
+            {
+              "severity": "P1",
+              "title": "响应丢失时，已保存的决策请求 ID 可能查不到既有命令",
+              "evidence": "固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 中，`docs/spec/core-decoupling-11-tui.spec.md` 第 3、4 项和 CM72-2 要求先保存 ID，再用同一 ID 对账。`internal/steerline/decision.go:243–255` 的 `SubmitAnswerDecision` 按内容幂等键查到既有命令时，直接返回其 `CommandID`，这个 ID 可能与 TUI 保存的 ID 不同。`internal/steerline/console/model_update_actions.go:24–29` 只有收到响应才重映射，`internal/steerline/console/model.go:513–529` 和 `internal/steerlineclient/client.go:193–195` 的轮询只按保存的 ID 查询。如果重放响应丢失或 TUI 在保存映射前退出，查询无法找到实际命令。Spec 缺少可按原提交 ID 恢复的重放关联，也没有覆盖这个失败窗口的验收。"
+            },
+            {
+              "severity": "P2",
+              "title": "现有只读恢复核验没有产品客户端入口",
+              "evidence": "固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 中，`docs/spec/core-decoupling-11-tui.spec.md` 的目标与范围及 CM72-1 要求保留现有 UI，并让所有产品读取经过注入接口。`internal/steerline/console/model_keys.go:133–134` 的 `u` 键进入 `inspectSelectedRecovery`，该方法在 `internal/steerline/console/model_control.go:99–122` 直接调用 `steerline.InspectRecovery`。`internal/steerline/recovery.go:43–94` 的实现读取 SQLite 投影并核验进程、工作区、领取和 PR。`internal/steerline/clientcontracts/client.go:162–179,196–229` 的 `Resources`、查询接口和 `Client` 均无恢复核验方法或报告类型。Spec 缺少这条既有入口的迁移和验收，按现有交接无法同时保留报告与删除中心依赖。"
+            },
+            {
+              "severity": "P2",
+              "title": "方案选择缺少可枚举且带固定摘要的产品契约",
+              "evidence": "固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 中，`docs/spec/core-decoupling-11-tui.spec.md` 第 2 项和 CM72-2 要求迁移方案列表及固定身份。`internal/steerline/console/profile_choice.go:21–61,66–104` 从 `Config.AvailableExecutionProfiles` 枚举方案，显示支持原因，并用 ID 和摘要核对所选方案。`internal/steerline/clientcontracts/client.go:20–33,196–214` 的 `ProjectSnapshot` 和消费接口没有方案列表或摘要 DTO，只有 `StartTaskPayload`。`internal/steerlineapp/client.go:113–121` 的 `ResolveStartTask` 按 ID 传空预期摘要重新解析，无法验证结果就是用户先前看到的方案。Spec 需要明确这项 #71 交接能力的补齐归属，并验收同一方案 ID 的摘要变化后旧选择会被拒绝。"
+            },
+            {
+              "severity": "P2",
+              "title": "按钮和快捷键缺少可共享的资格结果",
+              "evidence": "固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 中，`docs/spec/core-decoupling-11-tui.spec.md` 第 3 项要求按钮与快捷键共同消费服务端资格和原因。`internal/steerline/console/model_control.go:262–287` 的 `candidateActionReason` 和 `internal/steerline/console/view.go:754–793` 的 `decisionAnswerAvailability` 仍由 UI 组合资格。`internal/steerline/clientcontracts/observations.go:41–56` 只提供连接级标志和能力列表，`internal/steerline/clientcontracts/client.go:196–229` 只有决策专用 `DecisionEligibility`，没有绑定具体目标的控制资格结果。现有 `internal/steerline/control_service.go:222–263` 在受理时才给出各控制动作的拒绝原因。Spec 缺少把权威资格暴露给渲染与按键路径的接口归属，迁移可能把原判断直接搬到另一处，仍保留两套规则。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-02",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "现有写端口无法在同一事务内验证在线目标并登记重放关联",
+              "evidence": "在固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210，Spec「决策请求与重放回执」要求只为已验证的在线目标事务性登记关联，同时保持 Store 实现和写端口。`internal/steerline/persistence/ports.go:58-67,165-189` 的 `Commands` 和 `CommandStore` 没有在同一事务内重检服务及决策前值并登记关联的入口。`internal/steerline/sqlite_write_ports.go:23-27` 的 `EnqueueCommand` 每次只处理一条记录。`internal/steerline/sqlite_store_write_commands.go:133-150,155-216` 在答案去重命中时直接返回既有记录，另行入队专用种类虽可利用唯一键，却会跳过答案专属校验。服务可在在线校验和关联登记之间换代。Spec 需明确允许扩展现有命令受理事务及其类型化端口，或给出能在同一事务内满足这些前值的现有入口。"
+            },
+            {
+              "severity": "P1",
+              "title": "决策资格绑定的 Attempt 和恢复版本没有贯穿受理事务",
+              "evidence": "在固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210，Spec「动作资格」要求绑定 Execution、Attempt 和恢复版本，CM72-2 要求拒绝旧决策代次，但「并行与最终交付」约束保持 Store 实现。`internal/steerlineapp/client.go:219-221` 的 `clientDecision.Submit` 没有转发 `SourceAttemptID` 和 `ExpectedRecoveryVersion`。`internal/steerline/decision.go:236-237,279-285` 的 `SubmitAnswerDecision` 从提交时的快照重新填入这两个值，再用后一次读取核对。`internal/steerline/sqlite_store_write_commands.go:257-291` 的 `AcceptDecisionAnswer` 只将当前 Attempt 与记录里的 `record.AttemptID` 比较，没有比较提交方固定的 Attempt 或恢复版本。Spec 需明确从展示、提交到受理事务都使用原前值，并允许补齐事务重检。现有路径无法证明读取资格后发生的恢复代次变化会在事务内被拒绝。"
+            },
+            {
+              "severity": "P2",
+              "title": "只读取实际命令状态无法区分答案已受理和动作已完成",
+              "evidence": "在固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210，Spec「决策请求与重放回执」要求查询关联与实际命令并分别显示重放、受理和执行完成。`internal/steerline/sqlite_store_write_commands.go:299-319` 的 `AcceptDecisionAnswer` 保存答案时就把命令置为 `accepted`。`internal/steerline/worker_feedback.go:96-108,166-169` 随后才使用该命令执行宿主动作或发送反馈。后续事实写入决策或操作记录，例如 `internal/steerline/worker_events.go:47-78` 的 `reply_accepted` 和操作确认。`internal/steerlineclient/client.go:193-207` 的 `WaitCommand` 在 `accepted` 就返回。Spec 需明确回执通过哪些既有权威证据判定原动作完成，并用同一原 ID 验证从已受理到已完成的变化。"
+            },
+            {
+              "severity": "P2",
+              "title": "重放规则需要区分同一请求 ID 的身份校验与不同请求 ID 的答案去重",
+              "evidence": "在固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210，Spec「决策请求与重放回执」既要求保留既有内容去重，又要求原请求指纹覆盖发起者，并用「身份和内容相符」描述重放。`internal/steerline/query_command.go:76-82` 的 `decisionAnswerKey` 不含发起者，`internal/steerline/decision.go:23-24` 的 `sameDecisionAnswer` 也不比较发起者。`internal/steerline/sqlite_store_test.go:434-480` 明确要求 Alice 和 Bob 以不同 ID 并发提交相同答案时汇聚到同一个实际命令。如果用完整指纹匹配实际命令，会破坏这个既有行为。如果同一原 ID 也只按答案内容匹配，就会接受更换发起者的提交。Spec 和 CM72-4 应明确两种比较规则，并覆盖不同发起者、不同原 ID 的分支。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-03",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "已拒绝的旧答案命令会挡住刷新后的合法提交",
+              "evidence": "当前 Spec 第 35 行要求不同原 ID 命中实际命令时拒绝旧版本，CM72-2 和 CM72-4 只验证拒绝，缺少刷新后重新提交的规则。在固定提交 6dce3cf1，internal/steerline/query_command.go:76 的 decisionAnswerKey 不含 run revision 或 Decision 版本，internal/steerline/sqlite_store_schema.go:105 又要求项目内幂等键唯一。internal/steerline/state_revision.go:21、:58 表明 PR 或执行状态变化即可推进 run revision，无需更换 Decision 或 Attempt。因此原命令入队后因 revision 漂移被拒绝，即使同一问题仍 pending，刷新后使用新 ID 提交同一答案仍会命中旧行。Spec 需要区分同一观察下的并发去重与新观察下的合法新提交，同时保留旧 ID 的拒绝回执。若调整实际命令的键，internal/steerline/worker_feedback.go:100 和 internal/steerline/worker_events.go:63 的受理命令定位也须同步。"
+            },
+            {
+              "severity": "P1",
+              "title": "控制请求的原 revision 未明确传到写事务",
+              "evidence": "当前 Spec 第 15、27、48–49 行要求固定原控制 revision 并在提交边界重检，但手动启动的传递规则只明确传递 ExpectedTaskVersion。在固定提交 6dce3cf1，internal/steerline/control_service.go:267 用内存 revision 核对请求，:394–399 对派发模式、暂停和恢复重新读取 authority，再用新版本构造更新。internal/steerline/native_service.go:447–486 也在手动领取前重采样 AuthorityVersion。该版本就是 internal/steerline/native_service.go:39–51 投影到 Control.Revision 的值。若受理后权威版本变化而任务仍 Ready，事务可能对新版本写入。Spec 应明确将原 revision 用作非停止动作的事务前值，并验收受理后仅控制 revision 改变时拒绝且不写入。"
+            },
+            {
+              "severity": "P1",
+              "title": "环境复核缺少按原命令保存的已知结果",
+              "evidence": "当前 Spec 第 38–39 行要求通过已确认的 environment_recheck 回执和实际命令 ID 判定原动作结果。在固定提交 6dce3cf1，internal/steerline/worker_environment.go:428–449 按 Execution 和阻塞项复用操作。宿主仍有阻塞时，该路径调用 :630–641 的 renewEnvironmentDecision，提交旧 Decision 为 applied 并创建新问题，未保存旧命令本次复核的结果。用户再次复核成功时，:534 才用后一次命令 ID 确认同一操作。按 Spec 的匹配规则，前一次复核明知未解除阻塞，回执却只能永久待核实。需要在续发问题的提交边界保存前一次命令的结果，并验证同一阻塞项连续两次复核能各自查到原结果。"
+            },
+            {
+              "severity": "P2",
+              "title": "控制协议 v2 缺少历史文件对启动和后续请求的影响定义",
+              "evidence": "当前 Spec 第 28 行及 CM72-2 要求保留旧控制文件并报告不兼容，未定义旧回执在 v2 启动和请求扫描中的处理边界。在固定提交 6dce3cf1，internal/steerline/native_state_preflight.go:260–318 扫描整个控制目录，任一回执版本不同即返回 authority_mismatch。internal/steerline/service_client.go:1096 在服务启动时执行该预检。即使调整启动预检，internal/steerline/control_service.go:145–155 遇到旧回执读取错误也会中止扫描，使后续有效请求无法处理。Spec 需要明确旧文件导致整个状态目录不兼容，还是仅产生逐条诊断，并验收保留旧文件后的启动及 v2 请求行为。"
+            },
+            {
+              "severity": "P2",
+              "title": "离线查询缺少判定原数据库归属的前值",
+              "evidence": "当前 Spec 第 33 行规定按原项目、配置归属和请求 ID 查询，并将数据库 ID 单列在提交指纹中。第 37 行要求仅在权威查询确认无原记录时报告未找到。在固定提交 6dce3cf1，internal/steerlineapp/client.go:36–49 用配置路径和 RunDir 构造项目引用，:134–145 分别暴露 DatabaseVersion 和按项目、ID 查命令。同一配置路径及 RunDir 下换成同项目的另一数据库后，原 ID 查无行，结果无法区分原库缺记录与查到了其他库。TUI 应将发送前保存的数据库 ID 用于同一读取快照的归属校验，CLI 仅凭 ID 查询时也需要明确其无记录结果的含义。"
+            },
+            {
+              "severity": "P2",
+              "title": "新增写端口与原始 Spec 的交付边界冲突",
+              "evidence": "固定提交 6dce3cf1 的原始 Spec `docs/spec/core-decoupling-11-tui.spec.md`「并行与最终交付」明确限定 #72 不改 Store 或写端口。当前 Spec 第 34、50、55 行把决策登记和受理事务扩展列为 #72 的同一实现 PR 的交付内容。`docs/spec/core-maintenance-constraints.md`:25–36 将这些修改交给 #69/#70，实际修改点落在 `internal/steerline/persistence/ports.go` 的命令端口和 `internal/steerline/sqlite_store_write_commands.go`:126、:219 的 SQLite 实现。当前只约定由存储侧集中修改，仍缺少明确的跨任务交付归属和集成顺序。需要确认 #72 的范围变更，或将事务能力列为由存储侧交付的明确接口交接。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-04",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "运行中发现旧协议会退出服务，独立停止通道无法继续运行",
+              "evidence": "Spec「手动启动与执行方案」要求旧协议只中止普通扫描，独立停止通道仍接受固定实例的 v2 停止请求。固定提交中，`internal/steerline/control_service.go:338-358` 的 `pollControl` 会把扫描错误向外返回，现有保留逻辑只处理已完成 intent 的回执发布失败。`internal/steerline/service.go:849-877` 的任务和控制定时分支收到错误即退出服务循环，退出时取消停止监听并调用 `shutdown`（同文件 642-709、893-937）。Spec 与 CM72-6 缺少将协议不兼容作为普通控制扫描的非致命状态处理的要求，以及发现旧文件后原实例仍能响应独立 v2 停止请求的验收。"
+            },
+            {
+              "severity": "P2",
+              "title": "仅存旧回执时，普通扫描和按 ID 查询都会漏掉协议冲突",
+              "evidence": "Spec「手动启动与执行方案」和 CM72-6 同时覆盖旧请求与旧回执，并要求按其原 ID 返回协议不兼容。固定提交中，`internal/steerline/control_service.go:118-158` 的 `controlDirectories` 和 `nextControlRequest` 只枚举请求目录，并跳过 `controlSeen` 中的 ID。`internal/steerlineapp/client.go:191-208` 的 `clientControl.Receipt` 先读请求，`internal/steerline/control_client.go:233-240` 的 `ReadVerifiedControlReceipt` 也采用相同顺序。旧回执独立存在时，普通扫描可继续消费 v2 请求，按 ID 查询则先得到请求文件不存在。Spec 需要明确独立发现旧回执并报告其版本，同时保留 v2 成功回执与原请求摘要的核验。"
+            },
+            {
+              "severity": "P2",
+              "title": "领取事务拒绝过期请求前，现有路径已更新远端跟踪引用",
+              "evidence": "Spec「手动启动与执行方案」沿用现有领取事务及 CAS。CM72-2 要求覆盖事务内版本竞争，并验证拒绝后无领取或外部动作。固定提交中，`internal/steerline/native_claim_command.go:154-179` 的 `ClaimNativeTask` 在进入 `TransactClaim` 前调用 `acquireNativeBase`，而该函数在同文件 342-350 通过带目标引用的 `git fetch` 更新 `refs/remotes/...`。只推进权威版本的竞争可以发生在 fetch 之后、同文件 221-254 的事务重检之前。事务可以阻止业务写入和 worker 启动，已经发生的 Git 更新仍会保留。Spec 需明确该准备副作用是否允许，并使实施边界与验收口径一致。"
+            },
+            {
+              "severity": "P2",
+              "title": "原生问题明确回复失败时缺少按原请求查询的持久终态",
+              "evidence": "Spec「决策请求与重放回执」要求明确失败可按原 ID 展示，且回执只归属于原动作。固定提交中，`internal/steerline/worker_events.go:181-226` 在匹配原问题的成功分支更新对应 `worker-question-answer` 操作，但在原生回复明确失败时只更新共享的 `execution.Error`。`internal/steerline/worker_lifecycle_feedback.go:215-222` 又允许发送操作先以 `accepted` 持久化。因此明确失败之后，原操作仍可能显示 `accepted`，共享错误也可能被后续动作覆盖。Spec 详细规定了环境复核终态的写入，却未要求在该失败分支把结果持久绑定至原问题、轮次和操作，也未在 CM72-4 验证该结果可由原 ID 读回。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-05",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "方案选择摘要与领取后冻结摘要未区分",
+              "evidence": "当前 Spec「手动启动与执行方案」要求从展示到提交原样传递方案摘要，并用原摘要核验已持久领取。固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 的 internal/steerline/execution_profiles.go 中，ResolveExecutionProfile 校验选择时的 DigestFor，Freeze 则把 RequirementsEvaluation 及其证据摘要纳入冻结摘要。internal/steerline/native_claim_command.go 的 ClaimNativeTask 在领取时重新采集证据，再冻结方案。internal/steerline/execution_requirements.go 的 evaluateExecutionRequirements 会写入新的 CheckedAt。internal/steerline/control_service.go 的 applyControlAction 却把冻结后的 workflow.ExecutionProfile.Digest 直接与请求摘要比较。配置未变且领取已提交时，带执行要求的合法方案也会出现两个不同摘要。Spec 需要明确从原领取命令核验选择摘要，并独立核验冻结摘要及其证据。"
+            },
+            {
+              "severity": "P2",
+              "title": "环境复核在首次执行前失去目标时缺少终态写入路径",
+              "evidence": "当前 Spec「决策请求与重放回执」及 CM72-5 要求旧目标失效时，按实际命令 ID 保留 stale_target。固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 的 internal/steerline/service.go 中，controlTick 可单独调用 processPendingCommands，将答案提交为已受理。随后 internal/steerline/worker_environment.go 的 blockWorkerEnvironment 可以更换阻塞项及当前 Decision。internal/steerline/decision.go 的 applyDecisions 只处理当前 answer_saved Decision。即使旧决定进入 applyEnvironmentAction，入口处的旧目标检查也在建立操作前返回，现有 stale_target 路径只覆盖操作已建立后发生的变化。因此已受理的旧请求可能永远没有操作回执。Spec 缺少基于原受理记录结算这一窗口的路径及验收。"
+            },
+            {
+              "severity": "P2",
+              "title": "宿主阻塞遮蔽原生问题时，匹配的失败事件可能被丢弃",
+              "evidence": "当前 Spec「决策请求与重放回执」要求匹配原问题和轮次的明确失败写入原 worker-question-answer 操作。固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 的 internal/steerline/worker_environment.go 中，blockWorkerEnvironment 将原 answer_saved 问题保存在 DeferredDecisionID，并把宿主问题设为当前 Decision。internal/steerline/worker_events.go 的 eventWorkerFlowFor 只从当前 Decision 取 QuestionRoute。internal/steerline/worker_environment.go 的 reconcileEnvironmentQuestion 与 internal/steerline/worker_lifecycle.go 的 reconcileDeferredLifecycleFeedback 也只通过已有受理状态或成功确认推进。若原回复在宿主问题展示期间明确失败，现有入口会略过该事件，之后按原 ID 会一直显示待核实。CM72-4 缺少原问题被遮蔽时仍按固定路由落下失败回执的场景。"
+            },
+            {
+              "severity": "P2",
+              "title": "活动轮和宿主延后反馈会把明确拒绝降为未知",
+              "evidence": "当前 Spec「决策请求与重放回执」将活动轮和宿主延后反馈关联到 worker-environment-feedback，并要求已有明确拒绝或失败时显示对应结果。固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 的 internal/steerline/worker_lifecycle.go 中，deliverLifecycleEnvironmentFeedback 校验生命周期回执后，把所有未确认输入的结果写成 outcome_unknown，其中包括 OperationRejected。internal/steerline/worker_execution.go 的 deliverResumableWorkerFeedback 与 internal/steerline/worker_environment.go 的 flushEnvironmentFeedback 均调用该路径。Spec 只为原生问题和环境复核明确了负向终态的生产规则。仅增加只读投影，会使这两类反馈的明确拒绝继续显示待核实。"
+            },
+            {
+              "severity": "P2",
+              "title": "控制旧协议校验的共享预检边界会波及其他产品入口",
+              "evidence": "当前 Spec「手动启动与执行方案」把旧控制文件的运行时影响限定在普通控制扫描，并要求沿用 validateNativeControlTree 的启动预检边界。固定提交 6dce3cf1abf293e18bd78f92677c72a3fa2f0210 的 internal/steerline/native_state_preflight.go 中，validateNativeControlTree 由共享 preflightNativeStatePath 调用。internal/steerline/decision.go 的 SubmitAnswerDecision 也执行该预检。internal/steerline/control_client.go 的 ReadTaskSnapshot 还通过 internal/steerline/native_project_open.go 的 OpenNativeTaskProject 进入同一预检。若在现有共享入口统一加入 v2 版本拒绝，运行中放入孤立 v1 回执会同时阻断 SQLite 答案提交和 CLI 任务快照。Spec 未规定如何保留这些调用者的目录结构校验，并将整树协议版本拒绝限定到预定入口。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-06",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "现有 worker 提交端口无法直接写入过期复核终态",
+              "evidence": "本 Spec「决策请求与重放回执」及 CM72-5 要求原复核尚无操作时，在既有 worker 事务中直接插入 `confirmed/stale_target`，并在事务内重检原受理记录。「并行与最终交付」要求沿用既有 worker 提交端口，列出的存储交接只有决策登记、受理和证据读取。固定提交的 `internal/steerline/sqlite_worker_commit.go:110-125` 明确拒绝插入状态为 `confirmed` 的新操作，`internal/steerline/persistence/ports.go:24-43` 的 `WorkerCommit` 也没有用于重检原命令及 `decision_answers` 的前值。CM72-5 所要求的无操作路径需要纳入存储交接的类型化原子结算能力。"
+            },
+            {
+              "severity": "P1",
+              "title": "活动轮反馈缺少可在重启后核验的原轮次",
+              "evidence": "本 Spec「决策请求与重放回执」及 CM72-4 要求按原轮次核验 `worker-environment-feedback` 的明确拒绝，并禁止改投新轮次，但未指定活动轮反馈在发送前把原轮次持久化到哪里。固定提交的 `internal/steerline/worker_lifecycle.go:1692-1744` 将 `FeedbackInput` 存为操作请求，并从当前执行构造发送或对账快照。`internal/steerline/execution/lifecycle.go:50-55,424-453` 中 `FeedbackInput` 与 `LifecycleBindingDigest` 均未绑定轮次，`LifecycleReceipt.ValidateFor` 比对的是操作身份。宿主延后队列另有 `TurnID`，见 `internal/steerline/worker_environment.go:653-679`，但活动轮反馈没有该记录。活动轮发生切换后，既有操作证据无法独立证明被核验的拒绝属于原发送轮次。"
+            },
+            {
+              "severity": "P1",
+              "title": "CLI 任务快照沿用的开库入口会初始化缺失状态库",
+              "evidence": "本 Spec「手动启动与执行方案」把 `ReadTaskSnapshot` 放在经 `OpenNativeTaskProject` 的共享预检路径上，CM72-6 验证已有库中的真实 CLI 查询。硬前置 `docs/spec/core-decoupling-10-client.spec.md:15-24` 要求离线纯查询在缺库时报告缺失且不建库。固定提交的 `internal/steerline/control_client.go:58-69` 确实从 `ReadTaskSnapshot` 调用该入口，而 `internal/steerline/native_project_open.go:28-77` 会在状态目录干净且库缺失时创建 `steerline.db` 并初始化项目。Spec 需要明确让任务快照保留共享结构检查，并由现有只读开库路径报告缺库，同时覆盖缺库查询前后的状态。"
+            },
+            {
+              "severity": "P2",
+              "title": "普通扫描的协议诊断可能阻断独立的答案入口",
+              "evidence": "本 Spec「手动启动与执行方案」及 CM72-6 要求旧控制文件使普通扫描报非致命诊断，同时允许同一实例继续受理合法 SQLite 决策答案。固定提交的 `internal/steerline/control_service.go:335-358` 在保留控制错误时调用 `setError` 并发布 checkpoint，`internal/steerline/service.go:341-344` 会将服务状态设为 `error`。连接仍可报告 `CanControl`，但 `internal/steerline/decision.go:272-277` 与 `internal/steerline/sqlite_store_write_commands.go:263-273` 均要求持久投影为 `running/ready`。若协议诊断复用现有控制错误发布路径，答案受理会取决于后续定时分支是否已恢复服务状态。Spec 需要明确普通控制协议诊断的发布边界，并在诊断可见时验证答案受理。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "audit_rounds": 6,
+      "batch_id": "B-a2abd43c482ae4e5e115ee00",
+      "conditions": {
+        "cli_version": "codex-cli 0.166.0",
+        "code_sha256": "6744c8a961e42ddacf97e18c122d83382b8b4777326b36bdac2839252ab01946",
+        "execution_spec_sha256": null,
+        "max_audit_rounds": 8,
+        "protocol_sha256": "4d5a7cf6b9d641bb13c33be74fdb0f6039d6b92d227c4998371d7f328da55a8e",
+        "provider_base_url": null,
+        "timeout_seconds": 1800,
+        "windows_sandbox": "unelevated"
+      },
+      "cost": {
+        "complete": false,
+        "currency": "USD",
+        "estimated_subtotal_usd": "0",
+        "estimated_usd": null,
+        "invocations": 12,
+        "known_subtotal_usd": "0",
+        "priced_invocations": 0,
+        "reported_invocations": 0,
+        "reported_subtotal_usd": "0",
+        "total_usd": null
+      },
+      "error_stage": null,
+      "error_type": null,
+      "evidence_path": "batches/B-a2abd43c482ae4e5e115ee00/runs/run-d1ce03d002cd446d8923f0d1969aab68",
+      "execution_invocations": [
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 155.06299999999464,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 150.531,
+            "completion_observed": true,
+            "events_observed": 145,
+            "failed_tools": 0,
+            "non_tool_seconds": 148.732,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.5,
+            "tool_active_seconds": 1.799,
+            "warnings": []
+          },
+          "stage": "audit-01",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 300.78100000001723,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 295.593,
+            "completion_observed": true,
+            "events_observed": 221,
+            "failed_tools": 0,
+            "non_tool_seconds": 286.31,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 5.172,
+            "tool_active_seconds": 9.283,
+            "warnings": []
+          },
+          "stage": "audit-02",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 878.0929999999935,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 857.015,
+            "completion_observed": true,
+            "events_observed": 291,
+            "failed_tools": 0,
+            "non_tool_seconds": 821.781,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 21.047,
+            "tool_active_seconds": 35.234,
+            "warnings": []
+          },
+          "stage": "audit-03",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 497.0309999999881,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 493.015,
+            "completion_observed": true,
+            "events_observed": 267,
+            "failed_tools": 0,
+            "non_tool_seconds": 472.747,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.985,
+            "tool_active_seconds": 20.268,
+            "warnings": []
+          },
+          "stage": "audit-04",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 591.4839999999967,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 586.484,
+            "completion_observed": true,
+            "events_observed": 307,
+            "failed_tools": 0,
+            "non_tool_seconds": 553.982,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.969,
+            "tool_active_seconds": 32.502,
+            "warnings": []
+          },
+          "stage": "audit-05",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 664.5,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 660.297,
+            "completion_observed": true,
+            "events_observed": 319,
+            "failed_tools": 0,
+            "non_tool_seconds": 572.158,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.156,
+            "tool_active_seconds": 88.139,
+            "warnings": []
+          },
+          "stage": "audit-06",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 682.2179999999935,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 678.453,
+            "completion_observed": true,
+            "events_observed": 108,
+            "failed_tools": 0,
+            "non_tool_seconds": 677.438,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.672,
+            "tool_active_seconds": 1.015,
+            "warnings": []
+          },
+          "stage": "repair-01",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 250.6710000000021,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 246.125,
+            "completion_observed": true,
+            "events_observed": 176,
+            "failed_tools": 0,
+            "non_tool_seconds": 242.281,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 4.515,
+            "tool_active_seconds": 3.844,
+            "warnings": []
+          },
+          "stage": "repair-02",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 165.88999999998487,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 160.766,
+            "completion_observed": true,
+            "events_observed": 112,
+            "failed_tools": 0,
+            "non_tool_seconds": 159.577,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 5.031,
+            "tool_active_seconds": 1.189,
+            "warnings": []
+          },
+          "stage": "repair-03",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 186.625,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 183.219,
+            "completion_observed": true,
+            "events_observed": 76,
+            "failed_tools": 0,
+            "non_tool_seconds": 180.923,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.359,
+            "tool_active_seconds": 2.296,
+            "warnings": []
+          },
+          "stage": "repair-04",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 204.17199999999139,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 200.281,
+            "completion_observed": true,
+            "events_observed": 136,
+            "failed_tools": 0,
+            "non_tool_seconds": 198.703,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 3.813,
+            "tool_active_seconds": 1.578,
+            "warnings": []
+          },
+          "stage": "repair-05",
+          "started": true,
+          "validated_completed_turn": null
+        },
+        {
+          "cleanup_reason": null,
+          "completion_validation": {
+            "failure_reasons": [],
+            "final_file_nonempty": true,
+            "final_message_present": true,
+            "final_text_matches": true,
+            "no_failed_event": true,
+            "no_pending_tools": true,
+            "turn_completed": true
+          },
+          "diagnostics": {
+            "patch_verification_errors": 0,
+            "sandbox_denials": 0,
+            "unknown_process_errors": 0
+          },
+          "duration_seconds": 271.31299999999464,
+          "error_type": null,
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "harness_version": 3,
+          "progress": {
+            "agent_active_seconds": 266.125,
+            "completion_observed": true,
+            "events_observed": 154,
+            "failed_tools": 0,
+            "non_tool_seconds": 258.313,
+            "pending_tool_diagnostics": [],
+            "pending_tools": [],
+            "post_completion_seconds": 5.141,
+            "tool_active_seconds": 7.812,
+            "warnings": []
+          },
+          "stage": "repair-06",
+          "started": true,
+          "validated_completed_turn": null
+        }
+      ],
+      "included": true,
+      "invocations": [
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 734720,
+            "input_tokens": 810977,
+            "output_tokens": 3098,
+            "reasoning_output_tokens": 138
+          },
+          "stage": "audit-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 734720,
+            "input_tokens": 810977,
+            "output_tokens": 3098,
+            "reasoning_output_tokens": 138,
+            "total_tokens": 814075,
+            "uncached_input_tokens": 76257
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1301120,
+            "input_tokens": 1398988,
+            "output_tokens": 9219,
+            "reasoning_output_tokens": 670
+          },
+          "stage": "audit-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1301120,
+            "input_tokens": 1398988,
+            "output_tokens": 9219,
+            "reasoning_output_tokens": 670,
+            "total_tokens": 1408207,
+            "uncached_input_tokens": 97868
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1398272,
+            "input_tokens": 1505827,
+            "output_tokens": 9905,
+            "reasoning_output_tokens": 951
+          },
+          "stage": "audit-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 1398272,
+            "input_tokens": 1505827,
+            "output_tokens": 9905,
+            "reasoning_output_tokens": 951,
+            "total_tokens": 1515732,
+            "uncached_input_tokens": 107555
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2278528,
+            "input_tokens": 2388145,
+            "output_tokens": 12982,
+            "reasoning_output_tokens": 2125
+          },
+          "stage": "audit-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2278528,
+            "input_tokens": 2388145,
+            "output_tokens": 12982,
+            "reasoning_output_tokens": 2125,
+            "total_tokens": 2401127,
+            "uncached_input_tokens": 109617
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2175488,
+            "input_tokens": 2300294,
+            "output_tokens": 14981,
+            "reasoning_output_tokens": 1762
+          },
+          "stage": "audit-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2175488,
+            "input_tokens": 2300294,
+            "output_tokens": 14981,
+            "reasoning_output_tokens": 1762,
+            "total_tokens": 2315275,
+            "uncached_input_tokens": 124806
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2992640,
+            "input_tokens": 3116821,
+            "output_tokens": 17026,
+            "reasoning_output_tokens": 1984
+          },
+          "stage": "audit-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 2992640,
+            "input_tokens": 3116821,
+            "output_tokens": 17026,
+            "reasoning_output_tokens": 1984,
+            "total_tokens": 3133847,
+            "uncached_input_tokens": 124181
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 603776,
+            "input_tokens": 661331,
+            "output_tokens": 4799,
+            "reasoning_output_tokens": 267
+          },
+          "stage": "repair-01",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 603776,
+            "input_tokens": 661331,
+            "output_tokens": 4799,
+            "reasoning_output_tokens": 267,
+            "total_tokens": 666130,
+            "uncached_input_tokens": 57555
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 576896,
+            "input_tokens": 629486,
+            "output_tokens": 6241,
+            "reasoning_output_tokens": 850
+          },
+          "stage": "repair-02",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 576896,
+            "input_tokens": 629486,
+            "output_tokens": 6241,
+            "reasoning_output_tokens": 850,
+            "total_tokens": 635727,
+            "uncached_input_tokens": 52590
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 492800,
+            "input_tokens": 548518,
+            "output_tokens": 4921,
+            "reasoning_output_tokens": 375
+          },
+          "stage": "repair-03",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 492800,
+            "input_tokens": 548518,
+            "output_tokens": 4921,
+            "reasoning_output_tokens": 375,
+            "total_tokens": 553439,
+            "uncached_input_tokens": 55718
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 541696,
+            "input_tokens": 601802,
+            "output_tokens": 4950,
+            "reasoning_output_tokens": 1215
+          },
+          "stage": "repair-04",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 541696,
+            "input_tokens": 601802,
+            "output_tokens": 4950,
+            "reasoning_output_tokens": 1215,
+            "total_tokens": 606752,
+            "uncached_input_tokens": 60106
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 520448,
+            "input_tokens": 577920,
+            "output_tokens": 5467,
+            "reasoning_output_tokens": 465
+          },
+          "stage": "repair-05",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 520448,
+            "input_tokens": 577920,
+            "output_tokens": 5467,
+            "reasoning_output_tokens": 465,
+            "total_tokens": 583387,
+            "uncached_input_tokens": 57472
+          },
+          "usage_issues": []
+        },
+        {
+          "cost": {
+            "components_usd": null,
+            "estimated_usd": null,
+            "issue": "price_missing",
+            "kind": "estimated",
+            "total_usd": null
+          },
+          "raw_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 864128,
+            "input_tokens": 919799,
+            "output_tokens": 5959,
+            "reasoning_output_tokens": 348
+          },
+          "stage": "repair-06",
+          "tokens": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 864128,
+            "input_tokens": 919799,
+            "output_tokens": 5959,
+            "reasoning_output_tokens": 348,
+            "total_tokens": 925758,
+            "uncached_input_tokens": 55671
+          },
+          "usage_issues": []
+        }
+      ],
+      "lifecycle": "PAUSED",
+      "model": "gpt-6.2-astra",
+      "price": null,
+      "pricing_issue": "price_missing",
+      "protocol_id": "spec-mrac-v2",
+      "protocol_version": 6,
+      "provider": "openai",
+      "raw_status": "PAUSED",
+      "reasoning_effort": "high",
+      "repair_rounds": 6,
+      "revision": 2,
+      "run_id": "run-d1ce03d002cd446d8923f0d1969aab68",
+      "status": "NON_CONVERGED",
+      "stop_reason": "early_pause",
+      "tokens": {
+        "complete": true,
+        "invocations": 12,
+        "known_totals": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 14480512,
+          "input_tokens": 15459908,
+          "output_tokens": 99548,
+          "reasoning_output_tokens": 11150,
+          "total_tokens": 15559456,
+          "uncached_input_tokens": 979396
+        },
+        "missing_by_field": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0,
+          "uncached_input_tokens": 0
+        },
+        "usage_recorded_invocations": 12
+      },
+      "wall_time_seconds": 5015.688,
+      "audit_findings": [
+        {
+          "stage": "audit-01",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "恢复核验快捷键没有可注入的产品查询接口",
+              "evidence": "Spec「必须交付」1、CM72-1 要求所有产品读取经过 #71 接口。固定提交中，internal/steerline/console/model_keys.go 的 handleKey 将 u 和核验面板的 r 接到 inspectSelectedRecovery，后者在 console/model_control.go 直接用 ref.Config 调用 steerline.InspectRecovery。internal/steerline/recovery.go 的 InspectRecovery 除读取快照外还核验进程、工作区、领取和 PR，现有 ProjectSnapshot 无法还原这些结果。internal/steerline/clientcontracts/client.go 的 ProjectQueries 和 Client 均无此查询，报告类型 RecoveryInspection 也在根包。Spec 需明确纯报告与只读查询由谁补齐，并将现有快捷键通过真实接线取得报告列入验收。"
+            },
+            {
+              "severity": "P1",
+              "title": "方案选择器需要的列表和已展示的方案摘要未由 #71 契约提供",
+              "evidence": "Spec「必须交付」2、3 和 CM72-2 同时要求删除 Config、保留方案选择并按展示时的固定身份提交。internal/steerline/console/profile_choice.go 的 renderExecutionProfileChoice 和 handleExecutionProfileChoice 使用 AvailableExecutionProfiles、StaticUnavailableReason 及 profile.Digest()。internal/steerline/clientcontracts/client.go 的 ProjectRef、ProjectSnapshot 和 Client 没有可选方案列表；Controls.StartTaskPayload 只接收任务 ID 和方案 ID。internal/steerlineapp/client.go 的 ResolveStartTask 用空的预期摘要解析当前配置。若用这个入口替换选择器，同 ID 方案在展示后变更时可能取得新摘要。需在硬前置交接中落实非秘密方案列表、不可用原因和展示时的摘要，并验收同 ID 换摘要时旧选择不能提交。"
+            },
+            {
+              "severity": "P1",
+              "title": "开始任务的快捷键缺少可直接消费的资格结果",
+              "evidence": "Spec「目标与范围」禁止复制资格规则，「必须交付」3 要求按钮和快捷键使用服务端资格及原因。internal/steerline/console/model_control.go 的 candidateActionReason 和 startSelected 仍组合候选新鲜度、配置一致性、手动模式、暂停状态及能力；internal/steerline/console/view.go 也用该结果决定是否提示 s。internal/steerlineclient/eligibility.go 的 CandidateFreshness 位于禁止 UI 导入的实现包，且只检查部分条件。internal/steerline/clientcontracts/observations.go 的 ServiceConnection 仅给出连接级能力，clientcontracts/client.go 的 ProjectQueries 和 Controls 均无针对所选候选的开始资格及拒绝原因。需明确该结果的生产者及交接接口，否则删掉旧规则会丢失禁用原因，照搬规则又违反 CM72-1。"
+            },
+            {
+              "severity": "P1",
+              "title": "公共项目引用无法保留损坏配置行和同仓控制冲突",
+              "evidence": "Spec「必须交付」1、2、4 要求删除旧 ProjectRef 和配置解析，同时保持项目归属。internal/steerline/console/model.go 的 LoadProjects 将单项加载错误保留为可见行，并对解析到同一仓库的配置设置 Conflict 以禁用控制。console/console_test.go 的 TestLoadProjectsSupportsZeroPartialAndExplicitConfigs 明确断言损坏行与有效项目共存。internal/steerline/clientcontracts/client.go 的 ProjectRef 只有 Key、Name、ConfigPath、Identity、RunDir，Client 没有项目发现接口；internal/steerlineapp/client.go 的 OpenClient 对单个配置返回客户端或错误。Spec 需明确外层如何逐项交付诊断和跨配置冲突，并验收混合配置目录中有效项目仍可读、损坏行仍可见、冲突项目不能提交控制。"
+            },
+            {
+              "severity": "P2",
+              "title": "统一的旧版本拒绝条件与现有停服协议冲突",
+              "evidence": "Spec「必须交付」3 和 CM72-2 要求使用精确版本并拒绝旧版本，但没有区分动作。internal/steerline/console/model_control.go 的 beginAction 明确让 stop_service 跳过控制修订检查；internal/steerline/control_client.go 的 submitControlSnapshotWithID 对停服不写 ExpectedControlRevision，internal/steerline/control_protocol.go 的 validateControlRequest 对停服核验仓库与实例，也明确豁免控制修订。若按统一条件验收，同一服务仅发生调度状态变化就会使已有停服确认失效。应分别规定同实例修订变化、实例更换两种停服结果，其他控制动作沿用各自的版本检查。"
+            },
+            {
+              "severity": "P2",
+              "title": "「原默认 I/O 删除」没有划清视图偏好文件和窗口锁的归属",
+              "evidence": "Spec「目标与范围」将偏好归 TUI，「必须交付」2 和 CM72-1 却把文件默认实现及原默认 I/O 统一归入迁移。internal/steerline/console/preferences.go 的 acquireViewProfile 管理 ui/views、每窗口锁和 view.v1.json，并使用根包 RepoLock、LockRepository 与 NewControlRequestID；console/model.go 的 createActionWithProfile 调用链须在发送前通过 saveProjectView 持久化请求身份。console/console_test.go 的 TestViewProfilesSeparateLiveWindowsAndRecoverAfterClose 和 TestStartIsNotPublishedWhenRequestIdentityCannotBePersisted 分别约束窗口隔离和写失败行为。需明确 UI 私有文件的读写、锁及关闭责任，并在移除根包依赖后保留这两项断言，避免将偏好持久化误删或移入产品客户端。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-02",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "决策答案没有端到端固定草稿打开时的 Attempt 和恢复版本",
+              "evidence": "Spec「控制确认与窗口偏好」要求答案绑定原决策及相应版本。固定提交中，internal/steerline/contracts/runtime.go 的 DecisionAnswer 已有 SourceAttemptID 和 ExpectedRecoveryVersion，但 internal/steerline/console/model.go 的 answerSelectedDecision 只保存实例、run、决策及两项修订。internal/steerlineapp/client.go 的 clientDecision.Submit 也不转交这两个字段，internal/steerline/decision.go 的 SubmitAnswerDecision 从提交时首次读取的 run 填入它们。这样只能核验提交期间的变化，无法证明提交代次与用户看见的代次一致。交接契约应要求从打开草稿到中心受理一直传递并核对这两个值，失配时保留草稿、零发布。"
+            },
+            {
+              "severity": "P1",
+              "title": "决策幂等重放丢失响应后，仅查窗口保存的 command_id 无法找到原命令",
+              "evidence": "Spec「必须交付」第 3 项及「控制确认与窗口偏好」要求丢失响应后可按已保存身份对账。固定提交 internal/steerline/decision.go 的 SubmitAnswerDecision 按 decisionAnswerKey 命中时直接返回已有 CommandRecord，其 ID 可与本窗口预存的 ID 不同。internal/steerline/console/model_update_actions.go 的 updateActionSubmitted 只有收到响应才会重映射 ID，而 internal/steerlineapp/client.go 的 clientReader.Command 只按项目和给定 ID 查询。两个窗口提交相同答案，后一个窗口丢失重放响应时，其保存的 ID 在中心没有记录。Spec 需定义可在发送前保存的只读对账身份或等价映射，并覆盖重开窗口找回既有命令且不再次提交。"
+            },
+            {
+              "severity": "P1",
+              "title": "配置路径和运行目录复用时，窗口无法识别待查请求原属的仓库",
+              "evidence": "Spec「项目列表」固定用配置路径、NUL 和运行目录构成视图键，「控制确认与窗口偏好」又要求保留现有格式并在重开后沿用原身份。固定提交 internal/steerline/console/preferences.go 的 ProjectView 和 SavedAction 均未保存仓库身份。internal/steerline/console/model.go 的 NewModel 按 ref.Key 恢复动作，pollAction 随后使用当前 ref 查询。若同一路径的配置改指另一仓库且运行目录不变，两次视图键相同，旧请求将交给新项目客户端查询。Spec 需区分偏好复用键与请求所属仓库，明确缺少原身份或身份失配时保留待核实状态，禁止向新项目对账。"
+            },
+            {
+              "severity": "P2",
+              "title": "方案摘要验收混淆了内存中的受理配置与磁盘上的当前配置",
+              "evidence": "Spec「方案选择」和 CM72-2 要求确认前改方案时零发布，发布后、受理前改变时由中心拒绝。固定提交 internal/steerlineapp/client.go 的 clientResources 将 ResolveStartTask 绑定到打开时的 Config，internal/steerline/service_execution_profiles.go 的 projectExecutionConfig 返回服务保存的 baseConfig。internal/steerline/control_service.go 的 processNextControl 用该值校验后即写入 applying 回执。真实文件字节复核位于 internal/steerline/native_claim_command.go 的领取事务中。仅给 ResolveExecutionProfile 增加预期摘要时，客户端和服务仍可能同时依据旧配置通过，直到领取才失败。Spec 应明确确认和受理分别读取何种配置证据，并用真实文件变化区分零发布、受理拒绝和领取失败。"
+            },
+            {
+              "severity": "P2",
+              "title": "切换自动派发和回答决策缺少可直接供界面消费的完整资格结果",
+              "evidence": "Spec「必须交付」第 3 项要求提示和按键消费产品资格及原因，但「产品接口交接」只为开始任务补齐这一结果。固定提交 internal/steerline/console/model_control.go 的 toggleMode 检查默认方案和执行配置是否匹配。internal/steerline/console/view.go 的 decisionAnswerAvailability 检查旧 sidecar、执行目录支持、连接及 answer_decision 能力，而 internal/steerline/decision.go 的 DecisionReplyEligibility 没有覆盖全部这些条件。internal/steerline/clientcontracts/client.go 的 Controls 也没有针对目标派发模式的资格查询。照现有交接表迁移会留下 UI 规则，或使原来禁用的操作显示为可用。应给这两个现有入口明确资格结果及所有者，让提示和按键使用同一结果。"
+            },
+            {
+              "severity": "P2",
+              "title": "Windows 离线服务入口的文件探测没有交接给外层",
+              "evidence": "Spec「必须交付」第 2 项要求删除 console 的产品 I/O，同时保留现有界面。固定提交 internal/steerline/console/view.go 的 renderEmptySelection 调用 serviceWindowInstruction，后者在 Windows 渲染时直接 os.Stat 检查 steerline.exe 和 service-window.bat，分别显示安装提示、生成启动器提示或可用入口。internal/steerline/clientcontracts/client.go 的 ProjectRef、ProjectSnapshot 以及 Spec 新列出的项目条目均无对应事实。仅迁移默认查询源并检查禁用 import 仍会放过这条标准库 I/O 路径。应由应用外层提供已解析的入口或诊断，TUI 只展示结果。"
+            },
+            {
+              "severity": "P2",
+              "title": "视图保存成功仍可能淘汰尚待核实的请求",
+              "evidence": "Spec「控制确认与窗口偏好」把视图保存成功作为发送条件，并要求重开后继续查询原请求。固定提交 internal/steerline/console/model.go 的 saveProjectView 调用 savedActions(state.actions, 256)，后者将未决动作按更新时间排序并在 256 项截断，随后仅为入选项重建 Outstanding。internal/steerline/console/preferences.go 的 readViewFile 同样限制为 256 项。因此新增决策请求时可能成功写盘并发送，却挤掉一个此前仍待对账的 ID。CM72-2 引用的 TestStartIsNotPublishedWhenRequestIdentityCannotBePersisted 只覆盖目录写入失败。Spec 应明确未决项不能被淘汰，容量耗尽时拒绝新提交并保留已有记录。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-03",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "答案登记的事务边界无法兑现“发布前换代零新增命令”",
+              "evidence": "Spec「决策草稿」要求在发布前发生 Attempt 或恢复版本变化时零新增命令，「并行与最终交付」同时禁止修改 Store 和写端口。在固定提交 6dce3cf1 中，internal/steerline/decision.go 的 SubmitAnswerDecision 先读取并核对 run，随后才调用 AnswerDecisionWithID。internal/steerline/sqlite_store_write_commands.go 的 sqliteTx.EnqueueCommand 在 INSERT 所在事务内检查决策版本，却没有比较当前 Attempt、恢复版本、run 修订和服务实例。若换代提交发生在最后一次读取与 INSERT 之间，旧命令仍可登记，消费时拒绝也无法满足零新增。Spec 需要明确由写层所有者在登记事务内补齐核验，或将零新增保证限定到发布前的取样时点。"
+            },
+            {
+              "severity": "P1",
+              "title": "已拒绝的旧答案会占用刷新后仍有效的回答",
+              "evidence": "Spec「决策重放对账」要求沿用同一键算法，同时要求实例和修订不符的命令不能关联。固定提交 6dce3cf1 的 internal/steerline/query_command.go 中，decisionAnswerKey 不含服务实例、run 修订或决策版本。internal/steerline/decision.go 的 SubmitAnswerDecision 在当前资格校验前按键返回已有命令，sameDecisionAnswer 也不比较这三项。若旧命令因 run 修订变化被拒绝，而问题、Attempt 和恢复版本仍相同，用户重新查看问题并明确提交相同答案，会再次命中旧拒绝；按 Spec 核对修订又只能留下待核实。需区分旧请求对账与针对新展示版本的显式回答，并覆盖旧命令已拒绝、问题仍 pending 的场景。"
+            },
+            {
+              "severity": "P1",
+              "title": "保存 Git 公共目录路径无法识别在原位置替换的仓库",
+              "evidence": "Spec「待查项归属」和 CM72-2 要求仓库 A 换成 B 后，对 B 的自动与手动查询次数均为零。固定提交 6dce3cf1 的 internal/steerline/config.go 中，Config.ResolveIdentity 将 canonical(repository.CommonDir) 直接作为 Identity；internal/steerlineapp/config.go 的 repositoryStateKey 也由 CommonDir 生成。若 B 替换 A 后沿用原 .git 目录路径、配置路径和运行目录，凭据中的视图键与仓库身份都会相等。回执中的实例只能在查询后核验，无法保证查询次数为零。应明确该保证要求 A、B 的 CommonDir 不同，或提供查询前可核对、能区分同路径仓库代次的证据。"
+            },
+            {
+              "severity": "P2",
+              "title": "转入自动派发的条件遗漏单方案的隐式默认值",
+              "evidence": "Spec「切换派发模式与回答资格」写明转入 auto 要求“已指定默认方案”。固定提交 6dce3cf1 的 internal/steerline/execution_profiles.go 中，Config.DefaultProfileID 在全局配置只有一个方案且未填写 default_execution_profile 时返回该方案 ID。internal/steerline/console/model_control.go 的 toggleMode 和 internal/steerline/control_service.go 的 processNextControl 都按这个解析结果判断。按是否显式填写字段实现会禁用现有可用操作。资格条件应写为 DefaultProfileID() 的结果非空，并保留单方案未显式指定默认值的允许场景。"
+            },
+            {
+              "severity": "P2",
+              "title": "停服确认框缺少现有宽限时间的产品字段",
+              "evidence": "Spec「控制确认与窗口偏好」规定了停服目标和请求 ID，「必须交付」要求移除中心 Config 并保留现有展示。固定提交 6dce3cf1 的 internal/steerline/console/view.go 中，renderStopConfirmation 读取 state.ref.Config.ShutdownGrace，向用户显示确认停服后会等待 worker 多久。internal/steerline/clientcontracts/client.go 的 ProjectRef 和 ProjectSnapshot 均无此字段，Spec 新增的项目条目与离线入口事实也未交接该值。需由外层提供该项目的非秘密宽限时间，并验证自定义时长能在确认框中显示。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-04",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "新版幂等键会使 worker 找不到已受理的答案命令",
+              "evidence": "Spec「决策重放对账」把服务实例、run 修订和决策版本加入键，CM72-2 的成功断言止于命令受理。固定提交 6dce3cf1 的 internal/steerline/worker_feedback.go:96–103 中，applyWorkerFlowDecision 调用 ReadDecisionAnswer(run) 重算键，必须查到原 accepted 命令才会投递。internal/steerline/decision.go:170–184 的 ReadDecisionAnswer 没有还原这三个字段，而 internal/steerline/sqlite_store_write_commands.go:299–308 的 AcceptDecisionAnswer 已将完整答案存入 DecisionRecord.Answer，并递增了决策版本。按 Spec 只改准备、提交与对账，即可出现窗口显示答案已受理、worker 却一直收不到反馈的情况。应让投递路径使用持久化答案中的原始版本，并将成功断言延伸到使用原 command ID 投递反馈。"
+            },
+            {
+              "severity": "P1",
+              "title": "跨窗口重放留下的本地 ID 无法在中心拒绝异内容复用",
+              "evidence": "Spec「决策重放对账」同时要求两个窗口以 A、B 两个本地 ID 命中同一条命令、中心不保存别名映射，并要求异内容复用原 ID 时拒绝。固定提交 6dce3cf1 的 internal/steerline/sqlite_store_write_commands.go:133–150 中，sqliteTx.EnqueueCommand 命中同键时直接返回 A，不登记 B。internal/steerline/sqlite/records.go:298–316 的 Command 和 CommandByIdempotency 只能查询已登记的 ID 或键。若另一调用方随后携 B 提交另一份合格答案，按 B 和新键均查不到旧记录，中心无法识别 B 曾用于重放。窗口私有凭据只能约束该窗口。Spec 需明确本地跟踪 ID 与中心命令 ID 各自的复用保证，并据此调整契约或持久化要求。"
+            },
+            {
+              "severity": "P2",
+              "title": "CLI 在重放响应丢失后无法用打印的 ID 找回原命令",
+              "evidence": "Spec「决策重放对账」只规定窗口在发送前保存精确键，CM72-3 又要求 CLI/TUI 共用实际适配层并保留原请求查询。固定提交 6dce3cf1 的 cmd/steerline/main.go:271–296 中，answer 为每次提交生成本地 ID，出错时打印该 ID，后续 answer -request-id 只调用 Command 或 WaitCommand。若 CLI 以 B 命中了另一客户端先登记的 A，且返回 A 的响应丢失，打印的 B 没有命令记录，CLI 也没有原键可供查询。应为 CLI 定义可跨进程使用的只读对账引用，并验收凭错误输出找回 A、全程零重提。"
+            },
+            {
+              "severity": "P2",
+              "title": "CLI 缺省版本时，重复查看同一已受理答案可能变成冲突错误",
+              "evidence": "Spec「决策重放对账」要求 CLI 将缺省版本解析齐全后生成新版键，但没有规定决策已受理时从哪里取原提交版本。固定提交 6dce3cf1 的 cmd/steerline/main.go:288–294 不传版本，internal/steerline/decision.go:236–255 的 SubmitAnswerDecision 可在检查当前资格前按旧键返回相同答案的原命令。internal/steerline/sqlite_store_write_commands.go:299–315 的 AcceptDecisionAnswer 在受理时将决策版本从 V 增至 V+1。若重复调用按当前 V+1 补值，就无法命中以 V 登记的命令，随后会进入 decision.go:301–306 的已回答错误分支。应固定这一既有 CLI 行为，验收对同一明确决策重复提交相同答案时返回原 command ID，且不新增命令。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-05",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "登记前的确定拒绝会留下永远查不到回执的待查项",
+              "evidence": "Spec「决策草稿」要求最后一次取样发现 Attempt 或恢复版本变化时零登记；「按原引用查询」又规定原 ID 和键均无记录时保持待核实。若窗口已保存引用、提交端随后明确返回 stale_recovery，两条规则缺少衔接。固定提交中，internal/steerline/decision.go 的 SubmitAnswerDecision 在登记前返回该错误，internal/steerline/console/model.go 的 applyDecisionCommandResult 按错误文案判断终态，未识别 stale_recovery。该项会一直占用 256 项容量，也妨碍用户重新回答。产品提交接口需区分可证明的未登记与结果未知，并验收从真实提交端返回窗口后的草稿和待查状态。"
+            },
+            {
+              "severity": "P1",
+              "title": "旧键的 pending 答案可能先被受理，再因新键找不到命令而无法投递",
+              "evidence": "Spec「决策重放对账」为新键加版本标记，「worker 反馈投递」要求用新规则从持久答案重算键，却未规定切换时已有 pending 或 in_flight 命令的消费条件。固定提交中，internal/steerline/query_command.go 的 decisionAnswerKey 生成旧 answer: 键，internal/steerline/command_processor.go 的 processPendingCommands 解码载荷后可直接调用 AcceptAnswer，未核对键格式。若旧命令的固定字段仍有效，internal/steerline/sqlite_store_write_commands.go 的 AcceptDecisionAnswer 会将决策改为 answer_saved；随后 internal/steerline/worker_feedback.go 的 applyWorkerFlowDecision 按新键查不到这条已受理命令。应按 docs/spec/core-maintenance-constraints.md 的旧格式规则，在改变决策状态前明确拒绝并保留现场，覆盖一次带旧键待处理命令的重启。"
+            },
+            {
+              "severity": "P1",
+              "title": "先查拟登记 ID 再按键重放，不能保证并发时拒绝异内容复用",
+              "evidence": "Spec「两个 ID 的约束」要求已登记 ID 的内容冲突优先于同键重放，但验收只覆盖顺序调用。固定提交中，internal/steerline/sqlite_store_write_commands.go 的 sqliteTx.EnqueueCommand 先按幂等键查询，命中后直接返回旧记录，不查询传入的 command_id。可出现这一顺序：调用方先查 B 为空，另一调用方把 B 登记给答案 X，随后 A 登记答案 Y，原调用携 B 提交 Y 时按键得到 A。仅核对 A 的键、版本和载荷仍会错误返回重放成功。Spec 需给出一致的裁决时点，例如返回重放前复核 B 的实际绑定，并覆盖该交错。"
+            },
+            {
+              "severity": "P2",
+              "title": "CLI 显式版本冲突的验收缺少可调用的输入",
+              "evidence": "Spec「CLI 缺省版本」要求区分省略和显式零恢复版本，CM72-3 还要求通过 CLI 显式传入不符版本并验证拒绝。固定提交中，cmd/steerline/main.go 的 answer 参数没有实例、run 修订、决策版本、Attempt 或恢复版本选项；internal/steerline/clientcontracts/client.go 的 AnswerInput 只有值类型 ExpectedVersion，internal/steerlineapp/client.go 的 clientDecision.Answer 也只转发这一项。现有命令行无法构造该验收输入。需明确哪些字段由 CLI 暴露及如何保留参数是否出现，或将显式值冲突放在有此输入的产品端口验收。"
+            },
+            {
+              "severity": "P2",
+              "title": "不同 CommonDir 复用同一运行目录的场景不能用正常应用接线构造",
+              "evidence": "Spec「待查项归属」及对应验收要求 A、B 的 CommonDir 不同，同时复用绝对配置路径和运行目录，并能打开 B。固定提交中，internal/steerlineapp/config.go 的 loadConfig 即使读到显式 run_dir，仍会计算 repositoryStateKey 并调用 ValidateApplicationPaths；internal/steerline/native_state_preflight.go 的 validateNativeStateLocation 强制 RunDir 等于 StateRoot 与仓库键组成的路径。正常的两个不同仓库键会产生不同运行目录，强行复用 A 的目录会在打开 B 前失败。应明确同键异身份用中性 fake 验证窗口零查询，真实接线验证错误目录被拒绝，避免测试为了构造场景放宽项目绑定。"
+            },
+            {
+              "severity": "P2",
+              "title": "窗口加载的宽限时间不能作为目标服务实际停服的最长等待时间",
+              "evidence": "Spec「项目列表」「控制确认与窗口偏好」要求从窗口加载的 Config.ShutdownGrace 取值，并由确认框展示目标实例的最长等待时间。固定提交中，internal/steerline/console/model_control.go 的 prepareStop 允许对可定位实例停服，无需配置摘要相同；internal/steerline/service.go 的 Service.shutdown 则为每个 worker 分别从 executionConfigForRun 取配置并创建超时。服务按旧配置启动后把文件改为 17s，再打开窗口，即可显示服务没有采用的 17s。若展示本地配置值，应明确其来源；若承诺实例的实际时限，则需要实例侧事实，并覆盖配置不一致的场景。"
+            }
+          ]
+        },
+        {
+          "stage": "audit-06",
+          "findings": [
+            {
+              "severity": "P1",
+              "title": "答案受理事务没有核对载荷中的 Attempt 和恢复版本",
+              "evidence": "Spec「决策草稿」允许过时命令先登记，但要求在受理时拒绝，同时「并行与最终交付」禁止修改 Store。固定提交 6dce3cf1 的 internal/steerline/command_processor.go 中，processPendingCommands 检查内存中的 run 后另行调用 AcceptAnswer。internal/steerline/sqlite_store_write_commands.go 的 sqliteTx.AcceptDecisionAnswer 在事务内读取了 Execution 和当前 Attempt，却只将当前 Attempt 与 DecisionRecord.AttemptID 比较，没有比较 answer.SourceAttemptID 和 answer.ExpectedRecoveryVersion。受理前的内存检查不能提供共同约束要求的事务内保证。应明确由写层所有者交付这两项比较，并覆盖消费预检通过、受理事务读到新代次的情形。"
+            },
+            {
+              "severity": "P1",
+              "title": "已进入宿主延迟队列的旧答案仍可绕过新键校验并投递",
+              "evidence": "Spec「已有队列的消费」规定旧键不得投递，「worker 反馈投递」及 CM72-2 覆盖了 processPendingCommands 和 applyWorkerFlowDecision。固定提交 6dce3cf1 的 internal/steerline/worker_environment.go 还有独立入口 flushEnvironmentFeedback。升级前已 accepted 并写入 Environment.DeferredFeedback 的答案不会再经过上述两个入口。宿主恢复后，该函数读取 DecisionRecord.Answer，直接凭 feedback.CommandID 调用 internal/steerline/worker_lifecycle.go 的 deliverLifecycleEnvironmentFeedback；没有既有操作时，后者可以首次执行投递。应在这条路径核对原命令、键版本及载荷，并区分首次投递与对已发生操作的只读对账。"
+            },
+            {
+              "severity": "P1",
+              "title": "已保存 ID 的启动请求在发布前被拒后，可能永久占用待查位置",
+              "evidence": "Spec「方案选择」要求文件不可读或方案摘要变化时零发布并允许刷新重选，但「提交结果与待查项」只为答案定义了确定未登记结果。固定提交 6dce3cf1 的 internal/steerline/console/model_control.go 中，createActionWithProfile 先保存 Outstanding，再异步提交；startSelected 会阻止同一任务再次开始。internal/steerline/console/model_update_actions.go 的 updateActionSubmitted 将普通控制错误记为 indeterminate，只对两种错误文案结束跟踪。若最终发布前的配置核验此时报错，原 ID 永远查不到请求，重选仍被旧项拦住。应规定控制端口如何报告确定未发布，并验收该结果能释放待查项、保留原因且允许显式重选。"
+            },
+            {
+              "severity": "P1",
+              "title": "#71 的真实 CLI 查询仍可在离线时创建数据库",
+              "evidence": "Spec「产品接口交接」以 #71 整体交付为硬前置，CM72-3 又要求用真实 CLI/TUI 共用适配层验收。固定提交 6dce3cf1 的 cmd/steerline/main.go 中，tasks 调用 product.TaskSnapshot；internal/steerlineapp/client.go 的 clientResources 将它绑定到 internal/steerline/control_client.go 的 ReadTaskSnapshot。该函数调用 internal/steerline/native_project_open.go 的 OpenNativeTaskProject，缺库时会创建运行目录、打开 SQLite 并调用 InitializeProject。同文件已有只打开既有库的 OpenNativeTaskReader。当前 Spec 的混合项目验收无法发现这一副作用；应在认定硬前置完成前修正这条接线，验证真实缺库查询返回诊断且不产生数据库。"
+            },
+            {
+              "severity": "P2",
+              "title": "窗口重开所需的中心命令 ID 和未提交原因缺少持久化位置",
+              "evidence": "Spec「按原引用查询」要求查实后保存实际中心 ID，「提交结果与待查项」要求保留确定未登记的原因；「待查项归属」又将新增凭据定义为发送前写入且不可覆盖。固定提交 6dce3cf1 的 internal/steerline/console/preferences.go 中，SavedAction 没有实际中心 ID 或原因码，validSavedActionStatus 也不接受独立的未提交状态。internal/steerline/console/model.go 的 savedActions 只序列化原字段，NewModel 重开时生成通用历史文案。应明确哪些向后可读的视图字段保存事后结果，并验收 B 已查实为 A 后重开仍按 A 查询，以及确定未登记的原因在重开后仍可见。"
+            },
+            {
+              "severity": "P2",
+              "title": "开始和模式切换资格遗漏了正在处理另一条控制操作的情形",
+              "evidence": "Spec「开始资格」和「切换派发模式与回答资格」要求按钮、提示和按键消费同一服务端资格，但列出的条件没有区分运行中的 worker 与尚未结束的控制操作。固定提交 6dce3cf1 的 internal/steerline/service_client.go 在服务就绪时可给出 CanControl=true；internal/steerline/control_service.go 的 processNextControl 在检查任务或目标模式前，遇到 State.Control.Operation 非空就返回 slot_busy。这样即使任务 Ready、缓存新鲜且能力齐全，窗口仍可能把取样时已知不可受理的动作显示为可用。应让两种资格都返回该拒绝原因，并保留只有 worker 在运行时允许手动并行开始的对照。"
+            }
+          ]
         }
       ]
     }

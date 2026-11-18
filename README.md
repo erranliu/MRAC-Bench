@@ -34,6 +34,29 @@ uv run mracbench case register cases/steerline-pr196 --name case3 --request-id r
 
 显示名称与源包 ID 分别保存；永久编号以注册返回值为准。
 
+### 复现 case3 v1 的 Spec @6 / harness v3 high 测试
+
+在 Windows PowerShell 中，从本仓库干净检出并切换到固定版本后运行：
+
+```powershell
+git checkout 440ef4636e9faf8b0554a85cb295b0964f0f17e9
+uv sync --frozen --python 3.12.13
+codex --version
+uv run mracbench case register cases/steerline-pr196 --name case3 --request-id register-case3-v1
+uv run mracbench run --managed --case case3 --case-version 1 --protocol spec-mrac-v2 --model gpt-6.2-sol --reasoning-effort high --windows-sandbox unelevated --max-rounds 8 --timeout 1800
+```
+
+将 `--model` 改为账户可用的模型即可复现对应模型的测试设置；例如
+`gpt-6.2-astra`。需要已登录的 Codex CLI、模型访问权限和访问 GitHub 的网络；
+上述 GPT-6.2 测试使用 `codex-cli 0.166.0`。固定版本包含协议 `spec-mrac-v2@6`
+和 harness v3；运行记录的 `raw/<stage>/invocation.json` 可核对实际 harness 版本。
+`--timeout` 是每次调用的秒数，第 8 轮只审计。上述命令用注册名称 `case3`，
+无需假设新环境分配与其他机器相同的 `C000003` 编号。
+
+同一输入、固定仓库基线和参数可以复现测试流程，但服务端模型更新、CLI、网络、
+系统以及模型输出的随机性会影响结果；不能保证审计发现或收敛次数完全一致。
+Windows Git 换行设置也可能使 Python 源文件字节哈希不同，虽然本次核对仅发现换行差异。
+
 从其他项目制作 case：将 [casemaker.md](doc/casemaker.md) 交给该项目中的 AI，指定已定稿的 Spec 文件和实现前的仓库 commit。制作器原样封装 Spec，不从上下文补写需求；将生成的 case 目录复制到本仓库的 `cases/` 下即可。
 
 `task.file` 指向固定输入文件（新 case 使用 `spec.md`），必填 `task.sha256` 为该文件原始字节的 SHA-256。loader 在启动 agent 前校验；缺失、格式错误或不匹配均返回 `CASE_ERROR`。已有 case 需补齐哈希。Spec 或基线变化时递增 case version；本仓库通过 `.gitattributes` 保留 case 文件的原始换行。
@@ -218,8 +241,8 @@ Spec @6 修复同时提供固定基线的仓库只读 MCP 与当前 Spec 的 UTF
 
 ## 历史测试结果
 
-- [case3 v1 · v2 / v3 合并有效成绩](doc/benchmarks/case3-v2-v3-valid-results.md)：13 次完整流程的模型汇总。
-- [case3 v1 · Spec v6 / harness v3 成绩](doc/benchmarks/spec-v6-harness3-case3-results.md)：3 次正式运行及逐轮发现。
+- [case3 v1 · v2 / v3 合并有效成绩](doc/benchmarks/case3-v2-v3-valid-results.md)：15 次完整流程的模型汇总。
+- [case3 v1 · Spec v6 / harness v3 成绩](doc/benchmarks/spec-v6-harness3-case3-results.md)：5 次正式运行及逐轮发现。
 
 - [case3 v1 · Spec v5 / harness v2 有效流程成绩](doc/benchmarks/spec-v5-harness2-case3-valid-results.md)：10 条完整流程成绩，6 次收敛、4 次未收敛；附排除清单。
 
